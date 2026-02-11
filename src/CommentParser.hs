@@ -29,11 +29,10 @@ lineEnding = try (string "\r\n") <|> string "\n" <|> string "\r"
 --spaceWithComments :: Parser [Comment]
 --spaceWithComments = many (lineComment <|> blockComment <|> (space1 *> pure []))
 
-cmtParsed :: String -> [Comment]
+cmtParsed :: String -> String
 cmtParsed input = case Text.Parsec.parse cmtParser "" input of
     Left err    -> error $ "Error while cut perse comments: " ++ show err
-    Right right -> right
-    -- concat $ map (\(Line l c) -> "Line " ++ show l ++ " " ++ (showPrettyString c)) right
+    Right right -> concat $ map (\(Line l c) -> "Line " ++ show l ++ " " ++ (showPrettyString c) ++ "\n") right
 
     where
     cmtParser :: Parser [Comment]
