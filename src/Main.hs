@@ -13,6 +13,7 @@ import System.FilePath ((</>))
 
 import Data.List (intercalate)
 import Data.Generics.Uniplate.Data
+import Data.Data
 
 main :: IO ()
 main =
@@ -89,35 +90,48 @@ analyzeGRHS :: LGRHS GhcPs (LHsExpr GhcPs) -> String
 analyzeGRHS (L _ (GRHS _ _ body)) = analyzeExpr body
 
 analyzeExpr :: LHsExpr GhcPs -> String
-analyzeExpr (L _ expr) = intercalate "\n" toStrLs where
+analyzeExpr (L _ expr) = intercalate "\n" (toStrLsEquat ++ toStrLsDiff) where
     argName = [(argExpr, argComm, name) | (HsApp _ (L _ (HsApp _ (L _ (HsVar _ name)) argExpr)) argComm) <- universe expr]
     argAppl = map (\(f, s, t) -> (f, s)) $ filter (\(_, _, name) -> (showSDocUnsafe (ppr name)) == "WithInfo") argName
-    p1 = (drop 1 argAppl)
-    p2 = zip argAppl p1
-    pairs = map (\((x1, c1), (x2, c2)) -> (x1, x2, toStr c1)) p2
+    pairs = map (\((x1, c1), (x2, c2)) -> (unLoc x1, unLoc x2, toStr c1)) (zip argAppl (drop 1 argAppl))
     toStr (L _ (HsLit _ lit)) = (showSDocUnsafe (ppr lit))
---    firstDiff = map findDiff pairs
-    toStrLs = map (\(x, y, z) -> "EQUAT: " ++ (showSDocUnsafe (ppr x)) ++ ", " ++ (showSDocUnsafe (ppr y)) ++ " :: " ++ z) pairs
---    toStrLs = map (\x -> "DIFF: " ++ (showSDocUnsafe (ppr x))) firstDiff
+    firstDiff = map findDiff pairs
+    toStrLsEquat = "EQUAT:" : map (\(x, y, z) -> (showSDocUnsafe (ppr x)) ++ ", " ++ (showSDocUnsafe (ppr y)) ++ " :: " ++ z) pairs
+--    toStrLsDiff  = map (\x -> "DIFF: " ++ (showSDocUnsafe (ppr x))) firstDiff
+    toStrLsDiff  = map (\x -> "DIFF: " ++ x) firstDiff
 --    toStrLs = map (\(x, y) -> "EQUAT: " ++ (showSDocUnsafe (ppr x)) ++ ", " ++ (showSDocUnsafe (ppr y))) argAppl
---    case expr of
---        OpApp _ l op r
---            | (showSDocUnsafe (ppr op)) == "(====)" -> "{\n  lll" ++ "\n  r:" ++ (showSDocUnsafe (ppr r)) ++ "}\n" ++ analyzeExpr l ++ analyzeExpr r
---            | otherwise -> analyzeExpr l ++ analyzeExpr r
---        HsApp _ f arg -> analyzeExpr f ++ analyzeExpr arg
---        HsPar _ _ exp _ -> analyzeExpr exp
---        _ -> "Other"
---  case expr of
---    HsApp _ f arg -> "Application: {\n" ++ analyzeExpr f ++ "\n" ++ analyzeExpr arg ++ "}\n"
---    OpApp _ l op r -> "Operator application: {\n" ++ analyzeExpr l ++ "\n" ++ analyzeExpr r ++ "}\n"
---    HsLam _ mg -> "Lambda: {\n" ++ analyzeMatchGroup mg  ++ "}\n"
---    HsLet _ _ _ _ body -> analyzeExpr body
---    HsIf _ a b c -> analyzeExpr a ++ analyzeExpr b ++ analyzeExpr c
---    HsVar _ name -> "Var: " ++ (showSDocUnsafe (ppr name))
---    HsLit _ lit -> "Literal: " ++ (showSDocUnsafe (ppr lit))
---    HsGetField _ fild fl_name -> "GetField: " ++ (showSDocUnsafe (ppr fl_name)) ++ "\n: " ++ analyzeExpr fild
---    HsPar _ _ exp _ -> analyzeExpr exp
---    _ -> "AnyExpr: " ++ (showSDocUnsafe (ppr expr)) ++ "\n"
 
 
---firstDiff :: (HsExpr GhcPs, HsExpr GhcPs, String) ->
+findDiff :: (HsExpr GhcPs, HsExpr GhcPs, String) -> String
+findDiff (x, y, comm) = firstDiffList (universe x) (universe y)
+
+firstDiffList :: [HsExpr GhcPs] -> [HsExpr GhcPs] -> String
+firstDiffList [] [] = "Nothing"
+firstDiffList (x:xs) (y:ys)
+  | toConstr x /= toConstr y && (show (toConstr x) == "HsPar") =
+    firstDiffList xs (y:ys)
+  | toConstr x /= toConstr y && (show (toConstr y) == "HsPar") =
+    firstDiffList (x:xs) ys
+  | toConstr x /= toConstr y =
+    "Different constructors: " ++ show (toConstr x) ++ " vs " ++ show (toConstr y) ++ "\nl: " ++ printExpr x ++ "r: " ++ printExpr y
+  | otherwise =
+    firstDiffList xs ys
+firstDiffList _ _ = "Different number of children"
+
+
+printLExpr :: LHsExpr GhcPs -> String
+printLExpr = printExpr . unLoc
+
+printExpr :: HsExpr GhcPs -> String
+printExpr expr =
+  case expr of
+    HsApp _ f arg -> "Application: {\n" ++ printLExpr f ++ "\n" ++ printLExpr arg ++ "}\n"
+    OpApp _ l op r -> "Operator application: {\n" ++ printLExpr l ++ "\n" ++ printLExpr r ++ "}\n"
+    HsLam _ mg -> "Lambda: {\n" ++ "matchGroup" ++ "}\n"
+    HsLet _ _ _ _ body -> printLExpr body
+    HsIf _ a b c -> printLExpr a ++ printLExpr b ++ printLExpr c
+    HsVar _ name -> "Var: " ++ (showSDocUnsafe (ppr name))
+    HsLit _ lit -> "Literal: " ++ (showSDocUnsafe (ppr lit))
+    HsPar _ _ exp _ -> printLExpr exp
+    _ -> "AnyExpr\n"
+
