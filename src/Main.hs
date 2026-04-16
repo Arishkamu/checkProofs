@@ -73,7 +73,7 @@ analyzeDecl (L _ decl) =
 analyzeBind :: HsBind GhcPs -> String
 analyzeBind bind =
   case bind of
-    FunBind { fun_matches = mg } -> analyzeMatchGroup mg
+    FunBind { fun_matches = mg } -> "FUNBIND: " ++ (showSDocUnsafe (ppr bind)) ++ "\n" ++ analyzeMatchGroup mg
     PatBind {} -> []
     _ -> []
 
@@ -103,20 +103,19 @@ analyzeExpr (L _ expr) = intercalate "\n" (toStrLsEquat ++ toStrLsDiff) where
 
 
 findDiff :: (HsExpr GhcPs, HsExpr GhcPs, String) -> String
-findDiff (x, y, comm) = firstDiffList (universe x) (universe y)
+findDiff (x, y, comm) = "Different constructors: " ++ show (toConstr xd) ++ " vs " ++ show (toConstr yd) ++ "\nl: " ++ printExpr xd ++ "r: " ++ printExpr yd
+    where
+    (xd, yd) = firstDiffList (universe x) (universe y)
 
-firstDiffList :: [HsExpr GhcPs] -> [HsExpr GhcPs] -> String
-firstDiffList [] [] = "Nothing"
+firstDiffList :: [HsExpr GhcPs] -> [HsExpr GhcPs] -> (HsExpr GhcPs, HsExpr GhcPs)
 firstDiffList (x:xs) (y:ys)
   | toConstr x /= toConstr y && (show (toConstr x) == "HsPar") =
     firstDiffList xs (y:ys)
   | toConstr x /= toConstr y && (show (toConstr y) == "HsPar") =
     firstDiffList (x:xs) ys
-  | toConstr x /= toConstr y =
-    "Different constructors: " ++ show (toConstr x) ++ " vs " ++ show (toConstr y) ++ "\nl: " ++ printExpr x ++ "r: " ++ printExpr y
+  | toConstr x /= toConstr y = (x, y)
   | otherwise =
     firstDiffList xs ys
-firstDiffList _ _ = "Different number of children"
 
 
 printLExpr :: LHsExpr GhcPs -> String
