@@ -1,10 +1,15 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, RecordWildCards#-}
 
 import GHC
+import GHC.Hs
+import GHC.Types.SrcLoc
 import GHC.Paths (libdir)
 import GHC.Driver.Flags
-import GHC.Utils.Outputable
+import GHC.Utils.Outputable (Outputable, showSDocUnsafe, ppr)
 import GHC.Core
+import GHC.Data.Bag (Bag, bagToList)
+
+import Language.Haskell.Syntax
 
 import Control.Monad.IO.Class
 
@@ -21,13 +26,11 @@ main =
     dflags <- getSessionDynFlags
     _ <- setSessionDynFlags dflags
 
-    -- load the file
---    let path = "/Users/arina/hse/nir/moskvinPrj/checkProofs/test/BasicTest.hs"
     let path = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example.hs"
     target <- guessTarget path Nothing Nothing
     setTargets [target]
+    load LoadAllTargets
 
-    -- parse it
     modGraph <- depanal [] False
     let ms = head $ mgModSummaries modGraph
 
@@ -35,14 +38,14 @@ main =
 
     parsed <- parseModule ms
 
-    liftIO $ putStrLn "\n=== Parsed AST ==="
-    liftIO $ putStrLn (showSDocUnsafe (ppr (pm_parsed_source parsed)))
-
+--    liftIO $ putStrLn "\n=== Parsed AST ==="
+--    liftIO $ putStrLn (showSDocUnsafe (ppr (pm_parsed_source parsed)))
+--
     typed <- typecheckModule parsed
-
-    liftIO $ putStrLn "\n=== Renamed AST ==="
-    liftIO $ putStrLn (showSDocUnsafe (ppr (tm_renamed_source typed)))
-
+--
+--    liftIO $ putStrLn "\n=== Renamed AST ==="
+--    liftIO $ putStrLn (showSDocUnsafe (ppr (tm_renamed_source typed)))
+--
     liftIO $ putStrLn "\n=== Typechecked AST ==="
     liftIO $ putStrLn (showSDocUnsafe (ppr (tm_typechecked_source typed)))
     liftIO $ putStrLn "\n=== AST ==="
@@ -51,12 +54,79 @@ main =
 --      [] -> liftIO $ putStrLn "No module found"
 --      (ms:_) -> do
 --        p <- parseModule ms
-    let p = pm_parsed_source parsed
-    liftIO $ putStrLn $ analyzeModule p
+    let t = typecheckedSource typed
+    let t = bagToList $ typecheckedSource typed
+    liftIO $ putStrLn $ prettyPrint t
+--    let p = pm_parsed_source parsed
+--    liftIO $ putStrLn $ analyzeModule p
 --    case tm_renamed_source typed of
 --        Just r -> liftIO $ putStrLn $ analyzeModule p
 --        Nothing -> liftIO $ putStrLn "Can't rename"
+    liftIO $ putStrLn "THE END"
 
+data Conversion = Conversion {
+  lhs     :: HsExpr GhcTc,
+  rhs     :: HsExpr GhcTc,
+  comment :: String        -- Maybe HsExpr GhcPs to substitute
+}
+
+type DeclConversions = (HsDecl GhcTc, [Conversion])
+
+data AstInfo = AstInfo {
+  declConvrs  :: [DeclConversions], -- List of Conversion per decl
+  funcDefs    :: [String]
+}
+
+instance Semigroup AstInfo where
+  AstInfo c1 f1 <> AstInfo c2 f2 = AstInfo (c1 <> c2) (f1 <> f2)
+
+instance Monoid AstInfo where
+  mempty = AstInfo [] []
+
+
+
+class PrettyPrint a where
+  prettyPrint :: a -> String
+
+prettyPrintStrs :: [String] -> String
+prettyPrintStrs = intercalate "\n  "
+
+instance PrettyPrint Conversion where
+  prettyPrint Conversion{..} = comment ++ " :: " ++ showSDocUnsafe (ppr lhs) ++ " => " ++ showSDocUnsafe (ppr rhs)
+
+instance PrettyPrint AstInfo where
+  prettyPrint AstInfo{..} =
+    "===== AstInfo =====" ++
+    "\nDeclConvrs:" ++ prettyPrintStrs (concatMap makePretty declConvrs)  ++
+    "\nFunDefs:" ++ prettyPrintStrs funcDefs
+
+    where
+    makePretty (decl, convrs) = "DeclName:" : map (\cnv -> "  " ++ prettyPrint cnv) convrs
+
+-- Represent: LHsBindLR GhcTc
+instance PrettyPrint (GenLocated SrcSpanAnnA (HsBindLR GhcTc GhcTc)) where
+  prettyPrint (L _ bind) =
+    case bind of
+--        FunBind{ fun_matches = mg } -> "FUNBIND: " ++ (showSDocUnsafe (ppr bind)) ++ "\n" ++ analyzeMatchGroup mg
+--        PatBind{} -> []
+--        VarBind{} ->
+--        PatSynBind{} -> "PatSynBind"
+--      (XHsBindsLR a) -> "XHsBindsLR" ++ " :: " ++ prettyPrint (abs_binds a)
+      _ -> show (toConstr bind) ++ " :: " ++ (showSDocUnsafe (ppr bind))
+
+instance (PrettyPrint a) => PrettyPrint [a] where
+  prettyPrint as = intercalate "\n  " $ map prettyPrint as
+
+instance (PrettyPrint a) => PrettyPrint (Bag a) where
+  prettyPrint = prettyPrint . bagToList
+
+
+
+collectAstInfo :: TypecheckedSource -> AstInfo
+collectAstInfo binds = mconcat $ map collectBinds (bagToList binds)
+
+collectBind :: LHsBind GhcPs -> AstInfo
+collectBind (L _ bind) = AstInfo  funDefs
 
 analyzeModule :: ParsedSource -> String
 analyzeModule (L _ modu) =
