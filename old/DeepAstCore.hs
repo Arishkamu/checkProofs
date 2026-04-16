@@ -12,6 +12,8 @@ import System.Directory (getCurrentDirectory)
 import System.FilePath ((</>))
 
 import Data.List (intercalate)
+import Data.Generics.Uniplate.Data
+import Data.Data
 
 main :: IO ()
 main =
@@ -47,14 +49,14 @@ main =
 --    Rec lex -> map snd lex
 
 goFunc :: CoreBind -> String
-goFunc bind = intercalate "\n\nEXPR=\n" $ map (goExpr 1) $ case bind of
+goFunc bind = intercalate "\n\nEXPR=\n" $ map (goExpr) $ case bind of
     NonRec x ex -> [ex]
     Rec lex -> map snd lex
 
 
--- App:
---   |App:
---   |  |App:
+-- App1:
+--   |App2:
+--   |  |App3:
 --   |  |  |Var:WithInfo
 --   |  |  |Type:a_aBd -> d_aBb
 --   |  |App:
@@ -82,15 +84,48 @@ goFunc bind = intercalate "\n\nEXPR=\n" $ map (goExpr 1) $ case bind of
 --   |  |Var:unpackCString#
 --   |  |Lit:"(.)"#
 
-goExpr :: Int -> CoreExpr -> String
-goExpr ident expr = "\n" ++ replicate ident ' ' ++ case expr of
+printExpr :: Int -> CoreExpr -> String
+printExpr ident expr = "\n" ++ replicate ident ' ' ++ case expr of
     (Var idx) -> "Var:" ++ show (ppr idx)
     (Lit lit) -> "Lit:" ++ show (ppr lit)
-    (App ap ar) -> "App:" ++ goExpr (ident + 2) ap ++ goExpr (ident + 2) ar
-    (Lam b lm) -> "Lam:" ++ show (ppr b) ++ goExpr (ident + 2) lm
-    (Let _ ex) -> "Lam:" ++ goExpr (ident + 2) ex
-    (Case ex _ _ _)  -> "Case:" ++ goExpr (ident + 2) ex ++ " Alt=NOT-IMPL"
-    (Cast ex _) -> "Cast:" ++ goExpr (ident + 2) ex
-    (Tick _ tex) -> "Tick:" ++ goExpr (ident + 2) tex
+    (App ap ar) -> "App:" ++ printExpr (ident + 2) ap ++ printExpr (ident + 2) ar
+    (Lam b lm) -> "Lam:" ++ show (ppr b) ++ printExpr (ident + 2) lm
+    (Let _ ex) -> "Lam:" ++ printExpr (ident + 2) ex
+    (Case ex _ _ _)  -> "Case:" ++ printExpr (ident + 2) ex ++ " Alt=NOT-IMPL"
+    (Cast ex _) -> "Cast:" ++ printExpr (ident + 2) ex
+    (Tick _ tex) -> "Tick:" ++ printExpr (ident + 2) tex
     (Type ty) -> "Type:" ++ show (ppr ty)
     (Coercion _) -> "Coercion"
+
+goExpr :: CoreExpr -> String
+goExpr expr = "\nAAAA: " ++ intercalate "\n" (toStrLsEquat) where
+    argName = [(argExpr, argComm, name) | (App (App (App (Var name) _) argExpr) argComm) <- universe expr]
+    argAppl = map (\(f, s, t) -> (f, s)) $ filter (\(_, _, name) -> (show (ppr name)) == "WithInfo") argName
+    pairs = map (\((x1, c1), (x2, c2)) -> (x1, x2, toStr c1)) (zip argAppl (drop 1 argAppl))
+    toStr (App _ (Lit lit)) = show (ppr lit)
+----    firstDiff = map findDiff pairs
+    toStrLsEquat = "EQUAT:" : map (\(x, y, z) -> (show (ppr x)) ++ ", " ++ (show (ppr y)) ++ " :: " ++ z) pairs
+----    toStrLsDiff  = map (\x -> "DIFF: " ++ (showSDocUnsafe (ppr x))) firstDiff
+----    toStrLsDiff  = map (\x -> "DIFF: " ++ x) firstDiff
+----    toStrLs = map (\(x, y) -> "EQUAT: " ++ (showSDocUnsafe (ppr x)) ++ ", " ++ (showSDocUnsafe (ppr y))) argAppl
+
+
+--    AAAA: EQUAT:
+--    . @c_aBa @d_aBb @a_aBd f_agN (. @b_aBc @c_aBa @a_aBd g_agO h_agP),
+--            \ (x_agQ :: a_aBd) -> f_agN (. @b_aBc @c_aBa @a_aBd g_agO h_agP x_agQ)
+--            :: "(.)"#
+--    \ (x_agQ :: a_aBd) -> f_agN (. @b_aBc @c_aBa @a_aBd g_agO h_agP x_agQ),
+--            \ (x_agR :: a_aBd) -> f_agN (g_agO (h_agP x_agR))
+--            :: "(.)"#
+--    \ (x_agR :: a_aBd) -> f_agN (g_agO (h_agP x_agR)),
+--        \ (x_agT :: a_aBd) -> f_agN (g_agO (h_agP x_agT))
+--        :: "{beta}"#
+--    \ (x_agT :: a_aBd) -> f_agN (g_agO (h_agP x_agT)),
+--        \ (x_agU :: a_aBd) -> f_agN (g_agO (h_agP x_agU))
+--        :: "{beta \\208\\191\\209\\128\\208\\184\\208\\178\\208\\181\\209\\130}"#
+--    \ (x_agU :: a_aBd) -> f_agN (g_agO (h_agP x_agU)),
+--        \ (x_agW :: a_aBd) -> . @c_aBa @d_aBb @b_aBc f_agN g_agO (h_agP x_agW)
+--        :: "(.)"#
+--    \ (x_agW :: a_aBd) -> . @c_aBa @d_aBb @b_aBc f_agN g_agO (h_agP x_agW),
+--        . @b_aBc @d_aBb @a_aBd (. @c_aBa @d_aBb @b_aBc f_agN g_agO) h_agP
+--        :: "(.)"#
