@@ -72,7 +72,9 @@ main =
 data Conversion = Conversion {
   lhs     :: HsExpr GhcTc,
   rhs     :: HsExpr GhcTc,
-  comment :: String        -- Maybe HsExpr GhcPs to substitute
+  comment :: String,        -- Maybe HsExpr GhcPs to substitute
+  lDiff   :: HsExpr GhcTc,
+  rDiff   :: HsExpr GhcTc
 }
 
 -- Add local Where to DeclConversions???
@@ -107,7 +109,9 @@ instance PrettyPrint (GenLocated SrcSpanAnnN Id) where
   prettyPrint (L _ x) = prettyPrint x
 
 instance PrettyPrint Conversion where
-  prettyPrint Conversion{..} = comment ++ " :: " ++ showSDocUnsafe (ppr lhs) ++ " => " ++ showSDocUnsafe (ppr rhs)
+  prettyPrint Conversion{..} = comment ++ " :: " ++ showSDocUnsafe (ppr lhs) ++ " => " ++ showSDocUnsafe (ppr rhs) ++
+    "\n    Different constructors: " ++ show (toConstr lDiff) ++ " vs " ++ show (toConstr rDiff) ++
+    "\n      l: " ++ prettyPrint lDiff ++ "\n      r: " ++ prettyPrint rDiff
 
 instance PrettyPrint AstInfo where
   prettyPrint AstInfo{..} =
@@ -116,7 +120,7 @@ instance PrettyPrint AstInfo where
     "\nFunDefs:" ++ prettyPrint funcDefs
 
     where
-    makePretty (decl, convrs) = (("DeclName: " ++  prettyPrint decl) : map (\cnv -> "  " ++ prettyPrint cnv) convrs)
+    makePretty (decl, convrs) = (("\n  DeclName: " ++  prettyPrint decl) : map (\cnv -> "  " ++ prettyPrint cnv) convrs)
 
 -- Represent: LHsBindLR GhcTc
 --instance PrettyPrint (HsBindLR GhcTc GhcTc) where
@@ -168,22 +172,31 @@ collectMatchGroup funId mg = map (analyzeMatch . unLoc) matches where
   analyzeGRHS (L _ (GRHS _ _ body)) = collectExpr body
 
 collectExpr :: LHsExpr GhcTc -> [Conversion]
-collectExpr (L _ expr) = convrs where
+collectExpr (L _ expr) = map getConvrs pairs where
 --  aaa = intercalate "\n" $ map (\(a1, a2) -> show (toConstr a1) ++ " :: " ++ showSDocUnsafe (ppr a1) ++ "\n  " ++ show (toConstr a2) ++ " :: " ++ showSDocUnsafe (ppr a2)) [(e, ae) | e@(HsApp _ (L _ (HsApp _ (L _ ae) argExpr)) argComm) <- universe expr]
   argWithInfo = [(argExpr, argComm) |
     (HsApp _ (L _ (HsApp _ (L _ exprName) argExpr)) argComm) <- universe expr,
     "WithInfo" <- [showSDocUnsafe (ppr exprName)] ]
 --    argWithInfo = map (\(f, s, t) -> (f, s)) $ filter (\(_, _, name) -> (showSDocUnsafe (ppr name)) == "WithInfo") argName
   pairs  = zip argWithInfo (drop 1 argWithInfo)
-  convrs = map (\((x1, c1), (x2, c2)) -> Conversion (unLoc x1) (unLoc x2) (toStr c1)) pairs
+--  getConvrs :: (GenLocated SrcSpanAnnA (HsExpr GhcTc), GenLocated SrcSpanAnnA (HsExpr GhcTc)) -> (GenLocated SrcSpanAnnA (HsExpr GhcTc), GenLocated SrcSpanAnnA (HsExpr GhcTc)) -> Conversion
+  getConvrs ((L _ lhe, c1), (L _ rhe, _)) = getConvrsWithDiff lhe rhe (toStr c1) (findDiff lhe rhe)
+  getConvrsWithDiff lhe rhe comm (diffL, diffR) = Conversion lhe rhe comm diffL diffR
   toStr (L _ (HsLit _ lit)) = showSDocUnsafe (ppr lit)
---    firstDiff = map findDiff pairs
---    toStrLsEquat = "EQUAT:" : map (\(x, y, z) -> (showSDocUnsafe (ppr x)) ++ ", " ++ (showSDocUnsafe (ppr y)) ++ " :: " ++ z) pairs
---    toStrLsDiff  = map (\x -> "DIFF: " ++ (showSDocUnsafe (ppr x))) firstDiff
---    toStrLsDiff  = map (\x -> "DIFF: " ++ x) firstDiff
---    toStrLs = map (\(x, y) -> "EQUAT: " ++ (showSDocUnsafe (ppr x)) ++ ", " ++ (showSDocUnsafe (ppr y))) argAppl
 
 
+findDiff :: HsExpr GhcTc -> HsExpr GhcTc -> (HsExpr GhcTc, HsExpr GhcTc)
+findDiff x y = firstDiffList (universe x) (universe y)
+  where
+  firstDiffList :: [HsExpr GhcTc] -> [HsExpr GhcTc] -> (HsExpr GhcTc, HsExpr GhcTc)
+  firstDiffList (x:xs) (y:ys)
+    | toConstr x /= toConstr y && (show (toConstr x) == "HsPar") =
+      firstDiffList xs (y:ys)
+    | toConstr x /= toConstr y && (show (toConstr y) == "HsPar") =
+      firstDiffList (x:xs) ys
+    | toConstr x /= toConstr y = (x, y)
+    | otherwise =
+      firstDiffList xs ys
 
 
 {-
