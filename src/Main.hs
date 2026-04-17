@@ -9,8 +9,6 @@ import GHC.Utils.Outputable (Outputable, showSDocUnsafe, ppr)
 import GHC.Core
 import GHC.Data.Bag (Bag, bagToList)
 
-import Language.Haskell.Syntax
-
 import Control.Monad.IO.Class
 
 import System.Directory (getCurrentDirectory)
@@ -19,6 +17,8 @@ import System.FilePath ((</>))
 import Data.List (intercalate)
 import Data.Generics.Uniplate.Data
 import Data.Data
+
+import Debug.Trace
 
 main :: IO ()
 main =
@@ -55,8 +55,13 @@ main =
 --      (ms:_) -> do
 --        p <- parseModule ms
     let t = typecheckedSource typed
-    let t = bagToList $ typecheckedSource typed
+    let tt = bagToList $ typecheckedSource typed
     liftIO $ putStrLn $ prettyPrint t
+    liftIO $ putStrLn "\n\n=== ASTAST ===\n\n"
+    let astInfo = collectAstInfo t
+    liftIO $ putStrLn $ prettyPrint $ astInfo
+
+    let findDiffInfo = astInfo
 --    let p = pm_parsed_source parsed
 --    liftIO $ putStrLn $ analyzeModule p
 --    case tm_renamed_source typed of
@@ -70,11 +75,12 @@ data Conversion = Conversion {
   comment :: String        -- Maybe HsExpr GhcPs to substitute
 }
 
-type DeclConversions = (HsDecl GhcTc, [Conversion])
+-- Add local Where to DeclConversions???
+type DeclConversions = (LIdP GhcTc, [Conversion])
 
 data AstInfo = AstInfo {
   declConvrs  :: [DeclConversions], -- List of Conversion per decl
-  funcDefs    :: [String]
+  funcDefs    :: [HsBindLR GhcTc GhcTc]
 }
 
 instance Semigroup AstInfo where
@@ -91,6 +97,15 @@ class PrettyPrint a where
 prettyPrintStrs :: [String] -> String
 prettyPrintStrs = intercalate "\n  "
 
+instance (PrettyPrint a) => PrettyPrint (GenLocated SrcSpanAnnA a) where
+  prettyPrint (L _ x) = prettyPrint x
+
+instance PrettyPrint (Id) where
+  prettyPrint x = "ID: " ++ showSDocUnsafe (ppr x)
+
+instance PrettyPrint (GenLocated SrcSpanAnnN Id) where
+  prettyPrint (L _ x) = prettyPrint x
+
 instance PrettyPrint Conversion where
   prettyPrint Conversion{..} = comment ++ " :: " ++ showSDocUnsafe (ppr lhs) ++ " => " ++ showSDocUnsafe (ppr rhs)
 
@@ -98,21 +113,32 @@ instance PrettyPrint AstInfo where
   prettyPrint AstInfo{..} =
     "===== AstInfo =====" ++
     "\nDeclConvrs:" ++ prettyPrintStrs (concatMap makePretty declConvrs)  ++
-    "\nFunDefs:" ++ prettyPrintStrs funcDefs
+    "\nFunDefs:" ++ prettyPrint funcDefs
 
     where
-    makePretty (decl, convrs) = "DeclName:" : map (\cnv -> "  " ++ prettyPrint cnv) convrs
+    makePretty (decl, convrs) = (("DeclName: " ++  prettyPrint decl) : map (\cnv -> "  " ++ prettyPrint cnv) convrs)
 
 -- Represent: LHsBindLR GhcTc
-instance PrettyPrint (GenLocated SrcSpanAnnA (HsBindLR GhcTc GhcTc)) where
-  prettyPrint (L _ bind) =
+--instance PrettyPrint (HsBindLR GhcTc GhcTc) where
+--  prettyPrint (L _ bind) = prettyPrint bind
+
+instance PrettyPrint (HsBindLR GhcTc GhcTc) where
+  prettyPrint bind =
+--  show (toConstr bind) ++ " :: " ++ (showSDocUnsafe (ppr bind))
     case bind of
---        FunBind{ fun_matches = mg } -> "FUNBIND: " ++ (showSDocUnsafe (ppr bind)) ++ "\n" ++ analyzeMatchGroup mg
---        PatBind{} -> []
---        VarBind{} ->
---        PatSynBind{} -> "PatSynBind"
---      (XHsBindsLR a) -> "XHsBindsLR" ++ " :: " ++ prettyPrint (abs_binds a)
+      fb@FunBind{ fun_matches = mg } -> "FUNBIND: " ++ "\nID:" ++ showSDocUnsafe (ppr (unLoc (fun_id fb))) ++ "\n" ++ (showSDocUnsafe (ppr bind))
+--      analyzeMatchGroup mg
+--          PatBind{} -> []
+--          VarBind{} ->
+--          PatSynBind{} -> "PatSynBind"
+      (XHsBindsLR a) -> "XHsBindsLR" ++ " :: " ++ prettyPrint (abs_binds a)
       _ -> show (toConstr bind) ++ " :: " ++ (showSDocUnsafe (ppr bind))
+
+instance PrettyPrint (HsExpr GhcTc) where
+  prettyPrint expr = show (toConstr expr) ++ " :: " ++ (showSDocUnsafe (ppr expr))
+
+instance (PrettyPrint a, PrettyPrint b) => PrettyPrint (a, b) where
+  prettyPrint (x, y) = "(\n  " ++ prettyPrint x ++ "\n  " ++ prettyPrint y ++ "\n)"
 
 instance (PrettyPrint a) => PrettyPrint [a] where
   prettyPrint as = intercalate "\n  " $ map prettyPrint as
@@ -123,11 +149,44 @@ instance (PrettyPrint a) => PrettyPrint (Bag a) where
 
 
 collectAstInfo :: TypecheckedSource -> AstInfo
-collectAstInfo binds = mconcat $ map collectBinds (bagToList binds)
+collectAstInfo binds = mconcat $ map collectBind (bagToList binds)
 
-collectBind :: LHsBind GhcPs -> AstInfo
-collectBind (L _ bind) = AstInfo  funDefs
+collectBind :: LHsBind GhcTc -> AstInfo
+collectBind (L _ bind) = case bind of
+  FunBind{..} -> AstInfo (collectMatchGroup fun_id fun_matches) [bind]
+  XHsBindsLR a -> mconcat $ map collectBind $ bagToList (abs_binds a)
+  _ -> mempty
+--    PatBind{} -> []
+--    VarBind{} -> []
+--    PatSynBind{} -> "PatSynBind"
 
+collectMatchGroup :: LIdP GhcTc -> MatchGroup GhcTc (LHsExpr GhcTc) -> [DeclConversions]
+collectMatchGroup funId mg = map (analyzeMatch . unLoc) matches where
+  matches = unLoc (mg_alts mg)
+  analyzeMatch Match{..} = {- get List of Pats, construct id-}
+    (funId, concatMap analyzeGRHS (grhssGRHSs m_grhss) ) {- ignore local -}
+  analyzeGRHS (L _ (GRHS _ _ body)) = collectExpr body
+
+collectExpr :: LHsExpr GhcTc -> [Conversion]
+collectExpr (L _ expr) = convrs where
+--  aaa = intercalate "\n" $ map (\(a1, a2) -> show (toConstr a1) ++ " :: " ++ showSDocUnsafe (ppr a1) ++ "\n  " ++ show (toConstr a2) ++ " :: " ++ showSDocUnsafe (ppr a2)) [(e, ae) | e@(HsApp _ (L _ (HsApp _ (L _ ae) argExpr)) argComm) <- universe expr]
+  argWithInfo = [(argExpr, argComm) |
+    (HsApp _ (L _ (HsApp _ (L _ exprName) argExpr)) argComm) <- universe expr,
+    "WithInfo" <- [showSDocUnsafe (ppr exprName)] ]
+--    argWithInfo = map (\(f, s, t) -> (f, s)) $ filter (\(_, _, name) -> (showSDocUnsafe (ppr name)) == "WithInfo") argName
+  pairs  = zip argWithInfo (drop 1 argWithInfo)
+  convrs = map (\((x1, c1), (x2, c2)) -> Conversion (unLoc x1) (unLoc x2) (toStr c1)) pairs
+  toStr (L _ (HsLit _ lit)) = showSDocUnsafe (ppr lit)
+--    firstDiff = map findDiff pairs
+--    toStrLsEquat = "EQUAT:" : map (\(x, y, z) -> (showSDocUnsafe (ppr x)) ++ ", " ++ (showSDocUnsafe (ppr y)) ++ " :: " ++ z) pairs
+--    toStrLsDiff  = map (\x -> "DIFF: " ++ (showSDocUnsafe (ppr x))) firstDiff
+--    toStrLsDiff  = map (\x -> "DIFF: " ++ x) firstDiff
+--    toStrLs = map (\(x, y) -> "EQUAT: " ++ (showSDocUnsafe (ppr x)) ++ ", " ++ (showSDocUnsafe (ppr y))) argAppl
+
+
+
+
+{-
 analyzeModule :: ParsedSource -> String
 analyzeModule (L _ modu) =
   case hsmodDecls modu of
@@ -203,4 +262,6 @@ printExpr expr =
     HsLit _ lit -> "Literal: " ++ (showSDocUnsafe (ppr lit))
     HsPar _ _ exp _ -> printLExpr exp
     _ -> "AnyExpr\n"
+
+-}
 
