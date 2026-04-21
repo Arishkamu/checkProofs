@@ -119,7 +119,10 @@ getStrById :: Id -> String
 getStrById v = occNameString (getOccName v)
 
 toExprInfo :: CoreExpr -> ExprInfo
-toExprInfo (Var beta)  | getStrById beta == "Beta" = Beta
+toExprInfo (Var v)  
+  | getStrById v == "Beta" = Beta
+  | getStrById v == "LEta" = LEta
+  | getStrById v == "REta" = REta
 toExprInfo (App (Var v_id) (App _ (Lit (LitString pack_str)))) 
   | getStrById v_id == "LFunc" = LFunc $ BS8.unpack pack_str
   | getStrById v_id == "RFunc" = RFunc $ BS8.unpack pack_str
@@ -134,6 +137,10 @@ onSnd f (x, y) = (x, f y)
 
 alphaEq :: (Eq (DeBruijn a)) => a -> a -> Bool
 alphaEq lhv rhv = (deBruijnize lhv) == (deBruijnize rhv)
+
+checkArgTypes :: CoreExpr -> CoreExpr -> Bool
+checkArgTypes (Type tl) (Type tr) = (deBruijnize tl) == (deBruijnize tr)
+checkArgTypes _ _ = True
 ---- END UTILS
 
 
@@ -162,9 +169,17 @@ analyzeConvr funcdefs Conversion{..} =
     LFunc comment -> analyzeFuncConv funcdefs cn_lhe cn_rhe comment
     RFunc comment -> analyzeFuncConv funcdefs cn_rhe cn_lhe comment
     Beta          -> analyzeBetaConv cn_lhe cn_rhe
+    LEta          -> analyzeEtaConv  cn_lhe cn_rhe
+    REta          -> analyzeEtaConv  cn_rhe cn_lhe
+
+analyzeEtaConv :: CoreExpr -> CoreExpr -> Either String [(CoreExpr, CoreExpr)]
+analyzeEtaConv (Lam v1 lm2) (Lam vr lmr) = analyzeEtaConv lm2 lmr >>= (\r -> case r of
+    [(r1, r2)] -> Right [(Lam v1 r1, Lam vr r2)] )
+analyzeEtaConv (Lam v1 (App f (Var v2))) rhe | v1 == v2 = Right [(f, rhe)]  -- TODO: check and fix
+analyzeEtaConv lhe rhe = Left $ "analyzeEtaConv:\n" ++ prettyPrint lhe ++ "\n" ++ prettyPrint rhe
 
 analyzeBetaConv :: CoreExpr -> CoreExpr -> Either String [(CoreExpr, CoreExpr)]
-analyzeBetaConv lhs rhs = Right [(lhs, rhs)] -- TODO: check alphaEq
+analyzeBetaConv lhe rhe = Right [(lhe, rhe)] -- TODO: check alphaEq
 
 analyzeFuncConv :: [FuncDef] -> CoreExpr -> CoreExpr -> String -> Either String [(CoreExpr, CoreExpr)]
 analyzeFuncConv funcdefs expr control_expr comment = checkFirstAppliedFunc control_expr expr >>= \new_expr -> Right [(new_expr, control_expr)]
@@ -176,11 +191,12 @@ analyzeFuncConv funcdefs expr control_expr comment = checkFirstAppliedFunc contr
       -- | alphaEq b_contr b = checkFirstAppliedFunc body_contr body >>= \new_body -> Right (Lam b new_body) 
       -- | otherwise = Left $ "Lambda:\n" ++ prettyPrint b ++ "\ndoes not match control lambda binder:\n" ++ prettyPrint b_contr 
     checkFirstAppliedFunc e1@(App f_contr arg_contr) e2@(App f arg)
-      | prettyPrint f_contr == prettyPrint f     = checkFirstAppliedFunc arg_contr arg >>= \new_arg -> Right (App f new_arg)
+      | alphaEq f_contr f && checkArgTypes arg_contr arg     = checkFirstAppliedFunc arg_contr arg >>= \new_arg -> Right (App f new_arg) 
+      | alphaEq f_contr f = checker e2
       | otherwise = checkFirstAppliedFunc f_contr f >>= \new_f -> Right (App new_f arg)
       -- | otherwise = Left $ "Application:\n" ++ prettyPrint e1 ++ "\ndoes not match control lambda binder:\n" ++ prettyPrint e2 
     checkFirstAppliedFunc _ app@(App _ _) = checker app
-    checkFirstAppliedFunc _ e = Left $ "No application found:\n" ++ prettyPrint e ++ "\n" ++ comment
+    checkFirstAppliedFunc ec e = Left $ "No application found:\n" ++ prettyPrint e ++ "\n" ++ prettyPrint ec ++ "\n" ++ comment ++ "\n" ++ prettyPrint expr ++ "\n" ++ prettyPrint control_expr
     
     checker :: CoreExpr -> Either String CoreExpr
     checker app = getFuncArgs app 

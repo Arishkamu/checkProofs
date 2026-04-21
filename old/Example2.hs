@@ -14,7 +14,7 @@ module Example where
 -- === (\x -> (f . g) (h x))           -- (.)
 -- ===  (f . g) . h
 
-data ExprInfo = LFunc String | RFunc String | Beta
+data ExprInfo = LFunc String | RFunc String | Beta | LEta | REta
 data WithInfo a = WithInfo { value :: a, info :: ExprInfo }
 
 
@@ -29,6 +29,12 @@ infixl 0 ====
 infixr 9 =.
 (=.)    :: (b -> c) -> (a -> b) -> a -> c
 (=.) f g = \x -> f (g x)
+
+myId                      :: a -> a
+myId x                    =  x
+
+myFlip :: (a -> b -> c) -> b -> a -> c
+myFlip f x y              =  f y x
 
 -- composeAssoc2 :: (c -> d) -> (b -> c) -> (a -> b) -> a -> d
 -- composeAssoc2 f g h = value (
@@ -63,19 +69,40 @@ composeAssoc4 f g h = value (
  ==== ((f =. g) =. h)                 `addInfo` RFunc "=.")
 
 
--- composeLeftNeutral :: (a -> b) -> a -> b
--- composeLeftNeutral f =
---       (myId =. f)           `addInfo` LFunc "=."
---  ==== (\x -> myId (f x))    `addInfo` LFunc "myId"
---  ==== (\x -> f x)           `addInfo` Beta
---  ==== f
+composeLeftNeutral :: (a -> b) -> a -> b
+composeLeftNeutral f = value (
+      (myId =. f)           `addInfo` LFunc "=."
+ ==== (\x -> myId (f x))    `addInfo` LFunc "myId"
+ ==== (\x -> f x)           `addInfo` LEta
+ ==== f                     `addInfo` RFunc "=.")
 
--- composeRightNeutral :: (a -> b) -> a -> b
--- composeRightNeutral f =
---      f =. id            -- (.)
---  ==== (\x -> f (id x))  -- id
---  ==== (\x -> f x)       -- {eta}
---  ==== f
+composeRightNeutral :: (a -> b) -> a -> b
+composeRightNeutral f = value (
+      (f =. myId)        `addInfo` LFunc "=."
+ ==== (\x -> f (myId x)) `addInfo` LFunc "myId"
+ ==== (\x -> f x)        `addInfo` LEta
+ ==== f                  `addInfo` Beta)
+
+
+flipFlipIsId :: (a -> b -> c) -> a -> b -> c
+flipFlipIsId  = value (
+     (myFlip =. myFlip)                        `addInfo` LFunc "=."
+ ==== (\f -> myFlip (myFlip f))                 `addInfo` REta
+ ==== (\f -> \x -> myFlip (myFlip f) x)         `addInfo` REta
+ ==== (\f -> \x -> \y -> myFlip (myFlip f) x y) `addInfo` LFunc "myFlip"
+ ==== (\f -> \x -> \y -> myFlip f y x)        `addInfo` LFunc "myFlip"
+ ==== (\f -> \x -> \y -> f x y)             `addInfo` LEta
+ ==== (\f -> \x -> f x)                     `addInfo` LEta
+ ==== (\f -> f)                            `addInfo`  RFunc "myId"
+ ==== (\f -> myId f)                        `addInfo` LEta
+ ==== myId                                  `addInfo` LEta)
+
+{- forall f x y. myFlip (myFlip f) x y ==== f x y -}
+flipFlipIsId' :: (a -> b -> c) -> a -> b -> c
+flipFlipIsId' f x y = value (
+     myFlip (myFlip f) x y  `addInfo` LFunc "myFlip"
+ ==== myFlip f y x         `addInfo` LFunc "myFlip"
+ ==== f x y                 `addInfo` LEta)
 
 
 res1 f g h = (\x -> f ((g . h) x)) where (.) f g = \x -> f (g x)

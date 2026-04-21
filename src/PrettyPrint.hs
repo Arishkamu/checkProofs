@@ -1,9 +1,11 @@
 {-# LANGUAGE RecordWildCards, FlexibleInstances #-}
-module PrettyPrint (PrettyPrint, prettyPrint) where
+module PrettyPrint (PrettyPrint, prettyPrint, prettyPrintBinds) where
 
 import GHC.Core
 import GHC.Types.Id
 import GHC.Utils.Outputable (Outputable, showSDocUnsafe, ppr)
+import GHC.Types.Name.Occurrence (occNameString)
+import GHC.Types.Name (getOccName)
 
 import Data.List (intercalate)
 import Data.Data (toConstr)
@@ -30,23 +32,35 @@ prettyPrintStrs ident = intercalate (bslN ident)
 --   prettyPrintIdent _ x = "\n" ++ replicate ident ' ' ++ showSDocUnsafe (ppr x)
 
 instance PrettyPrint Id where
-  prettyPrintIdent _ x = "ID: " ++ showSDocUnsafe (ppr x)
+  prettyPrintIdent _ x = "ID: " ++ occNameString (getOccName x)
 
 -- instance PrettyPrint (GenLocated SrcSpanAnnN Id) where
 --   prettyPrint (L _ x) = prettyPrint x
 
+instance PrettyPrint ExprInfo where
+    prettyPrintIdent _ expr_info = case expr_info of
+        LFunc comment -> "LFunc: " ++ comment
+        RFunc comment -> "RFunc: " ++ comment
+        Beta          -> "Beta reduction"
+        LEta          -> "L-Eta reduction"
+        REta          -> "R-Eta reduction"
+
 instance PrettyPrint Conversion where
   prettyPrintIdent ident Conversion{..} = 
-    comment ++ " :: " ++ showSDocUnsafe (ppr lhs) ++ " => " ++ showSDocUnsafe (ppr rhs) ++
-    bslN ident       ++ "Different constructors: " ++ show (toConstr lDiff) ++ " vs " ++ show (toConstr rDiff) ++
-    bslN (ident + 2) ++ "l: " ++ prettyPrint lDiff ++ 
-    bslN (ident + 2) ++ "r: " ++ prettyPrint rDiff
+    prettyPrintIdent 0 cn_info ++ " :: "
+    ++ bslN (ident + 2) ++ "l: " ++ prettyPrintIdent 0 cn_lhe
+    ++ bslN (ident + 2) ++ "r: " ++ prettyPrintIdent 0 cn_rhe
+    -- ++ showSDocUnsafe (ppr cn_lhe) ++ " => " ++ showSDocUnsafe (ppr cn_rhe) 
+    -- ++
+    -- bslN ident       ++ "Different constructors: " ++ show (toConstr lDiffCN) ++ " vs " ++ show (toConstr rDiffCN) ++
+    -- bslN (ident + 2) ++ "l: " ++ prettyPrint lDiffCN ++ 
+    -- bslN (ident + 2) ++ "r: " ++ prettyPrint rDiffCN
 
 instance PrettyPrint AstInfo where
   prettyPrintIdent ident AstInfo{..} =
     "===== AstInfo =====" 
-    ++ bslN ident ++ "DeclConvrs:" ++ prettyPrintStrs  (ident + 2) (concatMap makePretty declConvrs)  
-    ++ bslN ident ++ "FunDefs:"    ++ prettyPrintIdent (ident + 2) (map fst funcDefs)
+    ++ bslN ident ++ "Ast_declconvrs:" ++ prettyPrintStrs  (ident + 2) (concatMap makePretty ast_declconvrs)  
+    ++ bslN ident ++ "Ast_funcDefs:"    ++ prettyPrintIdent (ident + 2) (ast_funcdefs)
 
     where
     makePretty (decl, convrs) = (
@@ -56,6 +70,18 @@ instance PrettyPrint AstInfo where
 -- -- Represent: LHsBindLR GhcTc
 -- --instance PrettyPrint (HsBindLR GhcTc GhcTc) where
 -- --  prettyPrint (L _ bind) = prettyPrint bind
+
+prettyPrintBinds :: [(Id, CoreExpr)] -> String
+prettyPrintBinds binds = intercalate (bslN 2) $ map prettyPrintBind binds
+  where
+    prettyPrintBind (fnId, fnBody) = "Function: " ++ prettyPrint fnId ++ "\nBody: " ++ prettyPrintExpr fnBody
+
+prettyPrintExpr :: CoreExpr -> String
+prettyPrintExpr expr = case expr of
+  Lam args body -> "Lam: " ++ "\n    " ++ showSDocUnsafe (ppr args) ++ "\n" ++ prettyPrintExpr body
+  App f arg -> "App: " ++ prettyPrintExpr f ++ "\n to " ++ prettyPrintExpr arg
+  Var v -> "Var: " ++ showSDocUnsafe (ppr v) 
+  _ -> "NotImpl: " ++ showSDocUnsafe (ppr expr)
 
 -- instance PrettyPrint CoreBind where
 --     prettyPrintIdent ident (NonRec v expr) =
@@ -77,6 +103,7 @@ instance PrettyPrint AstInfo where
 --       _ -> show (toConstr bind) ++ " :: " ++ (showSDocUnsafe (ppr bind))
 
 instance PrettyPrint CoreExpr where
+--   prettyPrintIdent _ (App f arg) = "APP " ++ " :: " ++ "\nF: " ++ (showSDocUnsafe (ppr f)) ++ "\nA: " ++ (showSDocUnsafe (ppr arg))
   prettyPrintIdent _ expr = show (toConstr expr) ++ " :: " ++ (showSDocUnsafe (ppr expr))
 
 instance (PrettyPrint a, PrettyPrint b) => PrettyPrint (a, b) where
@@ -84,6 +111,11 @@ instance (PrettyPrint a, PrettyPrint b) => PrettyPrint (a, b) where
 
 instance (PrettyPrint a) => PrettyPrint [a] where
   prettyPrintIdent ident as = intercalate (bslN ident) $ map (prettyPrintIdent (ident + 2)) as
+
+instance (PrettyPrint a) => PrettyPrint (Either String a) where
+  prettyPrintIdent ident (Left e)  = "Either-Left:"  ++ bslN (ident + 2) ++ e
+  prettyPrintIdent ident (Right a) = "Either-Right:" ++ bslN (ident + 2) ++ prettyPrint a
+
 
 -- instance (PrettyPrint a) => PrettyPrint (Bag a) where
 --   prettyPrint = prettyPrint . bagToList
