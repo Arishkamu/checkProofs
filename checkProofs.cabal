@@ -73,7 +73,8 @@ executable checkProofs
         ghc ^>=9.12.2,
         base ^>=4.21.0.0,
         ghc-paths ^>=0.1.0.12,
-        uniplate ^>=1.6.13
+        uniplate ^>=1.6.13,
+        bytestring ^>=0.12.2.0
 
     -- Directories containing source files.
     hs-source-dirs:   
