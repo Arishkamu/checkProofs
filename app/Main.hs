@@ -51,7 +51,7 @@ main =
     _ <- setSessionDynFlags dflags
     session <- getSession
 
-    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example2.hs"
+    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example3.hs"
     coreMod <- compileToCoreModule filePath
 
     -- TODO: collectModule no dif just yet
@@ -80,6 +80,7 @@ printMy ses exprs =
     res <- mapM (printMyPair ses) exprs
     putStrLn $ intercalate "\n" $ map prettyPrintEqPairs res
     let onlyFalse = filter (\(e1, e2) -> not (alphaEq e1 e2)) res
+    putStrLn "---- Print only false:----\n"
     putStrLn $ intercalate "\n" $ map prettyPrintEqPairs onlyFalse
     putStrLn $ "Number of false: " ++ show (length onlyFalse) ++ "\n"
 
@@ -108,10 +109,15 @@ inlineLets expr =
 collectModule :: CoreModule -> AstInfo
 collectModule CoreModule{..} = AstInfo {
   ast_declconvrs = map (onSnd collectExpr) binds,
-  ast_funcdefs   = binds
+  ast_funcdefs   = binds,
+  ast_postldefs  = postulates
 } 
   where
-  binds = flattenBinds cm_binds
+  binds      = flattenBinds cm_binds
+  postulates = [ (f_id, l_postl, r_postl) |
+    (f_id, f_expr) <- binds,
+    (App (App (App (Var app_id) _) l_postl) r_postl) <- universe f_expr,
+    "postulate" <- [getStrById app_id] ]
 
 collectExpr :: CoreExpr -> [Conversion]
 collectExpr expr = map getConvrs pairs where
@@ -127,9 +133,6 @@ collectExpr expr = map getConvrs pairs where
 getStrById :: Id -> String
 getStrById v = occNameString (getOccName v)
 
-getStrByVar :: Id -> String
-getStrByVar v = occNameString (getOccName v)
-
 toSideExprInfo :: CoreExpr -> SideExprInfo
 toSideExprInfo (App (App (App (Var expr_side) _) _) expr_info) = toSideInfo (toExprInfo expr_info)
   where 
@@ -140,7 +143,8 @@ toSideExprInfo (App (App (App (Var expr_side) _) _) expr_info) = toSideInfo (toE
     | getStrById v == "Beta" = Beta
     | getStrById v == "Eta" = Eta
   toExprInfo (App (Var v_id) (App _ (Lit (LitString pack_str)))) 
-    | getStrById v_id == "Func" = Func $ BS8.unpack pack_str
+    | getStrById v_id == "Func"  = Func $ BS8.unpack pack_str
+    | getStrById v_id == "Postl" = Postl $ BS8.unpack pack_str
 toSideExprInfo e = error $ "Unexpected expression structure for comment, expected a function application with a string literal argument.\nGot: " ++ prettyPrint e
 
 
@@ -174,16 +178,17 @@ analyzeConversions AstInfo{..} = analyze $ concatMap snd ast_declconvrs
   where
     analyze :: [Conversion] -> Either String [(CoreExpr, CoreExpr)]
     analyze [] = Right []
-    analyze (x:xs) = analyzeConvr ast_funcdefs x >>= 
+    analyze (x:xs) = analyzeConvr ast_funcdefs ast_postldefs x >>= 
       \res -> analyze xs  >>= 
         \rest -> Right (res : rest)
 
-analyzeConvr :: [FuncDef] -> Conversion -> Either String (CoreExpr, CoreExpr)
-analyzeConvr funcdefs Conversion{..} = (
+analyzeConvr :: [FuncDef] -> [PostlDef] -> Conversion -> Either String (CoreExpr, CoreExpr)
+analyzeConvr funcdefs postldefs Conversion{..} = (
   case expr_info of
-    Func comnt   -> myTrace ("GET DIFF " ++ comnt ++ ": control:\n" ++ prettyPrint control_expr) (getFirstDiff    control_expr expr (analyzeFuncConv funcdefs comnt))
-    Eta          -> getFirstDiff    control_expr expr analyzeEtaConv
-    Beta         -> analyzeBetaConv control_expr expr)
+    Func comment  -> getFirstDiff    control_expr expr (analyzeFuncConv  funcdefs comment)
+    Postl comment -> getFirstDiff    control_expr expr (analyzePostlConv postldefs comment)
+    Eta           -> getFirstDiff    control_expr expr analyzeEtaConv
+    Beta          -> analyzeBetaConv control_expr expr)
   >>= (\new_expr -> Right (new_expr, control_expr))
   where
     (expr, control_expr, expr_info) = case cn_info of
@@ -198,11 +203,11 @@ getFirstDiff (Lam b_contr body_contr) (Lam b body) checker
   -- | otherwise = Left $ "Lambda:\n" ++ prettyPrint b ++ "\ndoes not match control lambda binder:\n" ++ prettyPrint b_contr 
 getFirstDiff e1@(App f_contr arg_contr) e2@(App f arg) checker
   | alphaEq f_contr f && checkArgTypes arg_contr arg     = getFirstDiff arg_contr arg checker >>= \new_arg -> Right (App f new_arg) 
-  | otherwise = checker e2
+  | otherwise = trace ("GET DIFF :\ncontrol: " ++ prettyPrint e1 ++ "\nexprexp: " ++ prettyPrint e1 ++ "\n") $ checker e2
   -- | otherwise = getFirstDiff f_contr f >>= \new_f -> Right (App new_f arg)
   -- | otherwise = Left $ "Application:\n" ++ prettyPrint e1 ++ "\ndoes not match control lambda binder:\n" ++ prettyPrint e2 
-getFirstDiff _ app@(App _ _) checker = checker app
-getFirstDiff ec e checker = checker e
+getFirstDiff ec app@(App _ _) checker = trace ("GET DIFF :\ncontrol: " ++ prettyPrint ec ++ "\nexprexp: " ++ prettyPrint app  ++ "\n") $ checker app
+getFirstDiff ec e checker = trace ("GET DIFF :\ncontrol: " ++ prettyPrint ec ++ "\nexprexp: " ++ prettyPrint e ++ "\n") $ checker e
  
 
 analyzeEtaConv :: CoreExpr -> Either String CoreExpr
@@ -215,7 +220,7 @@ analyzeBetaConv control_expr expr
   | otherwise = Left "Not Beta equivalent"
 
 analyzeFuncConv :: [FuncDef] -> String -> CoreExpr -> Either String CoreExpr
-analyzeFuncConv funcdefs comnt expr = getFuncArgs expr 
+analyzeFuncConv funcdefs comment expr = getFuncArgs expr 
   >>= checkComment 
   >>= substAndRestoreFunc funcdefs
   where
@@ -241,8 +246,8 @@ analyzeFuncConv funcdefs comnt expr = getFuncArgs expr
     
     checkComment :: [CoreExpr] -> Either String [CoreExpr]
     checkComment e@((Var func_id) : _) 
-      | getStrById func_id == comnt = Right e
-      | otherwise = Left $ "First applied function_id does not match comnt:\n" ++ prettyPrint func_id ++ "\nExpected: " ++ comnt
+      | getStrById func_id == comment = Right e
+      | otherwise = Left $ "First applied function_id does not match comment:\n" ++ prettyPrint func_id ++ "\nExpected: " ++ comment
     checkComment (e:_) = Left $ "First applied not a function!\nGot: " ++ prettyPrint e
     checkComment [] = Left $ "No function found in application!"
 
@@ -256,6 +261,22 @@ analyzeFuncConv funcdefs comnt expr = getFuncArgs expr
 
     -- simplifyFunc :: CoreExpr -> Either String CoreExpr
     -- simplifyFunc = Right
+
+analyzePostlConv :: [PostlDef] -> String -> CoreExpr -> Either String CoreExpr
+analyzePostlConv postldefs comment expr = getPostl >>= substIfAlphaEq
+  where
+  matchedFuncs = filter (\(postl_id, _, _) -> getStrById postl_id == comment) postldefs
+  getPostl = case matchedFuncs of
+    [(_, l_postl, r_postl)] -> Right (l_postl, r_postl)
+    (_:_) -> Left $ "Unexpected postulate. Found more than one matched with comment `" ++ comment ++ "`"
+    []    -> Left $ "Unexpected postulate. Not found match with comment `" ++ comment ++ "`"
+  
+  substIfAlphaEq (l_postl, r_postl) = Right r_postl
+  -- TODO make meaningfull subst
+  -- TODO fix alpha_eq
+    -- | alphaEq l_postl expr = Right r_postl TODO fix alpha_eq
+    -- | otherwise = Left $ "Left side of postulate: " ++ prettyPrint l_postl ++ "\n don't match expr: " ++ prettyPrint expr
+
 
 simplifyFunc :: HscEnv -> CoreExpr -> IO CoreExpr
 simplifyFunc hscEnv expr = do
@@ -296,13 +317,13 @@ easySubstFunc expr fn_id fn_body = substExpr subst expr
 {- TODO:
     * collectModule no dif just yet
     * analyze each conversion separatly
-        * Chcek comnt. 
+        * Chcek comment. 
         * if Func 
             * take correct hand-side
             * find first applied function: 
                 * it could be inside lam 
                 * compare that before that alphaEq
-            * Check that function coresponds with comnt
+            * Check that function coresponds with comment
             * Find defenition for func
             * subst and restore function 
             * simplify ? (restored function) (whole expr) 
@@ -327,4 +348,16 @@ easySubstFunc expr fn_id fn_body = substExpr subst expr
   wrap in monad
     except
     store context
+  
+  TODO make meaningfull subst
+    a==b
+    k==(\x = expr expr expr)
+
+    k a ==> (\x = expr expr expr) b
+
+    expr_l ==> (\x y -> expr_l) == (\x y -> expr_r) <== expr_r
+    expr_o ==> (\x y -> expr_o) x_o y_o
+
+    expr_o ==> (\x y -> expr_o) x_o y_o ==> (\x y -> (\x y -> expr_l)) x_o y_o ==> 
+    (\x_o y_o -> expr_l) ==> (\x_o y_o -> expr_r) ==> expr_r
 -}

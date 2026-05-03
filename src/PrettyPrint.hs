@@ -39,9 +39,10 @@ instance PrettyPrint Id where
 
 instance PrettyPrint ExprInfo where
     prettyPrintIdent _ expr_info = case expr_info of
-        Func comment -> "Func: " ++ comment
-        Beta         -> "Beta reduction"
-        Eta          -> "Eta reduction"
+        Func  comment -> "Func: "  ++ comment
+        Postl comment -> "Postl: " ++ comment
+        Beta          -> "Beta reduction"
+        Eta           -> "Eta reduction"
 
 instance PrettyPrint Conversion where
   prettyPrintIdent ident Conversion{..} = 
@@ -59,11 +60,12 @@ instance PrettyPrint AstInfo where
     "===== AstInfo =====" 
     ++ bslN ident ++ "Ast_declconvrs:" ++ prettyPrintStrs  (ident + 2) (concatMap makePretty ast_declconvrs)  
     ++ bslN ident ++ "Ast_funcDefs:"    ++ prettyPrintIdent (ident + 2) (ast_funcdefs)
+    ++ bslN ident ++ "Ast_postlDefs:"   ++ prettyPrintIdent (ident + 2) (ast_postldefs)
 
     where
-    makePretty (decl, convrs) = (
+    makePretty (decl, convrs) =
         (bslN (ident + 2) ++ "DeclName: " ++  prettyPrintIdent (ident + 2) decl) 
-        : map (prettyPrintIdent (ident + 4)) convrs)
+        : map (prettyPrintIdent (ident + 4)) convrs
 
 -- -- Represent: LHsBindLR GhcTc
 -- --instance PrettyPrint (HsBindLR GhcTc GhcTc) where
@@ -105,7 +107,18 @@ instance PrettyPrint CoreExpr where
   prettyPrintIdent _ expr = show (toConstr expr) ++ " :: " ++ (showSDocUnsafe (ppr expr))
 
 instance (PrettyPrint a, PrettyPrint b) => PrettyPrint (a, b) where
-  prettyPrintIdent ident (x, y) = "(\n" ++ prettyPrintIdent (ident + 2) x ++ "\n" ++ prettyPrintIdent (ident + 2) y ++ bslN ident ++ ")"
+  prettyPrintIdent ident (x, y) = bslN ident ++ "(" 
+    ++ "\n" ++ prettyPrintIdent (ident + 2) x 
+    ++ "\n" ++ prettyPrintIdent (ident + 2) y
+    ++ bslN ident ++ ")"
+
+instance (PrettyPrint a, PrettyPrint b, PrettyPrint c) => PrettyPrint (a, b, c) where
+  prettyPrintIdent ident (x, y, z) = bslN ident ++ "(" 
+    ++ "\n" ++ prettyPrintIdent (ident + 2) x 
+    ++ "\n" ++ prettyPrintIdent (ident + 2) y 
+    ++ "\n" ++ prettyPrintIdent (ident + 2) z 
+    ++ bslN ident ++ ")"
+
 
 instance (PrettyPrint a) => PrettyPrint [a] where
   prettyPrintIdent ident as = intercalate (bslN ident) $ map (prettyPrintIdent (ident + 2)) as

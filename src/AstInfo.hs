@@ -13,7 +13,7 @@ import GHC.Types.Id ( Id )
 
 -- data ExprInfo = LFunc String | RFunc String | Beta | LEta | REta
 type SideExprInfo = Either ExprInfo ExprInfo
-data ExprInfo = Func String | Beta | Eta
+data ExprInfo = Func String | Postl String | Beta | Eta
 
 data Conversion = Conversion {
   cn_lhe  :: CoreExpr,
@@ -23,9 +23,11 @@ data Conversion = Conversion {
 
 -- Add local Where to DeclConversions???
 type DeclConversions = (Id, [Conversion])
-type FuncDef = (Id, CoreExpr)
+type FuncDef  = (Id, CoreExpr)
+type PostlDef = (Id, CoreExpr, CoreExpr)
 
 data AstInfo = AstInfo {
-  ast_declconvrs  :: [DeclConversions], -- List of Conversion per decl
-  ast_funcdefs    :: [FuncDef] -- List of all function definitions (decls)
+  ast_declconvrs   :: [DeclConversions], -- List of Conversion per decl
+  ast_funcdefs     :: [FuncDef], -- List of all function definitions (decls)
+  ast_postldefs    :: [PostlDef] -- List of all postulate definitions
 }
