@@ -116,7 +116,7 @@ instance (PrettyPrint a) => PrettyPrint (Either String a) where
 
 instance (PrettyPrint a) => PrettyPrint (Either a a) where
   prettyPrintIdent ident (Left l)  = "L-" ++ prettyPrintIdent ident l
-  prettyPrintIdent ident (Right r) = "R-" ++ ++ prettyPrintIdent ident r
+  prettyPrintIdent ident (Right r) = "R-" ++ prettyPrintIdent ident r
 
 
 -- instance (PrettyPrint a) => PrettyPrint (Bag a) where

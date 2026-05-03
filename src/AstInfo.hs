@@ -1,7 +1,7 @@
 module AstInfo where
 
-import GHC.Core
-import GHC.Types.Id
+import GHC.Core ( CoreExpr )
+import GHC.Types.Id ( Id )
 
 -- data Conversion = Conversion {
 --   lhsCN     :: CoreExpr,
@@ -12,12 +12,13 @@ import GHC.Types.Id
 -- }
 
 -- data ExprInfo = LFunc String | RFunc String | Beta | LEta | REta
+type SideExprInfo = Either ExprInfo ExprInfo
 data ExprInfo = Func String | Beta | Eta
 
 data Conversion = Conversion {
   cn_lhe  :: CoreExpr,
   cn_rhe  :: CoreExpr,
-  cn_info :: Either ExprInfo ExprInfo
+  cn_info :: SideExprInfo
 }
 
 -- Add local Where to DeclConversions???

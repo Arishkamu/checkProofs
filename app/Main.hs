@@ -36,9 +36,13 @@ import Debug.Trace
 import GHC.Types.Unique
 import Data.Either (fromRight)
 import Data.List (intercalate)
+import GHC.Utils.Outputable (showSDocUnsafe, ppr)
 
 import PrettyPrint
 import AstInfo
+
+myTrace :: (PrettyPrint a) => String -> a -> a 
+myTrace str v = trace ("My trace-str:" ++ str ++ "\n" ++ prettyPrint v ++ "\n") v
 
 main :: IO ()
 main =
@@ -51,6 +55,8 @@ main =
     coreMod <- compileToCoreModule filePath
 
     -- TODO: collectModule no dif just yet
+    liftIO $ putStrLn "\n=== Core cm_types ===\n"
+    liftIO $ putStrLn (showSDocUnsafe $ ppr $ cm_types coreMod)
     let astInfo = collectModule coreMod
     liftIO $ putStrLn "\n===== Collected AstInfo =====\n"
     liftIO $ putStrLn $ prettyPrint astInfo
@@ -60,7 +66,7 @@ main =
       Left err -> liftIO $ putStrLn $ "Error: " ++ err
       Right convrs -> do
         liftIO $ putStrLn "\n=== Simplify Analysis ===\n"
-        liftIO $ (printMy session) convrs
+        liftIO $ printMy session convrs
         -- liftIO $ putStrLn "\n=== End ===\n"
         -- mapM_ (\(e1, e2) -> (liftIO (simplifyFunc session e1), e2)) convrs
         -- liftIO $ putStrLn $ map prettyPrintEqPairs $ map (\(e1, e2) -> (inlineLets e1, e2)) m
@@ -72,7 +78,10 @@ printMy :: HscEnv -> [(CoreExpr, CoreExpr)] -> IO ()
 printMy ses exprs = 
   do
     res <- mapM (printMyPair ses) exprs
-    putStrLn $ intercalate "\n" $ map prettyPrintEqPairs res 
+    putStrLn $ intercalate "\n" $ map prettyPrintEqPairs res
+    let onlyFalse = filter (\(e1, e2) -> not (alphaEq e1 e2)) res
+    putStrLn $ intercalate "\n" $ map prettyPrintEqPairs onlyFalse
+    putStrLn $ "Number of false: " ++ show (length onlyFalse) ++ "\n"
 
 printMyPair :: HscEnv -> (CoreExpr, CoreExpr) -> IO (CoreExpr, CoreExpr)
 printMyPair ses (x, y) = 
@@ -110,7 +119,7 @@ collectExpr expr = map getConvrs pairs where
     (App (App (App (Var exprName) _) argExpr) argComm) <- universe expr,
     "addInfo" <- [getStrById exprName] ]
   pairs  = zip argAddInfo (drop 1 argAddInfo)
-  getConvrs ((lhe, c1), (rhe, _)) = Conversion lhe rhe (toExprInfo c1)
+  getConvrs ((lhe, c1), (rhe, _)) = Conversion lhe rhe (toSideExprInfo c1)
 
 ---- END COLLECTING AST INFO
 
@@ -118,15 +127,21 @@ collectExpr expr = map getConvrs pairs where
 getStrById :: Id -> String
 getStrById v = occNameString (getOccName v)
 
-toExprInfo :: CoreExpr -> ExprInfo
-toExprInfo (Var v)  
-  | getStrById v == "Beta" = Beta
-  | getStrById v == "LEta" = LEta
-  | getStrById v == "REta" = REta
-toExprInfo (App (Var v_id) (App _ (Lit (LitString pack_str)))) 
-  | getStrById v_id == "LFunc" = LFunc $ BS8.unpack pack_str
-  | getStrById v_id == "RFunc" = RFunc $ BS8.unpack pack_str
-toExprInfo _ = error "Unexpected expression structure for comment, expected a function application with a string literal argument"
+getStrByVar :: Id -> String
+getStrByVar v = occNameString (getOccName v)
+
+toSideExprInfo :: CoreExpr -> SideExprInfo
+toSideExprInfo (App (App (App (Var expr_side) _) _) expr_info) = toSideInfo (toExprInfo expr_info)
+  where 
+  toSideInfo  
+    | getStrById expr_side == "Left"  = Left 
+    | getStrById expr_side == "Right" = Right 
+  toExprInfo (Var v)  
+    | getStrById v == "Beta" = Beta
+    | getStrById v == "Eta" = Eta
+  toExprInfo (App (Var v_id) (App _ (Lit (LitString pack_str)))) 
+    | getStrById v_id == "Func" = Func $ BS8.unpack pack_str
+toSideExprInfo e = error $ "Unexpected expression structure for comment, expected a function application with a string literal argument.\nGot: " ++ prettyPrint e
 
 
 onSnd :: (b -> c) -> (a, b) -> (a, c)
@@ -160,48 +175,62 @@ analyzeConversions AstInfo{..} = analyze $ concatMap snd ast_declconvrs
     analyze :: [Conversion] -> Either String [(CoreExpr, CoreExpr)]
     analyze [] = Right []
     analyze (x:xs) = analyzeConvr ast_funcdefs x >>= 
-      \res -> (analyze xs  >>= 
-        \rest -> Right (res ++ rest))
+      \res -> analyze xs  >>= 
+        \rest -> Right (res : rest)
 
-analyzeConvr :: [FuncDef] -> Conversion -> Either String [(CoreExpr, CoreExpr)]
-analyzeConvr funcdefs Conversion{..} = 
-  case cn_info of
-    LFunc comment -> analyzeFuncConv funcdefs cn_lhe cn_rhe comment
-    RFunc comment -> analyzeFuncConv funcdefs cn_rhe cn_lhe comment
-    Beta          -> analyzeBetaConv cn_lhe cn_rhe
-    LEta          -> analyzeEtaConv  cn_lhe cn_rhe
-    REta          -> analyzeEtaConv  cn_rhe cn_lhe
-
-analyzeEtaConv :: CoreExpr -> CoreExpr -> Either String [(CoreExpr, CoreExpr)]
-analyzeEtaConv (Lam v1 lm2) (Lam vr lmr) = analyzeEtaConv lm2 lmr >>= (\r -> case r of
-    [(r1, r2)] -> Right [(Lam v1 r1, Lam vr r2)] )
-analyzeEtaConv (Lam v1 (App f (Var v2))) rhe | v1 == v2 = Right [(f, rhe)]  -- TODO: check and fix
-analyzeEtaConv lhe rhe = Left $ "analyzeEtaConv:\n" ++ prettyPrint lhe ++ "\n" ++ prettyPrint rhe
-
-analyzeBetaConv :: CoreExpr -> CoreExpr -> Either String [(CoreExpr, CoreExpr)]
-analyzeBetaConv lhe rhe = Right [(lhe, rhe)] -- TODO: check alphaEq
-
-analyzeFuncConv :: [FuncDef] -> CoreExpr -> CoreExpr -> String -> Either String [(CoreExpr, CoreExpr)]
-analyzeFuncConv funcdefs expr control_expr comment = checkFirstAppliedFunc control_expr expr >>= \new_expr -> Right [(new_expr, control_expr)]
+analyzeConvr :: [FuncDef] -> Conversion -> Either String (CoreExpr, CoreExpr)
+analyzeConvr funcdefs Conversion{..} = (
+  case expr_info of
+    Func comnt   -> myTrace ("GET DIFF " ++ comnt ++ ": control:\n" ++ prettyPrint control_expr) (getFirstDiff    control_expr expr (analyzeFuncConv funcdefs comnt))
+    Eta          -> getFirstDiff    control_expr expr analyzeEtaConv
+    Beta         -> analyzeBetaConv control_expr expr)
+  >>= (\new_expr -> Right (new_expr, control_expr))
   where
-    checkFirstAppliedFunc :: CoreExpr -> CoreExpr -> Either String CoreExpr
-    checkFirstAppliedFunc (Lam b_contr body_contr) (Lam b body) 
-      = checkFirstAppliedFunc body_contr body >>= \new_body -> Right (Lam b new_body)
-      -- TODO: check wisely. They can not be the same, but all others should
-      -- | alphaEq b_contr b = checkFirstAppliedFunc body_contr body >>= \new_body -> Right (Lam b new_body) 
-      -- | otherwise = Left $ "Lambda:\n" ++ prettyPrint b ++ "\ndoes not match control lambda binder:\n" ++ prettyPrint b_contr 
-    checkFirstAppliedFunc e1@(App f_contr arg_contr) e2@(App f arg)
-      | alphaEq f_contr f && checkArgTypes arg_contr arg     = checkFirstAppliedFunc arg_contr arg >>= \new_arg -> Right (App f new_arg) 
-      | alphaEq f_contr f = checker e2
-      | otherwise = checkFirstAppliedFunc f_contr f >>= \new_f -> Right (App new_f arg)
-      -- | otherwise = Left $ "Application:\n" ++ prettyPrint e1 ++ "\ndoes not match control lambda binder:\n" ++ prettyPrint e2 
-    checkFirstAppliedFunc _ app@(App _ _) = checker app
-    checkFirstAppliedFunc ec e = Left $ "No application found:\n" ++ prettyPrint e ++ "\n" ++ prettyPrint ec ++ "\n" ++ comment ++ "\n" ++ prettyPrint expr ++ "\n" ++ prettyPrint control_expr
-    
-    checker :: CoreExpr -> Either String CoreExpr
-    checker app = getFuncArgs app 
-      >>= checkComment 
-      >>= substAndRestoreFunc funcdefs 
+    (expr, control_expr, expr_info) = case cn_info of
+      Left  info -> (cn_lhe, cn_rhe, info)
+      Right info -> (cn_rhe, cn_lhe, info)
+
+getFirstDiff :: CoreExpr -> CoreExpr -> (CoreExpr -> Either String CoreExpr) -> Either String CoreExpr
+getFirstDiff (Lam b_contr body_contr) (Lam b body) checker
+  = getFirstDiff body_contr body checker >>= \new_body -> Right (Lam b new_body)
+  -- TODO: check wisely. They can not be the same, but all others should
+  -- | alphaEq b_contr b = getFirstDiff body_contr body >>= \new_body -> Right (Lam b new_body) 
+  -- | otherwise = Left $ "Lambda:\n" ++ prettyPrint b ++ "\ndoes not match control lambda binder:\n" ++ prettyPrint b_contr 
+getFirstDiff e1@(App f_contr arg_contr) e2@(App f arg) checker
+  | alphaEq f_contr f && checkArgTypes arg_contr arg     = getFirstDiff arg_contr arg checker >>= \new_arg -> Right (App f new_arg) 
+  | otherwise = checker e2
+  -- | otherwise = getFirstDiff f_contr f >>= \new_f -> Right (App new_f arg)
+  -- | otherwise = Left $ "Application:\n" ++ prettyPrint e1 ++ "\ndoes not match control lambda binder:\n" ++ prettyPrint e2 
+getFirstDiff _ app@(App _ _) checker = checker app
+getFirstDiff ec e checker = checker e
+ 
+
+analyzeEtaConv :: CoreExpr -> Either String CoreExpr
+analyzeEtaConv (Lam v1 (App f (Var v2))) | v1 == v2 = Right f  -- TODO: check and fix
+analyzeEtaConv expr = Left $ "analyzeEtaConv:\n" ++ prettyPrint expr
+
+analyzeBetaConv :: CoreExpr -> CoreExpr -> Either String CoreExpr
+analyzeBetaConv control_expr expr 
+  | alphaEq control_expr expr = Right expr -- TODO: check alphaEq
+  | otherwise = Left "Not Beta equivalent"
+
+analyzeFuncConv :: [FuncDef] -> String -> CoreExpr -> Either String CoreExpr
+analyzeFuncConv funcdefs comnt expr = getFuncArgs expr 
+  >>= checkComment 
+  >>= substAndRestoreFunc funcdefs
+  where
+    -- checker :: CoreExpr -> CoreExpr -> Either String CoreExpr
+    -- checker = checkUntilRegex control_expr expr
+    --   >>= getFuncArgs 
+    --   >>= checkComment 
+    --   >>= substAndRestoreFunc funcdefs
+      -- >>= \new_expr -> Right [(new_expr, control_expr)]
+   
+    -- checkRegex :: CoreExpr -> Either String CoreExpr
+    -- checkRegex app = getFuncArgs app 
+    --   >>= checkComment 
+    --   >>= substAndRestoreFunc funcdefs 
+    --   >>= \new_expr -> Right [(new_expr, control_expr)]
       -- >>= simplifyFunc
     
     getFuncArgs :: CoreExpr -> Either String [CoreExpr]
@@ -212,8 +241,9 @@ analyzeFuncConv funcdefs expr control_expr comment = checkFirstAppliedFunc contr
     
     checkComment :: [CoreExpr] -> Either String [CoreExpr]
     checkComment e@((Var func_id) : _) 
-      | getStrById func_id == comment = Right e
-      | otherwise = Left $ "First applied function_id does not match comment:\n" ++ prettyPrint func_id ++ "\nExpected: " ++ comment
+      | getStrById func_id == comnt = Right e
+      | otherwise = Left $ "First applied function_id does not match comnt:\n" ++ prettyPrint func_id ++ "\nExpected: " ++ comnt
+    checkComment (e:_) = Left $ "First applied not a function!\nGot: " ++ prettyPrint e
     checkComment [] = Left $ "No function found in application!"
 
     substAndRestoreFunc :: [FuncDef] -> [CoreExpr] -> Either String CoreExpr
@@ -266,13 +296,13 @@ easySubstFunc expr fn_id fn_body = substExpr subst expr
 {- TODO:
     * collectModule no dif just yet
     * analyze each conversion separatly
-        * Chcek comment. 
+        * Chcek comnt. 
         * if Func 
             * take correct hand-side
             * find first applied function: 
                 * it could be inside lam 
                 * compare that before that alphaEq
-            * Check that function coresponds with comment
+            * Check that function coresponds with comnt
             * Find defenition for func
             * subst and restore function 
             * simplify ? (restored function) (whole expr) 
@@ -281,4 +311,20 @@ easySubstFunc expr fn_id fn_body = substExpr subst expr
         * if Beta
             * compare alphaEq
     * prettyPrintBinds (cm_binds coreMod)
+-}
+
+
+
+{-
+  Context: 
+    variables with types or Types
+    free variables?
+  
+  Variables at the moment:
+    global
+    params
+
+  wrap in monad
+    except
+    store context
 -}
