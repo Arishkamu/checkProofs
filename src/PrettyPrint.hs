@@ -39,11 +39,9 @@ instance PrettyPrint Id where
 
 instance PrettyPrint ExprInfo where
     prettyPrintIdent _ expr_info = case expr_info of
-        LFunc comment -> "LFunc: " ++ comment
-        RFunc comment -> "RFunc: " ++ comment
-        Beta          -> "Beta reduction"
-        LEta          -> "L-Eta reduction"
-        REta          -> "R-Eta reduction"
+        Func comment -> "Func: " ++ comment
+        Beta         -> "Beta reduction"
+        Eta          -> "Eta reduction"
 
 instance PrettyPrint Conversion where
   prettyPrintIdent ident Conversion{..} = 
@@ -115,6 +113,10 @@ instance (PrettyPrint a) => PrettyPrint [a] where
 instance (PrettyPrint a) => PrettyPrint (Either String a) where
   prettyPrintIdent ident (Left e)  = "Either-Left:"  ++ bslN (ident + 2) ++ e
   prettyPrintIdent ident (Right a) = "Either-Right:" ++ bslN (ident + 2) ++ prettyPrint a
+
+instance (PrettyPrint a) => PrettyPrint (Either a a) where
+  prettyPrintIdent ident (Left l)  = "L-" ++ prettyPrintIdent ident l
+  prettyPrintIdent ident (Right r) = "R-" ++ ++ prettyPrintIdent ident r
 
 
 -- instance (PrettyPrint a) => PrettyPrint (Bag a) where
