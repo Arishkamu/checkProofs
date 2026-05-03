@@ -11,12 +11,13 @@ import GHC.Types.Id
 --   rDiffCN   :: CoreExpr
 -- }
 
-data ExprInfo = LFunc String | RFunc String | Beta | LEta | REta
+-- data ExprInfo = LFunc String | RFunc String | Beta | LEta | REta
+data ExprInfo = Func String | Beta | Eta
 
 data Conversion = Conversion {
   cn_lhe  :: CoreExpr,
   cn_rhe  :: CoreExpr,
-  cn_info :: ExprInfo
+  cn_info :: Either ExprInfo ExprInfo
 }
 
 -- Add local Where to DeclConversions???
