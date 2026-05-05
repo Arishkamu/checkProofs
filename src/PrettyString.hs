@@ -115,7 +115,7 @@ instance PrettyString CoreBind where
 
 instance PrettyString CoreExpr where
 --   prettyStringIdent _ (App f arg) = "APP " ++ " :: " ++ "\nF: " ++ (showSDocUnsafe (ppr f)) ++ "\nA: " ++ (showSDocUnsafe (ppr arg))
-  prettyStringIdent _ expr = show (toConstr expr) ++ " :: " ++ (showSDocUnsafe (ppr expr))
+  prettyStringIdent _ expr = show (toConstr expr) ++ " :: " ++ showSDocUnsafe (ppr expr)
 
 instance (PrettyString a, PrettyString b) => PrettyString (a, b) where
   prettyStringIdent ident (x, y) = bslN ident ++ "(" 

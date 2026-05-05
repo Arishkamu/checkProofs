@@ -49,6 +49,9 @@ data CheckerST = CheckerST {
 
 type CheckerM = ExceptT String (StateT CheckerST IO)
 
+type Report = ([Id], [String])
+data ProofResult = Success Id| Failure Id String
+
 {-
   I WANT 
   to return REPORT:
@@ -58,7 +61,7 @@ type CheckerM = ExceptT String (StateT CheckerST IO)
         in step--Y
         Reason
       ]
-    Succses:
+    Success:
       [Function]
   
   OR:
@@ -66,7 +69,7 @@ type CheckerM = ExceptT String (StateT CheckerST IO)
       Failure:
         in Step--Y
         Reason
-      Succses
+      Success
   
 ExceptT e (StateT s IO)
   1) Get List of functions
