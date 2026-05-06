@@ -233,19 +233,25 @@ analyzeModuleSt hscEnv checkerST =
     -- putStrLn $ case result of 
     --   Left s -> "ERROR: " ++ s
     --   Right r -> prettyStringEqPairs r
-    result <- mapM runChecker (st_declconvrs checkerST)
+    result <- myMapM (st_declconvrs checkerST) checkerST runChecker
     putStrLn $ prettyStringReport $ toReport result
     -- return result
     -- mapM fff result
 
   where
-    runChecker x = runStateT (runExceptT (analyzeDeclCnvrs hscEnv x)) checkerST
+    runChecker x = runStateT (runExceptT (analyzeDeclCnvrs hscEnv x))
     toReport     = foldr resToReport ([], [])
     resToReport (res, st) (succs, fails) = case res of
       Left reason -> (succs                     , createFail st reason : fails)
       Right res   -> (st_declconvr_id st : succs,                        fails)
-    -- (m (a, s) -> n (b, s))
-    -- m a -> (a -> m b) -> m b
+    myMapM :: (Monad m) => [a] -> CheckerST -> (a -> CheckerST -> m (b, CheckerST)) -> m [(b, CheckerST)]
+    myMapM [] s0 fff = return []
+    myMapM (a1:as) s0 fff = do
+      res1@(b1, s1) <- fff a1 s0
+      rest <- myMapM as s1 fff
+      return (res1 : rest )
+
+    -- [a], s -> (a, s -> m (b, s)) -> m [b]
     analyzeDeclCnvrs :: HscEnv -> DeclConversions -> CheckerM ()
     analyzeDeclCnvrs hscEnv (decl_id, cnvrs) = 
       do
