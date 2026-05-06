@@ -55,7 +55,7 @@ main =
     _ <- setSessionDynFlags dflags
     session <- getSession
 
-    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example4-fails.hs"
+    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example4.hs"
     coreMod <- compileToCoreModule filePath
 
     -- print CoreModule
@@ -284,6 +284,13 @@ getFirstDiff analyzer = go -- (suc, _) (suc, err) (err, _)
     go (Lam cntr_b cntr_body) (Lam b body) = do
       new_body <- go cntr_body body
       return $ Lam b new_body
+    go ce@(App _ (Type _)) e@(App _ (Type _)) 
+      | alphaEq ce e = throwError $ "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
+      | otherwise    = do
+        logMsg $ "Get diff:\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e ++ "\n"
+        r <- analyzer e
+        logMsg $ "After analyzer:" ++ "\n       expr: " ++ prettyString r ++ "\n"
+        return r
     go (App cntr_f cntr_arg)  (App f arg) =
       (go cntr_f f <&> (`App` arg)) <|> (go cntr_arg arg <&> App f)
       --
@@ -298,7 +305,10 @@ getFirstDiff analyzer = go -- (suc, _) (suc, err) (err, _)
       --     logMsg $ "Catches: " ++ e
       --     throwError e)
     go ce e
-      | alphaEq ce e = throwError $ "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
+    -- TODO NOW 
+      | alphaEq ce e = do
+        logMsg $ "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
+        throwError $ "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
       | otherwise    = do
         logMsg $ "Get diff:\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e ++ "\n"
         r <- analyzer e
@@ -330,7 +340,6 @@ analyzeFuncConv hscEnv comment control_expr expr =
   do
     new_expr <- getFirstDiff analyzer control_expr expr
     simpl_expr <- simplifyFunc hscEnv [] new_expr
-    logMsg $ "SIMPLIFY\n" ++ prettyString simpl_expr
     let no_lets_expr = inlineLets simpl_expr
     return (control_expr, no_lets_expr)
 
@@ -342,10 +351,6 @@ analyzeFuncConv hscEnv comment control_expr expr =
         func_body <- getBodyByFuncId func_id
 
         let subst_func = easySubstFunc func func_id func_body
-        logMsg $ "MK-APPS\n" ++ prettyString expr ++ "\n" ++ prettyString subst_func ++ "\n"  ++ prettyString args ++ "\n" 
-        logMsg ""
-        logMsg $ prettyString (mkCoreApps subst_func args)
-        logMsg $ prettyString $ foldl App subst_func args
         return $ mkCoreApps subst_func args -- maybe mkApps
 
     checkComment :: CoreExpr -> CheckerM Id
@@ -383,7 +388,8 @@ analyzePostlConv hscEnv comment control_expr expr =
       []     -> throwError $ "Unexpected postulate. Not found match with comment `" ++ comment ++ "`"
     new_expr <- simplifyFunc hscEnv [rule] expr
     new_contrl_expr <- simplifyFunc hscEnv [rule] control_expr
-    return (new_contrl_expr, new_expr)
+    let no_lets_expr = inlineLets new_expr
+    return (new_contrl_expr, no_lets_expr)
 
 mkPstlRule :: HscEnv -> PostlDef -> CheckerM CoreRule
 mkPstlRule hscEnv PostlDef{..} = do

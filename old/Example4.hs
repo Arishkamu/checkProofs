@@ -108,7 +108,7 @@ flipFlipIsId  = value (
  ==== (\f -> \x -> \y -> myFlip f y x)          `addInfo` Left (Func "myFlip")
  ==== (\f -> \x -> \y -> f x y)                 `addInfo` Left Eta
  ==== (\f -> \x -> f x)                         `addInfo` Left Eta
- ==== (\f -> f)                                 `addInfo` Left (Func "myId")
+ ==== (\f -> f)                                 `addInfo` Right (Func "myId")
  ==== (\f -> myId f)                            `addInfo` Left Eta
  ==== myId                                      `addInfo` Left Eta)
 
@@ -185,7 +185,7 @@ theoremFunctor2 f g xs = value (
   ==== (xs >>= \x -> return (g x) >>= return =. f)    `addInfo` Left (Postl "myM1")-- [m1]
   ==== (xs >>= \x -> (return =. f) (g x))             `addInfo` Right (Func "=.")-- (.)
   ==== (xs >>= \x -> ((return =. f) =. g) x)          `addInfo` Left Eta-- eta-reduction
-  ==== (xs >>= (return =. f) =. g)                    `addInfo` Right (Func "composeAssoc4")-- assoc (.) ?????????
+  ==== (xs >>= (return =. f) =. g)                    `addInfo` Right (Postl "composeAssoc4")-- assoc (.) ?????????
   ==== (xs >>= return =. (f =. g))                    `addInfo` Right (Func "myLiftM")-- liftM
   ==== (myLiftM (f =. g) xs)                          `addInfo` Left Beta)
 
@@ -206,7 +206,7 @@ liftM g xs == return g <*>.. xs
 -}
 theoremApplicative0 :: Monad m => (a -> b) -> m a -> m b
 theoremApplicative0 g xs = value (
-       (return g <*>.. xs)                `addInfo` Right (Func "<*>..")-- (<*>..)
+       (return g <*>.. xs)                `addInfo` Left (Func "<*>..")-- (<*>..)
   ==== (return g >>= \f -> myLiftM f xs)  `addInfo` Left (Postl "myM1")-- [m1]
   ==== ((\f -> myLiftM f xs) g)           `addInfo` Left Beta-- Left Beta-reduction
   ==== (myLiftM g xs)                     `addInfo` Left Beta)
