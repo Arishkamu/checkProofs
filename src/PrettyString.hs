@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards, FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
-module PrettyString (PrettyString, prettyString, prettyStringBinds) where
+module PrettyString (PrettyString, prettyString, prettyStringReport, prettyStringExpr) where
 
 import GHC.Core
 import GHC.Types.Id
@@ -116,6 +116,16 @@ instance PrettyString CoreBind where
 instance PrettyString CoreExpr where
 --   prettyStringIdent _ (App f arg) = "APP " ++ " :: " ++ "\nF: " ++ (showSDocUnsafe (ppr f)) ++ "\nA: " ++ (showSDocUnsafe (ppr arg))
   prettyStringIdent _ expr = show (toConstr expr) ++ " :: " ++ showSDocUnsafe (ppr expr)
+
+-- type Report = ([Id], [String])
+prettyStringReport :: Report -> String
+prettyStringReport (succs, fails) = 
+  "\n----- REPORT -----" ++ "\n" ++
+  "Succsessfully proved:" ++ "\n" ++
+  "  " ++ intercalate "\n  " (map (occNameString . getOccName) succs) ++ "\n" ++
+  "Failures proved:" ++ "\n" ++
+  "  " ++ intercalate (bslN 2) fails ++ "\n"
+
 
 instance (PrettyString a, PrettyString b) => PrettyString (a, b) where
   prettyStringIdent ident (x, y) = bslN ident ++ "(" 

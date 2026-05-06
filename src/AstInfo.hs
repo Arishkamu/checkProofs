@@ -5,6 +5,8 @@ import GHC.Types.Id ( Id )
 
 import Control.Monad.Except (ExceptT)
 import Control.Monad.State.Lazy (StateT)
+import GHC (HscEnv)
+import GHC.Base (Module)
 
 -- data Conversion = Conversion {
 --   lhsCN     :: CoreExpr,
@@ -44,13 +46,15 @@ data PostlDef = PostlDef {
 data CheckerST = CheckerST {
   st_declconvrs   :: [DeclConversions], -- List of Conversion per decl
   st_funcdefs     :: [FuncDef], -- List of all function definitions (decls)
-  st_postldefs    :: [PostlDef] -- List of all postulate definitions
+  st_postldefs    :: [PostlDef], -- List of all postulate definitions
+  st_cnvrs_count  :: Int,
+  st_declconvr_id :: Id
+  -- st_hscenv       :: HscEnv
 }
 
 type CheckerM = ExceptT String (StateT CheckerST IO)
 
 type Report = ([Id], [String])
-data ProofResult = Success Id| Failure Id String
 
 {-
   I WANT 

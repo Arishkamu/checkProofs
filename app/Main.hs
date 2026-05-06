@@ -26,7 +26,7 @@ import Control.Applicative ((<|>))
 import Data.Generics.Uniplate.Data (universe)
 import qualified Data.ByteString.Char8 as BS8
 import Data.Functor
--- import Data.List (isPrefixOf)
+import Data.List (intercalate)
 
 -- Simplifier
 import GHC.Unit.External (initExternalUnitCache, eucEPS, ExternalPackageState(..))
@@ -55,7 +55,7 @@ main =
     _ <- setSessionDynFlags dflags
     session <- getSession
 
-    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example3.hs"
+    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example4-fails.hs"
     coreMod <- compileToCoreModule filePath
 
     -- print CoreModule
@@ -135,6 +135,11 @@ collectConvrs (f_id, f_body) = case map getConvrs pairs of
 ---- END COLLECTING AST STATE
 
 ---- UTILS
+createFail :: CheckerST -> String -> String
+createFail CheckerST{..} reason = 
+  "Fail in decl: " ++ getStrById st_declconvr_id ++ " in conversion number: " ++ show st_cnvrs_count ++ "\n" 
+  ++ "  Reason: " ++ reason
+
 getStrById :: Id -> String
 getStrById v = occNameString (getOccName v)
 
@@ -178,24 +183,49 @@ alphaEq lhv rhv = deBruijnize lhv == deBruijnize rhv
 logMsg :: String -> CheckerM ()
 logMsg msg = liftIO $ putStrLn $ "LOG\n" ++ msg
 
+incCnvrsCounter :: CheckerM ()
+incCnvrsCounter = modify (\st -> st { st_cnvrs_count = st_cnvrs_count st + 1 })
+newDeclCnvrs :: Id -> CheckerM ()
+newDeclCnvrs decl_id = modify (\st -> st { st_cnvrs_count = 0, st_declconvr_id = decl_id })
+
+madePostulate :: Id -> CheckerM ()
+madePostulate f_id = 
+  do
+    f_body     <- getBodyByFuncId f_id
+    let (pstl_binds, _) = collectBinders f_body
+    declConvrs <- gets st_declconvrs
+
+    (convrs_fst, convrs_lst) <- case lookup f_id declConvrs of
+      Just convrs -> return (head convrs, last convrs)
+      Nothing     -> throwError $ "Unexpected state. Succesfully analized " ++ getStrById f_id ++ " but it doesn't have conversions."
+    let new_postl = PostlDef f_id pstl_binds (cn_lhs convrs_fst) (cn_rhs convrs_lst)
+    
+    logMsg $ "Made new postulate:\n  " ++ prettyString new_postl
+    modify (\st -> st { st_postldefs = new_postl : st_postldefs st})
+
+
 -- incCounter :: CheckerM ()
 -- incCounter = modify (\st -> st { counter = counter st + 1 })
 
 ------ TODO-1
-prettyStringEqPairs :: (CoreExpr, CoreExpr) -> String
-prettyStringEqPairs (e_cntr, e) =
-  "EXPR: " ++ prettyString e ++ "\n" ++
-  "==?==\n" ++
-  "CNTR: " ++ prettyString e_cntr ++ "\n" ++
-  "Result: " ++ show (alphaEq e e_cntr)  ++ "\n"
+cmpCnvrs :: CoreExpr -> CoreExpr -> CheckerM ()
+cmpCnvrs e_cntr e = do
+  logMsg $ 
+    "EXPR: " ++ prettyString e ++ "\n" ++
+    "==?==\n" ++
+    "CNTR: " ++ prettyString e_cntr ++ "\n" ++
+    "Result: " ++ show (alphaEq e e_cntr)  ++ "\n"
+  if alphaEq e e_cntr
+    then return ()
+    else throwError $ "Error. Not equal.\n  Expected: " ++ prettyString e_cntr ++ "\n  Got: " ++ prettyString e
 
 
-analyzeModuleSt :: HscEnv -> CheckerST -> IO [()]
-analyzeModuleSt session checkerST =
+analyzeModuleSt :: HscEnv -> CheckerST -> IO ()
+analyzeModuleSt hscEnv checkerST =
 
   do
-    let (_, d1) = head (st_declconvrs checkerST)
-    let c1 = head d1
+    let d1 = head (st_declconvrs checkerST)
+    -- let c1 = head d1
     -- map analyzeConvrs (st_declconvrs checkerST)
     -- let initState = CheckerST 0
 
@@ -203,34 +233,43 @@ analyzeModuleSt session checkerST =
     -- putStrLn $ case result of 
     --   Left s -> "ERROR: " ++ s
     --   Right r -> prettyStringEqPairs r
-    result <- mapM amb d1
-    mapM fff result
+    result <- mapM runChecker (st_declconvrs checkerST)
+    putStrLn $ prettyStringReport $ toReport result
+    -- return result
+    -- mapM fff result
 
   where
-    amb a = runStateT (runExceptT (analyzeConvrs session a)) checkerST
-    fff (r, _) = putStrLn $ case r of
-      Left s -> "ERROR: " ++ s
-      Right r -> prettyStringEqPairs r
+    runChecker x = runStateT (runExceptT (analyzeDeclCnvrs hscEnv x)) checkerST
+    toReport     = foldr resToReport ([], [])
+    resToReport (res, st) (succs, fails) = case res of
+      Left reason -> (succs                     , createFail st reason : fails)
+      Right res   -> (st_declconvr_id st : succs,                        fails)
     -- (m (a, s) -> n (b, s))
     -- m a -> (a -> m b) -> m b
--- analyzeModule :: HscEnv -> CheckerM String
--- analyzeModule = 
---   do
---     runStateT (mapStateT f m) initState = f (runStateT m initState)
+    analyzeDeclCnvrs :: HscEnv -> DeclConversions -> CheckerM ()
+    analyzeDeclCnvrs hscEnv (decl_id, cnvrs) = 
+      do
+        newDeclCnvrs decl_id
+        mapM_ (analyzeConvrs hscEnv) cnvrs
+        madePostulate decl_id 
+    -- return $ intercalate "\n" $ map prettyStringEqPairs res
+    -- runStateT (mapStateT f m) initState = f (runStateT m initState)
 
 
 ------ TODO-2
 
 ---- ANALYZE SINGLE CONVERSION
-analyzeConvrs :: HscEnv -> Conversion -> CheckerM (CoreExpr, CoreExpr)
+analyzeConvrs :: HscEnv -> Conversion -> CheckerM ()
 analyzeConvrs hscEnv Conversion{..} =
   do
+    incCnvrsCounter
     let analyzeExpr = case expr_info of
           Func  comment -> analyzeFuncConv  hscEnv comment
           Postl comment -> analyzePostlConv hscEnv comment
           Eta           -> analyzeEtaConv
           Beta          -> analyzeBetaConv
-    analyzeExpr control_expr expr
+    (ce, e) <- analyzeExpr control_expr expr
+    cmpCnvrs ce e
     -- return (new_expr, control_expr)
 -- TODO no simplify subs or postulate. raw substing
 
@@ -291,6 +330,7 @@ analyzeFuncConv hscEnv comment control_expr expr =
   do
     new_expr <- getFirstDiff analyzer control_expr expr
     simpl_expr <- simplifyFunc hscEnv [] new_expr
+    logMsg $ "SIMPLIFY\n" ++ prettyString simpl_expr
     let no_lets_expr = inlineLets simpl_expr
     return (control_expr, no_lets_expr)
 
@@ -299,11 +339,13 @@ analyzeFuncConv hscEnv comment control_expr expr =
       do
         let (func, args) = collectArgs expr
         func_id   <- checkComment func
-        func_defs <- gets st_funcdefs
+        func_body <- getBodyByFuncId func_id
 
-        subst_func <- case lookup func_id func_defs of
-          Just func_body -> return $ easySubstFunc func func_id func_body
-          Nothing        -> throwError $ "Function definition not found for:\n" ++ prettyString func_id
+        let subst_func = easySubstFunc func func_id func_body
+        logMsg $ "MK-APPS\n" ++ prettyString expr ++ "\n" ++ prettyString subst_func ++ "\n"  ++ prettyString args ++ "\n" 
+        logMsg ""
+        logMsg $ prettyString (mkCoreApps subst_func args)
+        logMsg $ prettyString $ foldl App subst_func args
         return $ mkCoreApps subst_func args -- maybe mkApps
 
     checkComment :: CoreExpr -> CheckerM Id
@@ -312,6 +354,14 @@ analyzeFuncConv hscEnv comment control_expr expr =
       | otherwise  = throwError $ "Applied function_id does not match comment:\n" ++ prettyString func_id ++ "\nExpected: " ++ comment
     checkComment e = throwError $ "Applied expression not a function call!\nGot: " ++ prettyString e
 
+getBodyByFuncId :: Id -> CheckerM CoreExpr
+getBodyByFuncId func_id = 
+  do
+    func_defs <- gets st_funcdefs
+    case lookup func_id func_defs of
+      Just func_body -> return func_body
+      Nothing        -> throwError $ "Function definition not found for:\n" ++ prettyString func_id
+        
 {- 
   when to do simplify and subst
   problem
