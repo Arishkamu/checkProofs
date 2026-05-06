@@ -5,14 +5,26 @@ module Main where
 import GHC
 import GHC.Paths (libdir)
 import GHC.Core
+import GHC.Core.Map.Type (DeBruijn(..), deBruijnize)
+import GHC.Core.Make (mkCoreApps) -- maybe mkApps
 import GHC.Driver.DynFlags ( gopt_set )
+import GHC.Driver.Env (mainModIs, hsc_HUE)
 import GHC.Types.Literal (Literal(..))
 import GHC.Types.Name.Occurrence (occNameString)
+-- Subst
+import GHC.Core.Subst (extendSubst, mkEmptySubst, substExpr)
+import GHC.Core.FVs (exprFreeVars)
+import GHC.Types.Var.Env (mkInScopeSet, extendInScopeSetSet)
+import GHC.Types.Var.Set (delVarSet)
 
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.State.Lazy
+import Control.Monad.Except
+import Control.Applicative ((<|>))
 import Data.Generics.Uniplate.Data (universe)
 import qualified Data.ByteString.Char8 as BS8
 import Data.Functor
+-- import Data.List (isPrefixOf)
 
 -- DEBUG
 import GHC.Utils.Outputable
@@ -43,7 +55,8 @@ main =
     liftIO $ putStrLn "\n===== Collected AstState =====\n"
     liftIO $ putStrLn $ prettyString astState
     liftIO $ putStrLn "\n===== End AstState =====\n"
-    let result = analyzeModule astState
+    liftIO $ analyzeModuleSt session astState
+    -- liftIO $ putStrLn result
     -- let result = analyzeConversions astState
     -- case result of
     --   Left err -> liftIO $ putStrLn $ "Error: " ++ err
@@ -52,7 +65,7 @@ main =
     --     liftIO $ printMy session convrs
     --     liftIO $ putStrLn "\n=== End ===\n"
     --     mapM_ (\(e1, e2) -> (liftIO (simplifyFunc session e1), e2)) convrs
-    --     liftIO $ putStrLn $ map prettyPrintEqPairs $ map (\(e1, e2) -> (inlineLets e1, e2)) m
+    --     liftIO $ putStrLn $ map prettyStringEqPairs $ map (\(e1, e2) -> (inlineLets e1, e2)) m
 
 
     liftIO $ putStrLn "\n===== The End: App/Main ====="
@@ -125,7 +138,8 @@ toSideExprInfo (App (App (App (Var expr_side) _) _) expr_info) = toSideInfo (toE
     | getStrById v_id == "Postl" = Postl $ BS8.unpack pack_str
 toSideExprInfo e = error $ "Unexpected expression structure for comment, expected a function application with a string literal argument.\nGot: " ++ prettyString e
 
-
+getModule :: HscEnv -> Module
+getModule = mainModIs . hsc_HUE
 -- onSnd :: (b -> c) -> (a, b) -> (a, c)
 -- onSnd f (x, y) = (x, f y)
 
@@ -148,18 +162,54 @@ alphaEq lhv rhv = deBruijnize lhv == deBruijnize rhv
 
 
 logMsg :: String -> CheckerM ()
-logMsg msg = liftIO $ putStrLn msg
+logMsg msg = liftIO $ putStrLn $ "LOG\n" ++ msg
 
 -- incCounter :: CheckerM ()
 -- incCounter = modify (\st -> st { counter = counter st + 1 })
 
-analyzeModule :: HscEnv -> Module -> CheckerST -> Report
-analyzeModule session mod checkerST =
-  do
-    map () (st_declconvrs checkerST)
+------ TODO-1
+prettyStringEqPairs :: (CoreExpr, CoreExpr) -> String
+prettyStringEqPairs (e1, e2) = 
+  "LHS: " ++ prettyString e1 ++ "\n" ++
+  "==?==\n" ++
+  "RHS: " ++ prettyString e2 ++ "\n" ++
+  "Result: " ++ show (alphaEq e1 e2)  ++ "\n"
 
-analyzeConvrs :: HscEnv -> Module -> Conversion -> CheckerM (CoreExpr, CoreExpr)
-analyzeConvrs session mod Conversion{..} =
+
+analyzeModuleSt :: HscEnv -> CheckerST -> IO [()]
+analyzeModuleSt session checkerST =
+
+  do
+    let (_, d1) = head (st_declconvrs checkerST)
+    let c1 = head d1
+    -- map analyzeConvrs (st_declconvrs checkerST)
+    -- let initState = CheckerST 0
+
+    -- (result, st) <- runStateT (runExceptT (analyzeConvrs c1)) checkerST
+    -- putStrLn $ case result of 
+    --   Left s -> "ERROR: " ++ s
+    --   Right r -> prettyStringEqPairs r
+    result <- mapM amb d1
+    mapM fff result
+  
+  where
+    amb a = runStateT (runExceptT (analyzeConvrs a)) checkerST
+    fff (r, _) = putStrLn $ case r of 
+      Left s -> "ERROR: " ++ s
+      Right r -> prettyStringEqPairs r
+    -- (m (a, s) -> n (b, s))
+    -- m a -> (a -> m b) -> m b
+-- analyzeModule :: HscEnv -> CheckerM String
+-- analyzeModule = 
+--   do
+--     runStateT (mapStateT f m) initState = f (runStateT m initState)
+
+
+------ TODO-2
+
+---- ANALYZE SINGLE CONVERSION
+analyzeConvrs :: Conversion -> CheckerM (CoreExpr, CoreExpr)
+analyzeConvrs Conversion{..} =
   do
     let analyzeFirstDiff = case expr_info of
           Func  comment -> getFirstDiff (analyzeFuncConv  comment)
@@ -168,234 +218,126 @@ analyzeConvrs session mod Conversion{..} =
           Beta          -> analyzeBetaConv
     new_expr <- analyzeFirstDiff control_expr expr
     return (new_expr, control_expr)
+-- TODO no simplify subs or postulate. raw substing
 
   where
     (expr, control_expr, expr_info) = case cn_info of
-      Left  info -> (cn_lhe, cn_rhe, info)
-      Right info -> (cn_rhe, cn_lhe, info)
+      Left  info -> (cn_lhs, cn_rhs, info)
+      Right info -> (cn_rhs, cn_lhs, info)
 
 getFirstDiff :: (CoreExpr -> CheckerM CoreExpr) -> CoreExpr -> CoreExpr -> CheckerM CoreExpr
-getFirstDiff analyzer cntr_expr expr =
-  case (cntr_expr, expr) of
-    (Lam cntr_b cntr_body, Lam b body) -> do
-      new_body <- getFirstDiff analyzer cntr_body body
+getFirstDiff analyzer = go -- (suc, _) (suc, err) (err, _)
+  where 
+    go (Lam cntr_b cntr_body) (Lam b body) = do
+      new_body <- go cntr_body body
       return $ Lam b new_body
-    (App cntr_f cntr_arg,  App f arg)  ->
-      getFirstDiff cntr_f f <|>
-      (getFirstDiff cntr_arg arg <&> App f)
-    (ec, c) 
-      | alphaEq ec c -> throwError $ "No difference.\n  cntr_expr: " ++ prettyString ec ++ "\n       expr: " ++ prettyString e
-      | otherwise    -> do
-        logMsg $ "Get diff:\n  cntr_expr: " ++ prettyString ec ++ "\n       expr: " ++ prettyString e ++ "\n"
-        analyzer ec c 
+    go (App cntr_f cntr_arg)  (App f arg) = 
+      go cntr_f f <|> (go cntr_arg arg <&> App f)
+      --
+      -- WHAT IF
+      -- get expr=(f, [arg])
+      -- f==cntr_f -> App f (go arg_lll)
+      -- f!=cntr_f -> analyze expr
+      --
+
+      -- `catchError` 
+      --   (\e -> do
+      --     logMsg $ "Catches: " ++ e
+      --     throwError e)
+    go ce e
+      | alphaEq ce e = throwError $ "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
+      | otherwise    = do
+        logMsg $ "Get diff:\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e ++ "\n"
+        analyzer e
 
 
-analyzeBetaConv :: CoreExpr -> CoreExpr -> Either String CoreExpr
+analyzeBetaConv :: CoreExpr -> CoreExpr -> CheckerM CoreExpr
 analyzeBetaConv control_expr expr
-  | alphaEq control_expr expr = Right expr -- TODO: check alphaEq
-  | otherwise = Left "Not Beta equivalent"
+  | alphaEq control_expr expr = return expr -- TODO: check alphaEq
+  | otherwise = throwError "Not Beta equivalent"
 
-analyzeEtaConv :: CoreExpr -> Either String CoreExpr
+analyzeEtaConv :: CoreExpr -> CheckerM CoreExpr
 analyzeEtaConv expr = case expr of
   (Lam v1 (App f (Var v2))) | v1 == v2
     -> do
-      logMsg $ "Evaluate Eta for expr:\n  " ++ prettyString expr 
+      logMsg $ "Evaluate Eta for expr:\n  " ++ prettyString expr
       return f  -- TODO: check and fix
-  _ -> throwError $ "Error in analyzeEtaConv:\n" ++ prettyPrint expr
+  _ -> throwError $ "Error in analyzeEtaConv:\n" ++ prettyString expr
 
-analyzeFuncConv :: CoreExpr -> CheckerM CoreExpr
-analyzeFuncConv 
+analyzeFuncConv :: String -> CoreExpr -> CheckerM CoreExpr
+analyzeFuncConv comment expr =
+  do
+    let (func, args) = collectArgs expr
+    func_id   <- checkComment func
+    func_defs <- gets st_funcdefs
 
--- analyzeFuncConv funcdefs comment expr = do
---   args <- getFuncArgs expr
---   checked <- checkComment comment args
---   substAndRestoreFunc funcdefs checked
+    subst_func <- case lookup func_id func_defs of
+      Just func_body -> easySubstFunc func func_id func_body
+      Nothing        -> throwError $ "Function definition not found for:\n" ++ prettyString func_id
+    return $ mkCoreApps subst_func args -- maybe mkApps
 
--- printMy :: HscEnv -> [(CoreExpr, CoreExpr)] -> IO ()
--- printMy ses exprs = 
+  where
+    checkComment :: CoreExpr -> CheckerM Id
+    checkComment (Var func_id)
+      | getStrById func_id == comment = return func_id
+      | otherwise  = throwError $ "Applied function_id does not match comment:\n" ++ prettyString func_id ++ "\nExpected: " ++ comment
+    checkComment e = throwError $ "Applied expression not a function call!\nGot: " ++ prettyString e
+
+{- 
+  when to do simplify and subst
+  problem
+    (m >>= return) `postulate` m
+    expr = (m >>= return) >>= return
+
+    (return a >>= k) `postulate` (k a)
+    (return a >>= (\a1 -> (return a1 >>= k)))
+    (\a1 -> (return a1 >>= k)) a              (return a >>= (\a1 -> k a1))
+-}
+analyzePostlConv :: String -> CoreExpr -> CheckerM CoreExpr
+analyzePostlConv comment expr =
+  do
+    postl_defs <- gets st_postldefs
+    let matchedPstls = filter ((comment ==) . getStrById . pstl_id) postl_defs
+    case matchedPstls of
+      [pstl] -> return $ pstl_rhs pstl
+      (_:_)  -> throwError $ "Unexpected postulate. Found more than one matched with comment `" ++ comment ++ "`"
+      []     -> throwError $ "Unexpected postulate. Not found match with comment `" ++ comment ++ "`"
+
+
+---- SIMPLIFIERS
+easySubstFunc :: CoreExpr -> Id -> CoreExpr -> CheckerM CoreExpr
+easySubstFunc expr fn_id fn_body = return $ substExpr subst expr
+  where
+    delFunFV = mkInScopeSet $ delVarSet (exprFreeVars expr) fn_id
+    subst = extendSubst (mkEmptySubst delFunFV) fn_id fn_body
+
+
+-- simplifyFunc :: HscEnv -> [CoreRule] -> CoreExpr -> CheckerM CoreExpr
+-- simplifyFunc hscEnv rules expr =
 --   do
---     res <- mapM (printMyPair ses) exprs
---     putStrLn $ intercalate "\n" $ map prettyPrintEqPairs res
---     let onlyFalse = filter (\(e1, e2) -> not (alphaEq e1 e2)) res
---     putStrLn "---- Print only false:----\n"
---     putStrLn $ intercalate "\n" $ map prettyPrintEqPairs onlyFalse
---     putStrLn $ "Number of false: " ++ show (length onlyFalse) ++ "\n"
+--     -- hscEnv <- gets st_hscenv
+--     let opts   = initSimplifyExprOpts (hsc_dflags hscEnv) (hsc_IC hscEnv)
+--         logger = hsc_logger hscEnv
 
--- printMyPair :: HscEnv -> (CoreExpr, CoreExpr) -> IO (CoreExpr, CoreExpr)
--- printMyPair ses (x, y) = 
---   do
---     x1 <- simplifyFunc ses x
---     let x2 = inlineLets x1
---     return (x2, y)
+--     euc <- initExternalUnitCache
+--     eps <- eucEPS euc
+--     let fam_envs =  ( eps_fam_inst_env eps
+--                     , extendFamInstEnvList emptyFamInstEnv $ se_fam_inst opts
+--                     )
 
--- inlineLets :: CoreExpr -> CoreExpr
--- inlineLets expr =
---   case expr of
---     Let (NonRec b rhs) body ->
---       inlineLets (easySubstFunc body b rhs)
+--         simpl_env = mkSimplEnv (se_mode opts) fam_envs
+--         my_in_scope = getInScope simpl_env `extendInScopeSetSet` exprFreeVars expr
+--         my_env = setInScopeSet simpl_env my_in_scope
 
---     App f x ->
---       App (inlineLets f) (inlineLets x)
+--         top_env_cfg = se_top_env_cfg opts
+--         read_eps_rules = eps_rule_base <$> eucEPS euc
+--         my_rule_env = (`addLocalRules` rules) . updExternalPackageRules emptyRuleEnv <$> read_eps_rules
 
---     Lam b e ->
---       Lam b (inlineLets e)
+--     let sz = exprSize expr
+--     (expr', counts) <- initSmpl logger my_rule_env top_env_cfg sz $
+--                           simplExpr my_env expr
+--     return expr'
 
---     _ -> expr
-
-
-
--- ---- DEBUG
--- prettyPrintEqPairs :: (CoreExpr, CoreExpr) -> String
--- prettyPrintEqPairs (e1, e2) = 
---   "LHS: " ++ prettyPrint e1 ++ "\n" ++
---   "==?==\n" ++
---   "RHS: " ++ prettyPrint e2 ++ "\n" ++
---   "Result: " ++ show (alphaEq e1 e2)  ++ "\n"
--- ---- END DEBUG
-
--- ---- analyze
--- analyzeConversions :: AstInfo -> Either String [(CoreExpr, CoreExpr)]
--- analyzeConversions AstInfo{..} = analyze $ concatMap snd ast_declconvrs
---   where
---     analyze :: [Conversion] -> Either String [(CoreExpr, CoreExpr)]
---     analyze [] = Right []
---     analyze (x:xs) = analyzeConvr ast_funcdefs ast_postldefs x >>= 
---       \res -> analyze xs  >>= 
---         \rest -> Right (res : rest)
-
--- analyzeConvr :: [FuncDef] -> [PostlDef] -> Conversion -> Either String (CoreExpr, CoreExpr)
--- analyzeConvr funcdefs postldefs Conversion{..} = (
---   case expr_info of
---     Func comment  -> getFirstDiff    control_expr expr (analyzeFuncConv  funcdefs comment)
---     Postl comment -> getFirstDiff    control_expr expr (analyzePostlConv postldefs comment)
---     Eta           -> getFirstDiff    control_expr expr analyzeEtaConv
---     Beta          -> analyzeBetaConv control_expr expr)
---   >>= (\new_expr -> Right (new_expr, control_expr))
---   where
---     (expr, control_expr, expr_info) = case cn_info of
---       Left  info -> (cn_lhe, cn_rhe, info)
---       Right info -> (cn_rhe, cn_lhe, info)
-
--- getFirstDiff :: CoreExpr -> CoreExpr -> (CoreExpr -> Either String CoreExpr) -> Either String CoreExpr
--- getFirstDiff (Lam b_contr body_contr) (Lam b body) checker
---   = getFirstDiff body_contr body checker >>= \new_body -> Right (Lam b new_body)
---   -- TODO: check wisely. They can not be the same, but all others should
---   -- | alphaEq b_contr b = getFirstDiff body_contr body >>= \new_body -> Right (Lam b new_body) 
---   -- | otherwise = Left $ "Lambda:\n" ++ prettyPrint b ++ "\ndoes not match control lambda binder:\n" ++ prettyPrint b_contr 
--- getFirstDiff e1@(App f_contr arg_contr) e2@(App f arg) checker
---   | alphaEq f_contr f && checkArgTypes arg_contr arg     = getFirstDiff arg_contr arg checker >>= \new_arg -> Right (App f new_arg) 
---   | otherwise = trace ("GET DIFF :\ncontrol: " ++ prettyPrint e1 ++ "\nexprexp: " ++ prettyPrint e1 ++ "\n") $ checker e2
---   -- | otherwise = getFirstDiff f_contr f >>= \new_f -> Right (App new_f arg)
---   -- | otherwise = Left $ "Application:\n" ++ prettyPrint e1 ++ "\ndoes not match control lambda binder:\n" ++ prettyPrint e2 
--- getFirstDiff ec app@(App _ _) checker = trace ("GET DIFF :\ncontrol: " ++ prettyPrint ec ++ "\nexprexp: " ++ prettyPrint app  ++ "\n") $ checker app
--- getFirstDiff ec e checker = trace ("GET DIFF :\ncontrol: " ++ prettyPrint ec ++ "\nexprexp: " ++ prettyPrint e ++ "\n") $ checker e
-
-
--- analyzeEtaConv :: CoreExpr -> Either String CoreExpr
--- analyzeEtaConv (Lam v1 (App f (Var v2))) | v1 == v2 = Right f  -- TODO: check and fix
--- analyzeEtaConv expr = Left $ "analyzeEtaConv:\n" ++ prettyPrint expr
-
--- analyzeBetaConv :: CoreExpr -> CoreExpr -> Either String CoreExpr
--- analyzeBetaConv control_expr expr 
---   | alphaEq control_expr expr = Right expr -- TODO: check alphaEq
---   | otherwise = Left "Not Beta equivalent"
-
--- analyzeFuncConv :: [FuncDef] -> String -> CoreExpr -> Either String CoreExpr
--- analyzeFuncConv funcdefs comment expr = getFuncArgs expr 
---   >>= checkComment 
---   >>= substAndRestoreFunc funcdefs
---   where
---     -- checker :: CoreExpr -> CoreExpr -> Either String CoreExpr
---     -- checker = checkUntilRegex control_expr expr
---     --   >>= getFuncArgs 
---     --   >>= checkComment 
---     --   >>= substAndRestoreFunc funcdefs
---       -- >>= \new_expr -> Right [(new_expr, control_expr)]
-
---     -- checkRegex :: CoreExpr -> Either String CoreExpr
---     -- checkRegex app = getFuncArgs app 
---     --   >>= checkComment 
---     --   >>= substAndRestoreFunc funcdefs 
---     --   >>= \new_expr -> Right [(new_expr, control_expr)]
---       -- >>= simplifyFunc
-
---     getFuncArgs :: CoreExpr -> Either String [CoreExpr]
---     getFuncArgs expr = Right $ reverse $ getFunc expr
---       where
---         getFunc (App f a) = a : getFunc f
---         getFunc f = [f]
-
---     checkComment :: [CoreExpr] -> Either String [CoreExpr]
---     checkComment e@((Var func_id) : _) 
---       | getStrById func_id == comment = Right e
---       | otherwise = Left $ "First applied function_id does not match comment:\n" ++ prettyPrint func_id ++ "\nExpected: " ++ comment
---     checkComment (e:_) = Left $ "First applied not a function!\nGot: " ++ prettyPrint e
---     checkComment [] = Left $ "No function found in application!"
-
---     substAndRestoreFunc :: [FuncDef] -> [CoreExpr] -> Either String CoreExpr
---     substAndRestoreFunc funcdefs (func_var@(Var func_id) : args) = 
---       (case lookup func_id funcdefs of
---         Just func_body -> Right $ easySubstFunc func_var func_id func_body
---         Nothing        -> Left $ "Function definition not found for:\n" ++ prettyPrint func_id)
---       >>= \subst_f -> Right $ foldl App subst_f args
---     substAndRestoreFunc _ app = Left $ "Unexpected expression structure, expected a function application:\n" ++ prettyPrint app
-
---     -- simplifyFunc :: CoreExpr -> Either String CoreExpr
---     -- simplifyFunc = Right
-
--- analyzePostlConv :: [PostlDef] -> String -> CoreExpr -> Either String CoreExpr
--- analyzePostlConv postldefs comment expr = getPostl >>= substIfAlphaEq
---   where
---   matchedFuncs = filter (\(postl_id, _, _) -> getStrById postl_id == comment) postldefs
---   getPostl = case matchedFuncs of
---     [(_, l_postl, r_postl)] -> Right (l_postl, r_postl)
---     (_:_) -> Left $ "Unexpected postulate. Found more than one matched with comment `" ++ comment ++ "`"
---     []    -> Left $ "Unexpected postulate. Not found match with comment `" ++ comment ++ "`"
-
---   substIfAlphaEq (l_postl, r_postl) = trace (
---     "\nFREE VARS l_postl: " ++ prettyPrint l_postl ++ "\nFREE VARS        : " ++ showSDocUnsafe (ppr (exprFreeVars l_postl)) ++
---     "\nFREE VARS expr.  : " ++ prettyPrint expr ++ "\nFREE VARS        : " ++ showSDocUnsafe (ppr (exprFreeVars expr))) $ Right r_postl
---   -- TODO make meaningfull subst
---   -- TODO fix alpha_eq
---     -- | alphaEq l_postl expr = Right r_postl TODO fix alpha_eq
---     -- | otherwise = Left $ "Left side of postulate: " ++ prettyPrint l_postl ++ "\n don't match expr: " ++ prettyPrint expr
-
-
--- simplifyFunc :: HscEnv -> CoreExpr -> IO CoreExpr
--- simplifyFunc hscEnv expr = do
---   euc <- initExternalUnitCache
---   let dflags = hsc_dflags hscEnv
---   let opts = initSimplifyExprOpts dflags (hsc_IC hscEnv)
---   let logger = hsc_logger hscEnv
-
---   eps <- eucEPS euc
---   let fam_envs =  ( eps_fam_inst_env eps
---                   , extendFamInstEnvList emptyFamInstEnv $ se_fam_inst opts
---                   )
-
---       simpl_env = mkSimplEnv (se_mode opts) fam_envs
---       my_in_scope = (getInScope simpl_env) `extendInScopeSetSet` (exprFreeVars expr)
---       my_env = setInScopeSet simpl_env my_in_scope
---       -- my_env_two = GHC.Core.Opt.Simplify.Env.extendIdSubst my_env fnId (mkContEx my_env fnBody)
---       -- delOneVSet = delOneFromUniqSet (exprFreeVars expr) fnId
---       -- my_env_two = setInScopeSet my_env $ (getInScope my_env) `extendInScopeSetSet` delOneVSet
-
---       top_env_cfg = se_top_env_cfg opts
---       read_eps_rules = eps_rule_base <$> eucEPS euc
---       read_ruleenv = updExternalPackageRules emptyRuleEnv <$> read_eps_rules
-
---   let sz = exprSize expr
---   (expr', counts) <- initSmpl logger read_ruleenv top_env_cfg sz $
---                         simplExpr my_env expr
---   return expr'
-
-
-
--- easySubstFunc :: CoreExpr -> Id -> CoreExpr -> CoreExpr
--- easySubstFunc expr fn_id fn_body = substExpr subst expr
---   where
---     delFunFV = mkInScopeSet $ delVarSet (exprFreeVars expr) fn_id 
---     subst = extendSubst (mkEmptySubst delFunFV) fn_id fn_body
 
 -- {- TODO:
 --     * collectModule no dif just yet
@@ -414,7 +356,7 @@ analyzeFuncConv
 --             * compare alphaEq
 --         * if Beta
 --             * compare alphaEq
---     * prettyPrintBinds (cm_binds coreMod)
+--     * prettyStringBinds (cm_binds coreMod)
 -- -}
 
 
