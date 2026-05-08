@@ -18,7 +18,7 @@ import GHC.Core.FVs (exprFreeVars)
 import GHC.Types.Var.Env (mkInScopeSet, extendInScopeSetSet)
 import GHC.Types.Var.Set (delVarSet, emptyDVarSet)
 import GHC.Data.FastString (mkFastString)
-import GHC.Types.Unique.Set (addListToUniqSet)
+import GHC.Types.Unique.Set (addListToUniqSet, unionUniqSets)
 
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.State.Lazy
@@ -497,17 +497,44 @@ simplifyFuncIO hscEnv rules expr set_topDefs =
         set_top_one_new = case set_top_one of
           []       -> []
           (t_id:_) -> [modifyIdInfo (`setRuleInfo` (RuleInfo rules emptyDVarSet)) t_id]
+        rhss = map ru_rhs rules
         
         simpl_env = mkSimplEnv (se_mode opts) fam_envs
         addDefsToSet = addListToUniqSet (exprFreeVars expr) set_top_one_new
-        my_in_scope = getInScope simpl_env `extendInScopeSetSet` addDefsToSet 
+        addDefsToSet2 = case (map exprFreeVars rhss) of
+          [] -> addDefsToSet 
+          (ll:_) -> unionUniqSets ll addDefsToSet
+          -- TODO order IS IMPORTANT. WANT TO SAVE MODIFied
+        my_in_scope = getInScope simpl_env `extendInScopeSetSet` addDefsToSet2
         my_env = setInScopeSet simpl_env my_in_scope
-      
 
         top_env_cfg = se_top_env_cfg opts
         read_eps_rules = eps_rule_base <$> eucEPS euc
         my_rule_env = (`addLocalRules` rules) . updExternalPackageRules emptyRuleEnv <$> read_eps_rules
 
+    putStrLn $ "------AAAAA"
+    putStrLn $ showSDocUnsafe $ ppr addDefsToSet
+    putStrLn $ "------BBBBB"
+    putStrLn $ showSDocUnsafe $ ppr addDefsToSet2
+    putStrLn $ "------"
+    putStrLn $ showSDocUnsafe $ ppr (map ru_rhs rules)
+    putStrLn $ "------"
+    putStrLn $ "------"
+    putStrLn $ showSDocUnsafe $ ppr expr
+    putStrLn $ "------"
+    putStrLn $ showSDocUnsafe $ ppr (exprFreeVars expr)
+    putStrLn $ "------"
+    if not (null rules)
+      then putStrLn $ showSDocUnsafe $ ppr $ ru_fn $ head rules
+      else putStrLn "RULES EMPTY"
+    -- putStrLn $ showSDocUnsafe $ ppr $ ru_fn $ head rules
+    putStrLn $ "------"
+    putStrLn $ showSDocUnsafe $ ppr $ set_topDefs
+    putStrLn $ "------"
+    putStrLn $ showSDocUnsafe $ ppr $ map idInfo set_top_one_new
+    putStrLn $ "------MY-ENV-------"
+    putStrLn $ showSDocUnsafe $ pprSimplEnv my_env
+    putStrLn $ "------MY-ENV-------"
     let sz = exprSize expr
     (expr', _) <- initSmpl logger my_rule_env top_env_cfg sz $
                           simplExprGently my_env expr
@@ -515,12 +542,6 @@ simplifyFuncIO hscEnv rules expr set_topDefs =
     -- putStrLn $ "Local: " ++ showSDocUnsafe (pprRuleBase $ re_local_rules re)
     -- putStrLn $ "Home: " ++ showSDocUnsafe (pprRuleBase $ re_home_rules re)
     -- putStrLn $ "EPS: " ++ showSDocUnsafe (pprRuleBase $ re_eps_rules re)
-    putStrLn $ "------"
-    putStrLn $ "------"
-    putStrLn $ showSDocUnsafe $ ppr $ map idInfo set_top_one_new
-    putStrLn $ "------MY-ENV-------"
-    putStrLn $ showSDocUnsafe $ pprSimplEnv my_env
-    putStrLn $ "------MY-ENV-------"
     if not (null rules)
       then 
         if (alphaEq expr' expr)
