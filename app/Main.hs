@@ -5,7 +5,7 @@ module Main where
 import GHC
 import GHC.Paths (libdir)
 import GHC.Core
-import GHC.Core.Map.Type (DeBruijn(..), deBruijnize)
+import GHC.Core.Map.Type (DeBruijn(..), deBruijnize, emptyCME, extendCMEs)
 import GHC.Core.Make (mkCoreApps) -- maybe mkApps
 import GHC.Driver.DynFlags ( gopt_set )
 import GHC.Driver.Env (mainModIs, hsc_HUE)
@@ -14,7 +14,7 @@ import GHC.Types.Name.Occurrence (occNameString)
 import GHC.Types.Basic (Activation(..))
 -- Subst
 import GHC.Core.Subst (extendSubst, mkEmptySubst, substExpr)
-import GHC.Core.FVs (exprFreeVars)
+import GHC.Core.FVs (exprFreeVars, ruleRhsFreeVars)
 import GHC.Types.Var.Env (mkInScopeSet, extendInScopeSetSet)
 import GHC.Types.Var.Set (delVarSet, emptyDVarSet)
 import GHC.Data.FastString (mkFastString)
@@ -27,7 +27,8 @@ import Control.Applicative ((<|>))
 import Data.Generics.Uniplate.Data (universe)
 import qualified Data.ByteString.Char8 as BS8
 import Data.Functor
-import Data.List (intercalate, isPrefixOf, partition, find)
+import Data.List (intercalate, isPrefixOf, partition, find, singleton)
+import Data.Bifunctor (bimap)
 
 -- Simplifier
 import GHC.Unit.External (initExternalUnitCache, eucEPS, ExternalPackageState(..))
@@ -104,9 +105,9 @@ getState hscEnv CoreModule{..} = CheckerST {
   st_declconvrs   = orderConvrs $ concatMap collectConvrs binds,
   st_funcdefs     = binds,
   st_postldefs    = concatMap (collectPostls hscEnv) binds,
-  st_hscenv       = hscEnv
-  -- st_cnvrs_count  = 0
-  -- st_declconvr_id = Id
+  st_hscenv       = hscEnv,
+  st_cnvrs_count  = 0,
+  st_declconvr_id = Nothing
   -- TODO. maybe add st_counter = CheckerCounter{}
 }
   where
@@ -158,8 +159,10 @@ collectConvrs (f_id, f_body) = case map getConvrs pairs of
 ---- UTILS
 createFail :: CheckerST -> String -> String
 createFail CheckerST{..} reason =
-  "Fail in decl: " ++ getStrById st_declconvr_id ++ " in conversion number: " ++ show st_cnvrs_count ++ "\n"
+  "Fail in decl: " ++ str_decl_id ++ " in conversion number: " ++ show st_cnvrs_count ++ "\n"
   ++ "  Reason: " ++ reason
+  where
+    str_decl_id = maybe "<No decl_id>" getStrById st_declconvr_id
 
 getStrById :: Id -> String
 getStrById v = occNameString (getOccName v)
@@ -190,6 +193,13 @@ getModule = mainModIs . hsc_HUE
 -- parametr for this function
 alphaEq :: (Eq (DeBruijn a)) => a -> a -> Bool
 alphaEq lhv rhv = deBruijnize lhv == deBruijnize rhv
+
+alphaEqWithEnv :: (Eq (DeBruijn a)) => ([Id], [Id]) -> a -> a -> Bool
+alphaEqWithEnv (l_vars, r_vars) lhv rhv =
+    deBrujinWithEnv lhv l_vars == deBrujinWithEnv rhv r_vars
+  where
+    deBrujinWithEnv e vars =
+      case deBruijnize e of (D cm_env a) -> D (extendCMEs cm_env vars) a
 
 mapPassStM :: (Monad m) => (a -> s -> m (b, s)) -> [a] -> s -> m [(b, s)]
 mapPassStM _ [] _ = return []
@@ -226,7 +236,7 @@ incCnvrsCounter :: CheckerM ()
 incCnvrsCounter = modify (\st -> st { st_cnvrs_count = st_cnvrs_count st + 1 })
 
 newDeclCnvrs :: Id -> CheckerM ()
-newDeclCnvrs decl_id = modify (\st -> st { st_cnvrs_count = 0, st_declconvr_id = decl_id })
+newDeclCnvrs decl_id = modify (\st -> st { st_cnvrs_count = 0, st_declconvr_id = Just decl_id })
 
 madePostulate :: Id -> CheckerM ()
 madePostulate f_id =
@@ -261,22 +271,23 @@ analyzeModuleSt :: CheckerST -> IO ()
 analyzeModuleSt checkerST =
 
   do
-    result <- mapPassStM runChecker (st_declconvrs checkerST) checkerST 
+    result <- mapPassStM runChecker (st_declconvrs checkerST) checkerST
     putStrLn $ prettyStringReport $ toReport result
 
   where
     runChecker x = runStateT (runExceptT (analyzeDeclCnvrs x))
     toReport     = foldr resToReport ([], [])
     resToReport (res, st) (succs, fails) = case res of
-      Left reason  -> (succs                     , createFail st reason : fails)
-      Right _     -> (st_declconvr_id st : succs,                        fails)
+      Left reason  -> (succs         , createFail st reason : fails)
+      Right res_id -> (res_id : succs,                        fails)
 
-    analyzeDeclCnvrs :: DeclConversions -> CheckerM ()
+    analyzeDeclCnvrs :: DeclConversions -> CheckerM Id
     analyzeDeclCnvrs (decl_id, cnvrs) =
       do
         newDeclCnvrs decl_id
         mapM_ analyzeConvrs cnvrs
         madePostulate decl_id
+        return decl_id
         --- TODO 
         -- replace throwError with createError and create in in place
         -- return decl_id
@@ -316,21 +327,21 @@ analyzeConvrs Conversion{..} =
 
 ---- just believe that this is enought
 getFirstDiff :: CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr -> CoreExpr)
-getFirstDiff = go -- (suc, _) (suc, err) (err, _)
+getFirstDiff = go ([], [])-- (suc, _) (suc, err) (err, _)
   where
-    go (Lam _ cntr_body) (Lam b body) = do
-      res <- go cntr_body body
+    go cm_envs (Lam cntr_b cntr_body) (Lam b body) = do
+      let new_cm_envs = bimap (cntr_b :) (b :) cm_envs
+      res <- go new_cm_envs cntr_body body
       return $ updBuilder (Lam b .) res
-    go ce@(App _ (Type _)) e@(App _ (Type _)) = checkEq ce e
-    go (App cntr_f cntr_arg) (App f arg) =
-      (go cntr_f f <&> updBuilder (\builder x -> App (builder x) arg)) 
-        <|> (go cntr_arg arg <&> updBuilder (App f .))
-    go ce e = checkEq ce e
-    
-    updBuilder updater (diff_expr, builder) = (diff_expr, updater builder)
+    go cm_envs ce@(App _ (Type _)) e@(App _ (Type _)) = checkEq cm_envs ce e
+    go cm_envs (App cntr_f cntr_arg) (App f arg) =
+      (go cm_envs cntr_f f <&> updBuilder (\builder x -> App (builder x) arg))
+        <|> (go cm_envs cntr_arg arg <&> updBuilder (App f .))
+    go cm_envs ce e = checkEq cm_envs ce e
 
-    checkEq ce e
-      | alphaEq ce e = do
+    updBuilder updater (diff_expr, builder) = (diff_expr, updater builder)
+    checkEq cm_envs ce e
+      | alphaEqWithEnv cm_envs ce e = do
         logMsg $     "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
         throwError $ "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
       | otherwise    = do
@@ -439,16 +450,19 @@ easySubstFunc expr fn_id fn_body = substExpr subst expr
     subst = extendSubst (mkEmptySubst delFunFV) fn_id fn_body
 
 simplifyFunc :: [PostlDef] -> CoreExpr -> CheckerM CoreExpr
-simplifyFunc pstls expr = do
-  hscEnv     <- gets st_hscenv
-  simplified <- liftIO $ simplifyFuncIO hscEnv pstls expr
-  let no_lets_expr = inlineLets simplified
-  case find isBetaReduction (universe no_lets_expr) of
-    Just _  -> simplifyFunc pstls no_lets_expr
-    Nothing -> return no_lets_expr
+simplifyFunc pstls expr = go 0 expr
   where
-    isBetaReduction (App (Lam _ _) _) = True
-    isBetaReduction _ = False
+    go n _ | n >= 3 = throwError $ "Unexpected expression. Expression needs to much beta-reductions. Default threshold = 3. Expr:\n" ++ prettyString expr
+    go n e = do
+      hscEnv     <- gets st_hscenv
+      simplified <- liftIO $ simplifyFuncIO hscEnv pstls e
+      let no_lets_expr = inlineLets simplified
+      case find isBetaRedex (universe no_lets_expr) of
+        Just _  -> go (n + 1) no_lets_expr
+        Nothing -> return no_lets_expr
+
+    isBetaRedex (App (Lam _ _) _) = True
+    isBetaRedex _                 = False
 
 simplifyFuncIO :: HscEnv -> [PostlDef] -> CoreExpr -> IO CoreExpr
 simplifyFuncIO hscEnv pstls expr =
@@ -468,7 +482,7 @@ simplifyFuncIO hscEnv pstls expr =
         -- my_env = setInScopeSet simpl_env my_in_scope
         rules = map pstl_rule pstls
         simpl_env = mkSimplEnv (se_mode opts) fam_envs
-        ru_rhs_fv = map (exprFreeVars . ru_rhs) rules
+        ru_rhs_fv = map ruleRhsFreeVars rules
         fv_set    = foldl unionUniqSets (exprFreeVars expr) ru_rhs_fv
           -- TODO order IS IMPORTANT. WANT TO SAVE MODIFied
         fv_idInfo_set = fv_set `addListToUniqSet` map pstl_fid pstls
@@ -487,7 +501,7 @@ simplifyFuncIO hscEnv pstls expr =
                           simplExpr my_env expr
 
     if not (null rules)
-      then 
+      then
         if alphaEq expr' expr
           then putStrLn $ "NOT FIRED: " ++ show (map (prettyString . pstl_id) pstls)
           else putStrLn $ "RULE `` FIRED"

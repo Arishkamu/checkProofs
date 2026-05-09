@@ -1,12 +1,12 @@
 module AstInfo where
 
-import GHC.Core ( CoreExpr, CoreBndr )
+import GHC (HscEnv)
+import GHC.Core ( CoreExpr, CoreRule )
 import GHC.Types.Id ( Id )
+import GHC.Utils.Outputable (Outputable)
 
 import Control.Monad.Except (ExceptT)
 import Control.Monad.State.Lazy (StateT)
-import GHC (HscEnv)
-import GHC.Base (Module)
 
 -- data Conversion = Conversion {
 --   lhsCN     :: CoreExpr,
@@ -30,11 +30,17 @@ data Conversion = Conversion {
 type DeclConversions = (Id, [Conversion])
 type FuncDef  = (Id, CoreExpr)
 
+-- TODO store only pstl_id and CoreRule
+-- data PostlDef = PostlDef {
+--   pstl_id     :: Id,
+--   pstl_binds  :: [CoreBndr],
+--   pstl_lhs    :: CoreExpr,
+--   pstl_rhs    :: CoreExpr
+-- }
 data PostlDef = PostlDef {
   pstl_id     :: Id,
-  pstl_binds  :: [CoreBndr],
-  pstl_lhs    :: CoreExpr,
-  pstl_rhs    :: CoreExpr
+  pstl_fid    :: Id, -- id for key function in lhs rule
+  pstl_rule   :: CoreRule
 }
 
 -- data AstInfo = AstInfo {
@@ -48,9 +54,23 @@ data CheckerST = CheckerST {
   st_funcdefs     :: [FuncDef], -- List of all function definitions (decls)
   st_postldefs    :: [PostlDef], -- List of all postulate definitions
   st_cnvrs_count  :: Int,
-  st_declconvr_id :: Id
-  -- st_hscenv       :: HscEnv
+  st_declconvr_id :: Maybe Id,
+  st_hscenv       :: HscEnv
 }
+
+-- data CheckerST = CheckerST {
+--   -- stay the same
+--   st_declconvrs   :: [DeclConversions], -- List of Conversion per decl
+--   st_funcdefs     :: [FuncDef], -- List of all function definitions (decls)
+--   st_postldefs    :: [PostlDef], -- List of all postulate definitions
+--   st_hscenv       :: HscEnv
+--   -- pass throught
+--   st_newpostls    :: [PostlDef], -- List of all postulate definitions
+--   -- new for each conversion
+--   st_alphaEq      :: 
+--   st_cnvrs_count  :: Int,
+--   st_declconvr_id :: Id,
+-- }
 
 type CheckerM = ExceptT String (StateT CheckerST IO)
 
