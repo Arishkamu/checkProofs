@@ -282,52 +282,27 @@ analyzeConvrs hscEnv Conversion{..} =
 -- return (CoreExpr, CoreExpr -> CoreExpr = builder)
 -- this thing throwError noDiff 
 -- or returns firstDiffExpr and builder
-getFirstDiff :: (CoreExpr -> CheckerM CoreExpr) -> CoreExpr -> CoreExpr -> CheckerM CoreExpr
-getFirstDiff analyzer = go -- (suc, _) (suc, err) (err, _)
+getFirstDiff :: CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr -> CoreExpr)
+getFirstDiff = go -- (suc, _) (suc, err) (err, _)
   where
     go (Lam _ cntr_body) (Lam b body) = do
-      new_body <- go cntr_body body
-      return $ Lam b new_body
+      res <- go cntr_body body
+      return $ updBuilder (Lam b .) res
     go ce@(App _ (Type _)) e@(App _ (Type _)) = checkEq ce e
-    go (App cntr_f cntr_arg)  (App f arg) =
-      (go cntr_f f <&> (`App` arg)) <|> (go cntr_arg arg <&> App f)
-      -- do
-      --   new_f <- go cntr_f f
-      --     `catchError` 
-      --       (\e -> 
-      --         if "No difference" `isPrefixOf` e 
-      --           then go cntr_arg arg <&> App f
-      --           else do
-      --             logMsg $ "Catches: " ++ e
-      --             throwError e)
-        -- 1) no error -> App new_f arg
-        -- 2) no difff -> go cntr_arg arg <&> App f
-        -- 3) error.   -> throwError e
-        -- return $ App new_f arg
-      
-      -- <|> (go cntr_arg arg <&> App f)
-      --
-      -- WHAT IF
-      -- get expr=(f, [arg])
-      -- f==cntr_f -> App f (go arg_lll)
-      -- f!=cntr_f -> analyze expr
-      --
-
-      -- `catchError` 
-      --   (\e -> do
-      --     logMsg $ "Catches: " ++ e
-      --     throwError e)
+    go (App cntr_f cntr_arg) (App f arg) =
+      (go cntr_f f <&> updBuilder (\builder x -> App (builder x) arg)) 
+        <|> (go cntr_arg arg <&> updBuilder (App f .))
     go ce e = checkEq ce e
     
+    updBuilder updater (diff_expr, builder) = (diff_expr, updater builder)
+
     checkEq ce e
       | alphaEq ce e = do
-        logMsg $ "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
+        logMsg $     "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
         throwError $ "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
       | otherwise    = do
         logMsg $ "Get diff:\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e ++ "\n"
-        r <- analyzer e
-        logMsg $ "After analyzer:" ++ "\n       expr: " ++ prettyString r ++ "\n"
-        return r
+        return (e, id)
 
 
 
@@ -339,30 +314,31 @@ analyzeBetaConv control_expr expr
 analyzeEtaConv :: CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
 analyzeEtaConv control_expr expr =
   do
-    new_expr <- getFirstDiff analyzer control_expr expr
-    return (control_expr, new_expr)
-  where
-    analyzer expr = case expr of
-      (Lam v1 (App f (Var v2))) | v1 == v2
-        -> do
-          logMsg $ "Evaluate Eta for expr:\n  " ++ prettyString expr
-          return f  -- TODO: check and fix
-      _ -> throwError $ "Error in analyzeEtaConv:\n" ++ prettyString expr
+    (diff_expr, builder) <- getFirstDiff control_expr expr
+    logMsg $ "Evaluate Eta for expr:\n  " ++ prettyString diff_expr
+    new_expr <- case diff_expr of
+      (Lam v1 (App f (Var v2))) | v1 == v2 -> return f  -- TODO: check and fix
+      _ -> throwError $ "Error in analyzeEtaConv:\n" ++ prettyString diff_expr
+    return (control_expr, builder new_expr)
 
 analyzeFuncConv :: HscEnv -> String -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
 analyzeFuncConv hscEnv comment control_expr expr =
   do
-    new_expr <- getFirstDiff analyzer control_expr expr
-    logMsg $ "After get-new-expr:\n" ++ prettyString new_expr
-    simpl_expr <- simplifyFunc hscEnv [] new_expr
+    (diff_expr, builder) <- getFirstDiff control_expr expr
+    logMsg $ "Evaluate func substitution for expr:\n  " ++ prettyString diff_expr
+    subst_expr      <- substitute diff_expr
+    let restr_expr   = builder subst_expr
+    simpl_expr      <- simplifyFunc hscEnv [] restr_expr
     let no_lets_expr = inlineLets simpl_expr
-    logMsg $ "After get-simpl_expr-1:\n" ++ prettyString (inlineLets simpl_expr)
-    simpl_2_expr <- simplifyFunc hscEnv [] no_lets_expr
-    logMsg $ "After get-simpl_expr-2:\n" ++ prettyString (inlineLets simpl_2_expr)
-    return (control_expr, (inlineLets simpl_2_expr))
+    -- TODO as much simplify as needed
+    return (control_expr, no_lets_expr)
+    -- logMsg $ "After get-simpl_expr-1:\n" ++ prettyString (inlineLets simpl_expr)
+    -- simpl_2_expr <- simplifyFunc hscEnv [] no_lets_expr
+    -- logMsg $ "After get-simpl_expr-2:\n" ++ prettyString (inlineLets simpl_2_expr)
+    -- return (control_expr, builder (inlineLets simpl_2_expr))
 
   where
-    analyzer expr =
+    substitute expr =
       do
         let (func, args) = collectArgs expr
         func_id   <- checkComment func
@@ -398,14 +374,14 @@ getBodyByFuncId func_id =
 analyzePostlConv :: HscEnv -> String -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
 analyzePostlConv hscEnv comment control_expr expr =
   do
-    postl_defs <- gets st_postldefs
+    postl_defs    <- gets st_postldefs
     declconv_defs <- gets st_declconvrs
     let matchedPstls = filter ((comment ==) . getStrById . pstl_id) postl_defs
     rule <- case matchedPstls of
       [pstl] -> mkPstlRule hscEnv pstl
       (_:_)  -> throwError $ "Unexpected postulate. Found more than one matched with comment `" ++ comment ++ "`"
       []     -> throwError $ "Unexpected postulate. Not found match with comment `" ++ comment ++ "`" ++ "\nALL postuls:\n" ++ prettyString (map pstl_id postl_defs) ++ "\nOrder:\n" ++ prettyString (map fst declconv_defs)
-    new_expr <- simplifyFunc hscEnv [rule] expr
+    new_expr        <- simplifyFunc hscEnv [rule] expr
     new_contrl_expr <- simplifyFunc hscEnv [rule] control_expr
     let no_lets_expr = inlineLets new_expr
     return (new_contrl_expr, no_lets_expr)
@@ -535,7 +511,7 @@ simplifyFuncIO hscEnv rules expr set_topDefs =
     putStrLn $ "------MY-ENV-------"
     let sz = exprSize expr
     (expr', _) <- initSmpl logger my_rule_env top_env_cfg sz $
-                          simplExprGently my_env expr
+                          simplExpr my_env expr
     re <- my_rule_env
     -- putStrLn $ "Local: " ++ showSDocUnsafe (pprRuleBase $ re_local_rules re)
     -- putStrLn $ "Home: " ++ showSDocUnsafe (pprRuleBase $ re_home_rules re)
@@ -548,9 +524,9 @@ simplifyFuncIO hscEnv rules expr set_topDefs =
       else putStrLn "No rules"
     return expr'
 
-simplExprGently env expr = do
-    expr1 <- simplExpr env (occurAnalyseExpr expr)
-    simplExpr env (occurAnalyseExpr expr1)
+-- simplExprGently env expr = do
+--     expr1 <- simplExpr env (occurAnalyseExpr expr)
+--     simplExpr env (occurAnalyseExpr expr1)
 
 -- {- TODO:
 --     * collectModule no dif just yet
