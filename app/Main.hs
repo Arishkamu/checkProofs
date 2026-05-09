@@ -96,12 +96,15 @@ main =
 ---- COLLECTING AST STATE
 getState :: CoreModule -> CheckerST
 getState CoreModule{..} = CheckerST {
-  st_declconvrs = declConvrsOrdered,
-  st_funcdefs   = binds,
-  st_postldefs  = concatMap collectPostls binds
+  st_declconvrs   = orderConvrs $ concatMap collectConvrs binds,
+  st_funcdefs     = binds,
+  st_postldefs    = concatMap collectPostls binds
+  -- st_cnvrs_count  = 0
+  -- st_declconvr_id = Id
+  -- TODO. maybe add st_counter = CheckerCounter{}
 }
   where
-  declConvrs = concatMap collectConvrs binds
+  declConvrs = orderConvrs $ concatMap collectConvrs binds
   declConvrsOrdered = uncurry (++) $ partition (isPrefixOf "lemma" . getStrById . fst) declConvrs
   binds    = flattenBinds cm_binds
   -- (funcDefs, postlDefs, proofsDefs) = foldr splitFunc ([], [], []) binds
@@ -122,6 +125,9 @@ getState CoreModule{..} = CheckerST {
   --   AnId elt_id -> getStrById elt_id == strName
   --   _           -> False) cm_types
 
+orderConvrs :: [DeclConversions] -> [DeclConversions]
+orderConvrs = uncurry (++) . partition (isPrefixOf "lemma" . getStrById . fst)
+
 collectPostls :: FuncDef -> [PostlDef]
 collectPostls (f_id, f_body) = case pstl_rest of
   App (App (App (Var app_id) _) pstl_lhs) pstl_rhs | getStrById app_id == "postulate"
@@ -136,7 +142,6 @@ collectConvrs (f_id, f_body) = case map getConvrs pairs of
     []      -> []
     convrs  -> [(f_id, convrs)]
   where
-  convrs = map getConvrs pairs
   argAddInfo = [(argExpr, argComm) |
     (App (App (App (Var exprName) _) argExpr) argComm) <- universe f_body,
     "addInfo" <- [getStrById exprName] ]
@@ -159,21 +164,19 @@ toSideExprInfo (App (App (App (Var expr_side) _) _) expr_info) = toSideInfo (toE
   toSideInfo
     | getStrById expr_side == "Left"  = Left
     | getStrById expr_side == "Right" = Right
+    | otherwise = err "`Left` or `Right`" expr_side
   toExprInfo (Var v)
     | getStrById v == "Beta" = Beta
     | getStrById v == "Eta" = Eta
   toExprInfo (App (Var v_id) (App _ (Lit (LitString pack_str))))
     | getStrById v_id == "Func"  = Func $ BS8.unpack pack_str
     | getStrById v_id == "Postl" = Postl $ BS8.unpack pack_str
+  toExprInfo _ = err "`Beta`, `Eta`, `Func comment`, or `Postl comment`" expr_side
+  err str_expect e = error $ "Unexpected expression structure for comment, expected " ++ str_expect ++ ".\nGot: " ++ prettyString e
 toSideExprInfo e = error $ "Unexpected expression structure for comment, expected a function application with a string literal argument.\nGot: " ++ prettyString e
 
 getModule :: HscEnv -> Module
 getModule = mainModIs . hsc_HUE
--- onSnd :: (b -> c) -> (a, b) -> (a, c)
--- onSnd f (x, y) = (x, f y)
-
--- -- alphaEqExpr :: CoreExpr -> CoreExpr -> Bool
--- -- alphaEqExpr lhs rhs = (deBruijnize lhs) == (deBruijnize rhs)
 
 -- assume that any variable in convertion is OR
 -- in (\x ->) this convertion
@@ -182,11 +185,12 @@ getModule = mainModIs . hsc_HUE
 alphaEq :: (Eq (DeBruijn a)) => a -> a -> Bool
 alphaEq lhv rhv = deBruijnize lhv == deBruijnize rhv
 
--- checkArgTypes :: CoreExpr -> CoreExpr -> Bool
--- checkArgTypes (Type tl) (Type tr) = (deBruijnize tl) == (deBruijnize tr)
--- checkArgTypes _ _ = True
--- ---- END UTILS
-
+mapPassStM :: (Monad m) => (a -> s -> m (b, s)) -> [a] -> s -> m [(b, s)]
+mapPassStM _ [] _ = return []
+mapPassStM f (a:as) s = do
+  r@(_, s1) <- f a s
+  (r :) <$> mapPassStM f as s1
+---- UTILS
 
 
 
@@ -195,6 +199,7 @@ logMsg msg = liftIO $ putStrLn $ "LOG\n" ++ msg
 
 incCnvrsCounter :: CheckerM ()
 incCnvrsCounter = modify (\st -> st { st_cnvrs_count = st_cnvrs_count st + 1 })
+
 newDeclCnvrs :: Id -> CheckerM ()
 newDeclCnvrs decl_id = modify (\st -> st { st_cnvrs_count = 0, st_declconvr_id = decl_id })
 
@@ -214,10 +219,31 @@ madePostulate f_id =
     modify (\st -> st { st_postldefs = new_postl : st_postldefs st})
 
 
--- incCounter :: CheckerM ()
--- incCounter = modify (\st -> st { counter = counter st + 1 })
 
------- TODO-1
+------ Analyze
+analyzeModuleSt :: HscEnv -> CheckerST -> IO ()
+analyzeModuleSt hscEnv checkerST =
+
+  do
+    result <- mapPassStM runChecker (st_declconvrs checkerST) checkerST 
+    putStrLn $ prettyStringReport $ toReport result
+
+  where
+    runChecker x = runStateT (runExceptT (analyzeDeclCnvrs x))
+    toReport     = foldr resToReport ([], [])
+    resToReport (res, st) (succs, fails) = case res of
+      Left reason -> (succs                     , createFail st reason : fails)
+      Right _     -> (st_declconvr_id st : succs,                        fails)
+
+    analyzeDeclCnvrs :: DeclConversions -> CheckerM ()
+    analyzeDeclCnvrs (decl_id, cnvrs) =
+      do
+        newDeclCnvrs decl_id
+        mapM_ (analyzeConvrs hscEnv) cnvrs
+        madePostulate decl_id
+
+
+---- ANALYZE SINGLE CONVERSION
 cmpCnvrs :: CoreExpr -> CoreExpr -> CheckerM ()
 cmpCnvrs e_cntr e = do
   logMsg $
@@ -230,51 +256,7 @@ cmpCnvrs e_cntr e = do
     else throwError $ "Error. Not equal.\n  Expected: " ++ prettyString e_cntr ++ "\n  Got: " ++ prettyString e
 
 
-analyzeModuleSt :: HscEnv -> CheckerST -> IO ()
-analyzeModuleSt hscEnv checkerST =
-
-  do
-    let d1 = head (st_declconvrs checkerST)
-    -- let c1 = head d1
-    -- map analyzeConvrs (st_declconvrs checkerST)
-    -- let initState = CheckerST 0
-
-    -- (result, st) <- runStateT (runExceptT (analyzeConvrs c1)) checkerST
-    -- putStrLn $ case result of 
-    --   Left s -> "ERROR: " ++ s
-    --   Right r -> prettyStringEqPairs r
-    result <- myMapM (st_declconvrs checkerST) checkerST runChecker
-    putStrLn $ prettyStringReport $ toReport result
-    -- return result
-    -- mapM fff result
-
-  where
-    runChecker x = runStateT (runExceptT (analyzeDeclCnvrs hscEnv x))
-    toReport     = foldr resToReport ([], [])
-    resToReport (res, st) (succs, fails) = case res of
-      Left reason -> (succs                     , createFail st reason : fails)
-      Right res   -> (st_declconvr_id st : succs,                        fails)
-    myMapM :: (Monad m) => [a] -> CheckerST -> (a -> CheckerST -> m (b, CheckerST)) -> m [(b, CheckerST)]
-    myMapM [] s0 fff = return []
-    myMapM (a1:as) s0 fff = do
-      res1@(b1, s1) <- fff a1 s0
-      rest <- myMapM as s1 fff
-      return (res1 : rest )
-
-    -- [a], s -> (a, s -> m (b, s)) -> m [b]
-    analyzeDeclCnvrs :: HscEnv -> DeclConversions -> CheckerM ()
-    analyzeDeclCnvrs hscEnv (decl_id, cnvrs) =
-      do
-        newDeclCnvrs decl_id
-        mapM_ (analyzeConvrs hscEnv) cnvrs
-        madePostulate decl_id
-    -- return $ intercalate "\n" $ map prettyStringEqPairs res
-    -- runStateT (mapStateT f m) initState = f (runStateT m initState)
-
-
------- TODO-2
-
----- ANALYZE SINGLE CONVERSION
+-- TODO STARTS HEAR
 analyzeConvrs :: HscEnv -> Conversion -> CheckerM ()
 analyzeConvrs hscEnv Conversion{..} =
   do
@@ -294,21 +276,36 @@ analyzeConvrs hscEnv Conversion{..} =
       Left  info -> (cn_lhs, cn_rhs, info)
       Right info -> (cn_rhs, cn_lhs, info)
 
+---- just believe that this is enought
+
+-- TODO
+-- return (CoreExpr, CoreExpr -> CoreExpr = builder)
+-- this thing throwError noDiff 
+-- or returns firstDiffExpr and builder
 getFirstDiff :: (CoreExpr -> CheckerM CoreExpr) -> CoreExpr -> CoreExpr -> CheckerM CoreExpr
 getFirstDiff analyzer = go -- (suc, _) (suc, err) (err, _)
   where
-    go (Lam cntr_b cntr_body) (Lam b body) = do
+    go (Lam _ cntr_body) (Lam b body) = do
       new_body <- go cntr_body body
       return $ Lam b new_body
-    go ce@(App _ (Type _)) e@(App _ (Type _))
-      | alphaEq ce e = throwError $ "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
-      | otherwise    = do
-        logMsg $ "Get diff:\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e ++ "\n"
-        r <- analyzer e
-        logMsg $ "After analyzer:" ++ "\n       expr: " ++ prettyString r ++ "\n"
-        return r
+    go ce@(App _ (Type _)) e@(App _ (Type _)) = checkEq ce e
     go (App cntr_f cntr_arg)  (App f arg) =
       (go cntr_f f <&> (`App` arg)) <|> (go cntr_arg arg <&> App f)
+      -- do
+      --   new_f <- go cntr_f f
+      --     `catchError` 
+      --       (\e -> 
+      --         if "No difference" `isPrefixOf` e 
+      --           then go cntr_arg arg <&> App f
+      --           else do
+      --             logMsg $ "Catches: " ++ e
+      --             throwError e)
+        -- 1) no error -> App new_f arg
+        -- 2) no difff -> go cntr_arg arg <&> App f
+        -- 3) error.   -> throwError e
+        -- return $ App new_f arg
+      
+      -- <|> (go cntr_arg arg <&> App f)
       --
       -- WHAT IF
       -- get expr=(f, [arg])
@@ -320,8 +317,9 @@ getFirstDiff analyzer = go -- (suc, _) (suc, err) (err, _)
       --   (\e -> do
       --     logMsg $ "Catches: " ++ e
       --     throwError e)
-    go ce e
-    -- TODO NOW 
+    go ce e = checkEq ce e
+    
+    checkEq ce e
       | alphaEq ce e = do
         logMsg $ "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
         throwError $ "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
