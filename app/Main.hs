@@ -5,10 +5,10 @@ module Main where
 import GHC
 import GHC.Paths (libdir)
 import GHC.Core
-import GHC.Core.Map.Type (DeBruijn(..), deBruijnize, emptyCME, extendCMEs)
+import GHC.Core.Map.Type (DeBruijn(..), deBruijnize, extendCMEs)
 import GHC.Core.Make (mkCoreApps) -- maybe mkApps
 import GHC.Driver.DynFlags ( gopt_set )
-import GHC.Driver.Env (mainModIs, hsc_HUE)
+import GHC.Driver.Env ( mainModIs, hsc_HUE, HscEnv(..) )
 import GHC.Types.Literal (Literal(..))
 import GHC.Types.Name.Occurrence (occNameString)
 import GHC.Types.Basic (Activation(..))
@@ -20,40 +20,34 @@ import GHC.Types.Var.Set (delVarSet, emptyDVarSet)
 import GHC.Data.FastString (mkFastString)
 import GHC.Types.Unique.Set (addListToUniqSet, unionUniqSets)
 
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.State.Lazy
-import Control.Monad.Except
+import Control.Monad.State.Lazy ( runStateT, liftIO, gets, modify )
+import Control.Monad.Except ( runExceptT, MonadError(..) )
 import Control.Applicative ((<|>))
 import Data.Generics.Uniplate.Data (universe)
 import qualified Data.ByteString.Char8 as BS8
-import Data.Functor
-import Data.List (intercalate, isPrefixOf, partition, find, singleton)
+import Data.Functor ( (<&>) )
+import Data.List (isPrefixOf, partition, find)
 import Data.Bifunctor (bimap)
 
 -- Simplifier
 import GHC.Unit.External (initExternalUnitCache, eucEPS, ExternalPackageState(..))
 import GHC.Driver.Config.Core.Opt.Simplify (initSimplifyExprOpts)
-import GHC.Driver.Env (HscEnv(..))
 import GHC.Core.FamInstEnv (extendFamInstEnvList, emptyFamInstEnv)
 import GHC.Core.Opt.Simplify (SimplifyExprOpts(..))
-import GHC.Core.Opt.Simplify.Env (mkSimplEnv, getInScope, setInScopeSet)
-import GHC.Core.Rules (updExternalPackageRules, emptyRuleEnv, addLocalRules, mkRule)
 import GHC.Core.Stats (exprSize)
 import GHC.Core.Opt.Simplify.Monad (initSmpl)
 import GHC.Core.Opt.Simplify.Iteration (simplExpr)
-import GHC.Core.Opt.Simplify.Env (pprSimplEnv)
 
 -- DEBUG
-import GHC.Utils.Outputable
-import GHC.Types.Id
-import GHC.Core.Rules
-import GHC.Core.Opt.Simplify.Env
-import GHC.Core.Opt.OccurAnal
-import GHC.Types.Id.Info
+import GHC.Utils.Outputable ( ppr, showSDocUnsafe )
+import GHC.Types.Id ( modifyIdInfo )
+import GHC.Core.Rules ( addLocalRules, emptyRuleEnv, mkRule, updExternalPackageRules )
+import GHC.Core.Opt.Simplify.Env ( getInScope, mkSimplEnv, setInScopeSet )
+import GHC.Types.Id.Info ( RuleInfo(..), setRuleInfo )
 
 import AstInfo
 import PrettyString
-import AstInfo (CheckerST(st_declconvrs, st_funcdefs))
+import SortDecls ( sorteDeclConvrs )
 
 
 main :: IO ()
@@ -79,6 +73,9 @@ main =
     liftIO $ putStrLn $ prettyString astState
     liftIO $ putStrLn "\n===== End AstState =====\n"
     liftIO $ analyzeModuleSt astState
+    liftIO $ putStrLn "\n===== Sorted DeclConvers =====\n"
+    liftIO $ putStrLn $ prettyString (map fst (st_declconvrs astState))
+    liftIO $ putStrLn "\n===== End Sorted DeclConvers =====\n"
     -- liftIO $ putStrLn result
     -- let result = analyzeConversions astState
     -- case result of
@@ -102,7 +99,7 @@ main =
 ---- COLLECTING AST STATE
 getState :: HscEnv -> CoreModule -> CheckerST
 getState hscEnv CoreModule{..} = CheckerST {
-  st_declconvrs   = orderConvrs $ concatMap collectConvrs binds,
+  st_declconvrs   = sortedDeclConvrs,
   st_funcdefs     = binds,
   st_postldefs    = concatMap (collectPostls hscEnv) binds,
   st_hscenv       = hscEnv,
@@ -114,6 +111,9 @@ getState hscEnv CoreModule{..} = CheckerST {
   -- declConvrs = orderConvrs $ concatMap collectConvrs binds
   -- declConvrsOrdered = uncurry (++) $ partition (isPrefixOf "lemma" . getStrById . fst) declConvrs
   binds    = flattenBinds cm_binds
+  sortedDeclConvrs = case sorteDeclConvrs $ concatMap collectConvrs binds of
+    Left cyrcles -> error $ "Error. Cyrcle dependencies were found.\n" ++ showSDocUnsafe (ppr cyrcles)
+    Right sdc    -> sdc
   -- (funcDefs, postlDefs, proofsDefs) = foldr splitFunc ([], [], []) binds
   -- splitFunc (fns, pstls, prfs) bind
   --   | isAppliedFn bind value_id = (fns, pstls, bind : prfs)
@@ -191,9 +191,11 @@ getModule = mainModIs . hsc_HUE
 -- in (\x ->) this convertion
 -- global func
 -- parametr for this function
+-- Called for whole expr and works as needs 
 alphaEq :: (Eq (DeBruijn a)) => a -> a -> Bool
 alphaEq lhv rhv = deBruijnize lhv == deBruijnize rhv
 
+-- Called in getFirstDiff
 alphaEqWithEnv :: (Eq (DeBruijn a)) => ([Id], [Id]) -> a -> a -> Bool
 alphaEqWithEnv (l_vars, r_vars) lhv rhv =
     deBrujinWithEnv lhv l_vars == deBrujinWithEnv rhv r_vars

@@ -243,6 +243,11 @@ theoremApplicative2 g x = value (
 3 Applicative law (Interchange)
 fs <*>.. return x  ===  return ($ x) <*>.. fs
 -}
+theoremApplicative3 :: Monad m => m (a -> b) -> a -> m b
+theoremApplicative3 fs x = value (
+       (fs <*>.. return x )         `addInfo` Left  (Postl "lemma1")-- [lemma1]
+  ==== (fs >>= \f -> return (f x))  `addInfo` Right (Postl "lemma2")-- [lemma2]
+  ==== (return (=$ x) <*>.. fs)      `addInfo` Left Beta)
 
 lemma1 fs x = value (-- left hand side transformation
         (fs <*>.. return x )                     `addInfo` Left (Func "<*>..")-- (<*>..)
@@ -259,12 +264,6 @@ lemma2 fs x = value (-- right hand side transformation
     ==== (fs >>= return =. (=$ x))               `addInfo` Left (Func "=.")-- (=.)
     ==== (fs >>= \f -> return ((=$ x) f))       `addInfo` Left (Func "=$")-- ($)
     ==== (fs >>= \f -> return (f x))            `addInfo` Left Beta)
-
-theoremApplicative3 :: Monad m => m (a -> b) -> a -> m b
-theoremApplicative3 fs x = value (
-       (fs <*>.. return x )         `addInfo` Left  (Postl "lemma1")-- [lemma1]
-  ==== (fs >>= \f -> return (f x))  `addInfo` Right (Postl "lemma2")-- [lemma2]
-  ==== (return (=$ x) <*>.. fs)      `addInfo` Left Beta)
 
 -- Expected: App :: >>=
 --   @m_a1mZ
@@ -286,40 +285,45 @@ theoremApplicative3 fs x = value (
 4 Applicative law (Composition)
 return (.) <*>.. us <*>.. vs <*>.. xs  ==  us <*>.. (vs <*>.. xs)
 -}
-{- TODO ARI
-    theoremApplicative4 :: Monad m => m (b -> c) -> m (a -> b) -> m a -> m c
-    theoremApplicative4 us vs xs = value (
-    ==== (return (=.) <*>.. us <*>.. vs <*>.. xs )         `addInfo` Left (Postl "lemma1"-- [lemma1]
-    ==== (us >>= \u -> vs >>= \v -> myLiftM (u =. v) xs)   `addInfo` Left (Postl "lemma2"-- [lemma2]
-    ==== (us <*>.. (vs <*>.. xs))                          `addInfo` Left Beta)
-    where
-        lemma1 = value (-- left hand side transformation
-        ==== (return (=.) <*>.. us <*>.. vs <*>.. xs )                              `addInfo` Left (Func "myLiftM"-- (<*>..)
-        ==== ((return (=.) >>= \c -> myLiftM c us) <*>.. vs <*>.. xs)               -- [m1]
-        ==== ((\c -> myLiftM c us) (=.) <*>.. vs <*>.. xs)                          -- Left Beta-reduction
-        ==== (myLiftM (=.) us <*>.. vs <*>.. xs)                                    `addInfo` Left (Func "myLiftM"-- myLiftM
-        ==== ((us >>= return =. (=.)) <*>.. vs <*>.. xs)                            `addInfo` Left (Func "myLiftM"-- (<*>..)
-        ==== (((us >>= return =. (=.)) >>= \r -> myLiftM r vs) <*>.. xs)             -- [m3] 
-        ==== ((us >>= \u -> (return =. (=.)) u >>= \r -> myLiftM r vs) <*>.. xs)    `addInfo` Left (Func "myLiftM"-- (=.)
-        ==== ((us >>= \u -> return (u =.) >>= \r -> myLiftM r vs) <*>.. xs)         -- [m1]
-        ==== ((us >>= \u -> (\r -> myLiftM r vs) (u =.)) <*>.. xs)                  -- Left Beta-reduction
-        ==== ((us >>= \u -> myLiftM (u =.) vs) <*>.. xs)                            `addInfo` Left (Func "myLiftM"-- myLiftM
-        ==== ((us >>= \u -> vs >>= return =. (u =.)) <*>.. xs)                      `addInfo` Left (Func "myLiftM"-- (<*>..)
-        ==== ((us >>= \u -> vs >>= return =. (u =.)) >>= \f -> myLiftM f xs)         -- [m3] + Left Beta-reduction ??????? TODO продумать многошаговость, если не вложенная, то, вроде, несложно
-        ==== (us >>= \u -> vs >>= return =. (u =.) >>= \f -> myLiftM f xs)           -- [m3] 
-        ==== (us >>= \u -> vs >>= \v -> (return =. (u =.)) v >>= \f -> myLiftM f xs) -- Left Beta-reduction
-        ==== (us >>= \u -> vs >>= \v -> return  (u =. v) >>= \f -> myLiftM f xs)    -- [m1]
-        ==== (us >>= \u -> vs >>= \v ->  (\f -> myLiftM f xs) (u =. v))             -- Left Beta-reduction
-        ==== (us >>= \u -> vs >>= \v ->  myLiftM (u =. v) xs)                        `addInfo` Left Beta)
-        lemma2 = value (-- right hand side transformation
-        ==== (us <*>.. (vs <*>.. xs) )                                -- (<*>..)
-        ==== (us >>= \u -> myLiftM u (vs <*>.. xs))                     -- (<*>..)
-        ==== (us >>= \u -> myLiftM u (vs >>= \v -> myLiftM v xs))         -- myLiftM
-        ==== (us >>= \u -> (vs >>= \v -> myLiftM v xs) >>= return =. u)  -- [m3] + Left Beta-reduction ??????
-        ==== (us >>= \u -> vs >>= \v -> myLiftM v xs >>= return =. u)    -- myLiftM
-        ==== (us >>= \u -> vs >>= \v -> myLiftM u (myLiftM v xs) )        -- [theoremFunctor2]
-        ==== (us >>= \u -> vs >>= \v -> myLiftM (u =. v) xs)               `addInfo` Left Beta)
--}
+theoremApplicative4 :: Monad m => m (b -> c) -> m (a -> b) -> m a -> m c
+theoremApplicative4 us vs xs = value (
+      (return (=.) <*>.. us <*>.. vs <*>.. xs )       `addInfo` Left (Postl "ta4_lemma1")-- [lemma1]
+ ==== (us >>= \u -> vs >>= \v -> myLiftM (u =. v) xs) `addInfo` Left (Postl "ta4_lemma2")-- [lemma2]
+ ==== (us <*>.. (vs <*>.. xs))                        `addInfo` Left Beta)
+
+ta4_lemma1 :: Monad m => m (b -> c) -> m (a -> b) -> m a -> m c
+ta4_lemma1 us vs xs = value (-- left hand side transformation
+      (return (=.) <*>.. us <*>.. vs <*>.. xs )                              `addInfo` Left (Func "<*>..")-- (<*>..)
+ ==== ((return (=.) >>= \c -> myLiftM c us) <*>.. vs <*>.. xs)               `addInfo` Left (Postl "myM1")-- [m1]
+ ==== ((\c -> myLiftM c us) (=.) <*>.. vs <*>.. xs)                          `addInfo` Left Beta-- Left Beta-reduction
+ ==== (myLiftM (=.) us <*>.. vs <*>.. xs)                                    `addInfo` Left (Func "myLiftM")-- myLiftM
+ ==== ((us >>= return =. (=.)) <*>.. vs <*>.. xs)                            `addInfo` Left (Func "<*>..")-- (<*>..)
+ ==== (((us >>= return =. (=.)) >>= \r -> myLiftM r vs) <*>.. xs)            `addInfo` Left (Postl "myM3")-- [m3] 
+ ==== ((us >>= \u -> (return =. (=.)) u >>= \r -> myLiftM r vs) <*>.. xs)    `addInfo` Left (Func "=.")-- (=.)
+ ==== ((us >>= \u -> return (u =.) >>= \r -> myLiftM r vs) <*>.. xs)         `addInfo` Left (Postl "myM1")-- [m1]
+ ==== ((us >>= \u -> (\r -> myLiftM r vs) (u =.)) <*>.. xs)                  `addInfo` Left Beta-- Left Beta-reduction
+ ==== ((us >>= \u -> myLiftM (u =.) vs) <*>.. xs)                            `addInfo` Left (Func "myLiftM")-- myLiftM
+ ==== ((us >>= \u -> vs >>= return =. (u =.)) <*>.. xs)                      `addInfo` Left (Func "<*>..")-- (<*>..)
+ ==== ((us >>= \u -> vs >>= return =. (u =.)) >>= \f -> myLiftM f xs)         `addInfo` Left (Postl "myM3")
+--  ==== ((us >>= \u -> vs >>= return =. (u =.)) >>= \f -> myLiftM f xs)         `addInfo` Left Beta-- [m3] + Left Beta-reduction ??????? TODO продумать многошаговость, если не вложенная, то, вроде, несложно
+ ==== (us >>= \u -> vs >>= return =. (u =.) >>= \f -> myLiftM f xs)           `addInfo` Left (Postl "myM3")-- [m3] 
+ ==== (us >>= \u -> vs >>= \v -> (return =. (u =.)) v >>= \f -> myLiftM f xs) `addInfo` Left (Func "=.")-- Left Beta-reduction
+ ==== (us >>= \u -> vs >>= \v -> return  (u =. v) >>= \f -> myLiftM f xs)    `addInfo` Left (Postl "myM1")-- [m1]
+ ==== (us >>= \u -> vs >>= \v ->  (\f -> myLiftM f xs) (u =. v))             `addInfo` Left Beta-- Left Beta-reduction
+ ==== (us >>= \u -> vs >>= \v ->  myLiftM (u =. v) xs)                        `addInfo` Left Beta)
+
+-- -- myM3 m k k' = (m >>= k >>= k')  `postulate`  (m >>= \x -> k x >>= k')
+
+ta4_lemma2 :: Monad m => m (b -> c) -> m (a -> b) -> m a -> m c
+ta4_lemma2 us vs xs = value (-- right hand side transformation
+      (us <*>.. (vs <*>.. xs) )                                   `addInfo` Left (Func "<*>..")-- (<*>..)
+ ==== (us >>= \u -> myLiftM u (vs <*>.. xs))                      `addInfo` Left (Func "<*>..")-- (<*>..)
+ ==== (us >>= \u -> myLiftM u (vs >>= \v -> myLiftM v xs))        `addInfo` Left (Func "myLiftM") -- myLiftM
+ ==== (us >>= \u -> (vs >>= \v -> myLiftM v xs) >>= return =. u)  `addInfo` Left (Postl "myM3")-- [m3] + Left Beta-reduction ??????
+--  ==== (us >>= \x -> (\u -> (vs >>= \v -> myLiftM v xs)) x >>= return =. u)  -- [m3] + Left Beta-reduction ??????
+ ==== (us >>= \u -> vs >>= \v -> myLiftM v xs >>= return =. u)    `addInfo` Right (Func "myLiftM")-- myLiftM
+ ==== (us >>= \u -> vs >>= \v -> myLiftM u (myLiftM v xs) )       `addInfo` Left (Postl "theoremFunctor2") -- [theoremFunctor2]
+ ==== (us >>= \u -> vs >>= \v -> myLiftM (u =. v) xs)             `addInfo` Left Beta)
 
 --------------------------------------------
 -- Законы класса Monad
@@ -487,13 +491,5 @@ instance  Monad Maybe  where
 --  === Nothing >>= k'               -- inst (>>=) (2)
 --  === (Nothing >>= k) >>= k'          
 
-
--- flip (flip f) x y = f x y
--- a + b = b + a
-
--- 0 + a = a + 0
--- a + 0 = a
-
--- a + 0 = a = 0 + a
 
  -- Lists (TODO тут понадобятся гипотезы индукции, это второй этап)

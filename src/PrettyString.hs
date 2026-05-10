@@ -58,10 +58,14 @@ instance PrettyString Conversion where
 
 instance PrettyString PostlDef where
   prettyStringIdent ident PostlDef{..} = 
-    bslN ident ++ "Postl_ID :: " ++ prettyStringIdent 0 pstl_id ++
-    bslN ident ++ "Binds:" ++ prettyStringIdent (ident + 2) pstl_binds ++
-    bslN (ident + 2) ++ "l_pstl: " ++ prettyStringIdent 0 pstl_lhs ++
-    bslN (ident + 2) ++ "r_pstl: " ++ prettyStringIdent 0 pstl_rhs
+    bslN ident ++ "Postl_ID :: "  ++ prettyStringIdent 0 pstl_id ++
+    bslN ident ++ "Postl_rule:\n" ++ prettyStringIdent 0 pstl_rule
+-- instance PrettyString PostlDef where
+-- prettyStringIdent ident PostlDef{..} = 
+--   bslN ident ++ "Postl_ID :: " ++ prettyStringIdent 0 pstl_id ++
+--   bslN ident ++ "Binds:" ++ prettyStringIdent (ident + 2) pstl_binds ++
+--   bslN (ident + 2) ++ "l_pstl: " ++ prettyStringIdent 0 pstl_lhs ++
+--   bslN (ident + 2) ++ "r_pstl: " ++ prettyStringIdent 0 pstl_rhs
 
 instance PrettyString CheckerST where
   prettyStringIdent :: Int -> CheckerST -> String
@@ -117,6 +121,11 @@ instance PrettyString CoreExpr where
 --   prettyStringIdent _ (App f arg) = "APP " ++ " :: " ++ "\nF: " ++ (showSDocUnsafe (ppr f)) ++ "\nA: " ++ (showSDocUnsafe (ppr arg))
   prettyStringIdent _ expr = show (toConstr expr) ++ " :: " ++ showSDocUnsafe (ppr expr)
 
+instance PrettyString CoreRule where
+--   prettyStringIdent _ (App f arg) = "APP " ++ " :: " ++ "\nF: " ++ (showSDocUnsafe (ppr f)) ++ "\nA: " ++ (showSDocUnsafe (ppr arg))
+  prettyStringIdent _ rule = showSDocUnsafe (ppr rule)
+
+
 -- type Report = ([Id], [String])
 prettyStringReport :: Report -> String
 prettyStringReport (succs, fails) = 
@@ -155,3 +164,4 @@ instance (PrettyString a) => PrettyString (Either a a) where
 
 -- instance (PrettyString a) => PrettyString (Bag a) where
 --   prettyString = prettyString . bagToList
+---- PrettyString
