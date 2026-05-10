@@ -64,6 +64,7 @@ executable checkProofs
     other-modules:
         PrettyString
         AstInfo
+        SortDecls
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -75,7 +76,8 @@ executable checkProofs
         mtl        ^>=2.3.1,
         ghc-paths  ^>=0.1.0.12,
         uniplate   ^>=1.6.13,
-        bytestring ^>=0.12.2.0
+        bytestring ^>=0.12.2.0,
+        containers ^>=0.7
 
     -- Directories containing source files.
     hs-source-dirs:   
