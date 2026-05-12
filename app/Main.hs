@@ -58,7 +58,7 @@ main =
     _ <- setSessionDynFlags dflags
     session <- getSession
 
-    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example5.hs"
+    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example-5.5.hs"
     coreMod <- compileToCoreModule filePath
 
     -- print CoreModule
@@ -151,7 +151,7 @@ collectConvrs (f_id, f_body) = case map getConvrs pairs of
   where
   argAddInfo = [(argExpr, argComm) |
     (App (App (App (Var exprName) _) argExpr) argComm) <- universe f_body,
-    "addInfo" <- [getStrById exprName] ]
+    "--." <- [getStrById exprName] ]    
   pairs  = zip argAddInfo (drop 1 argAddInfo)
   getConvrs ((lhe, c1), (rhe, _)) = Conversion lhe rhe (toSideExprInfo c1)
 ---- END COLLECTING AST STATE
@@ -457,6 +457,7 @@ simplifyFunc pstls expr = go 0 expr
     go n _ | n >= 3 = throwError $ "Unexpected expression. Expression needs to much beta-reductions. Default threshold = 3. Expr:\n" ++ prettyString expr
     go n e = do
       hscEnv     <- gets st_hscenv
+      logMsg $ "TRY simplify n=" ++ show n
       simplified <- liftIO $ simplifyFuncIO hscEnv pstls e
       let no_lets_expr = inlineLets simplified
       case find isBetaRedex (universe no_lets_expr) of
@@ -506,7 +507,7 @@ simplifyFuncIO hscEnv pstls expr =
       then
         if alphaEq expr' expr
           then putStrLn $ "NOT FIRED: " ++ show (map (prettyString . pstl_id) pstls)
-          else putStrLn $ "RULE `` FIRED"
+          else putStrLn $ "RULE `" ++ show (map (prettyString . pstl_id) pstls) ++ "` FIRED"
       else putStrLn "NO rules"
     return expr'
 
