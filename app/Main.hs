@@ -3,6 +3,17 @@
 module Main where
 
 import GHC
+    ( Id,
+      compileToCoreModule,
+      runGhc,
+      setSessionDynFlags,
+      getSessionDynFlags,
+      CoreModule(..),
+      HscEnv,
+      GeneralFlag(..),
+      GhcMonad(..),
+      NamedThing(..),
+      Module )
 import GHC.Paths (libdir)
 import GHC.Core
 import GHC.Core.Map.Type (DeBruijn(..), deBruijnize, extendCMEs)
@@ -168,12 +179,12 @@ getStrById :: Id -> String
 getStrById v = occNameString (getOccName v)
 
 toSideExprInfo :: CoreExpr -> SideExprInfo
-toSideExprInfo (App (App (App (Var expr_side) _) _) expr_info) = toSideInfo (toExprInfo expr_info)
+toSideExprInfo (App (Var expr_side) expr_info) = toSideInfo (toExprInfo expr_info)
   where
   toSideInfo
-    | getStrById expr_side == "Left"  = Left
-    | getStrById expr_side == "Right" = Right
-    | otherwise = err "`Left` or `Right`" expr_side
+    | getStrById expr_side == "L"  = L
+    | getStrById expr_side == "R" = R
+    | otherwise = err "`L` or `R`" expr_side
   toExprInfo (Var v)
     | getStrById v == "Beta" = Beta
     | getStrById v == "Eta" = Eta
@@ -324,8 +335,8 @@ analyzeConvrs Conversion{..} =
 
   where
     (expr, control_expr, expr_info) = case cn_info of
-      Left  info -> (cn_lhs, cn_rhs, info)
-      Right info -> (cn_rhs, cn_lhs, info)
+      L info -> (cn_lhs, cn_rhs, info)
+      R info -> (cn_rhs, cn_lhs, info)
 
 ---- just believe that this is enought
 getFirstDiff :: CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr -> CoreExpr)

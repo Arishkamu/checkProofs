@@ -29,8 +29,9 @@ toNodes decls = map (\dc@(decl_id, cnvrs) -> (dc, decl_id, cnInfoStr cnvrs)) dec
       Postl s -> findIdByStr s
       _ -> Nothing
     cnToExprInfo  cnvr = case cn_info cnvr of
-      Left ei -> ei
-      Right ei -> ei
+      L ei -> ei
+      R ei -> ei
+      QED -> error "Unexpected comment for conversion. Expected L or R get QED"
     findIdByStr s_id = find (cmpIdString s_id) (map fst decls)
 
 

@@ -125,6 +125,10 @@ instance PrettyString CoreRule where
 --   prettyStringIdent _ (App f arg) = "APP " ++ " :: " ++ "\nF: " ++ (showSDocUnsafe (ppr f)) ++ "\nA: " ++ (showSDocUnsafe (ppr arg))
   prettyStringIdent _ rule = showSDocUnsafe (ppr rule)
 
+instance PrettyString SideExprInfo where
+  prettyStringIdent ident (L l)  = "L-" ++ prettyStringIdent ident l
+  prettyStringIdent ident (R r) = "R-" ++ prettyStringIdent ident r
+  prettyStringIdent _ QED = "QED"
 
 -- type Report = ([Id], [String])
 prettyStringReport :: Report -> String
@@ -157,9 +161,6 @@ instance (PrettyString a) => PrettyString (Either String a) where
   prettyStringIdent ident (Left e)  = "Either-Left:"  ++ bslN (ident + 2) ++ e
   prettyStringIdent ident (Right a) = "Either-Right:" ++ bslN (ident + 2) ++ prettyString a
 
-instance (PrettyString a) => PrettyString (Either a a) where
-  prettyStringIdent ident (Left l)  = "L-" ++ prettyStringIdent ident l
-  prettyStringIdent ident (Right r) = "R-" ++ prettyStringIdent ident r
 
 
 -- instance (PrettyString a) => PrettyString (Bag a) where
