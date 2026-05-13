@@ -51,14 +51,15 @@ import GHC.Core.Opt.Simplify.Iteration (simplExpr)
 
 -- DEBUG
 import GHC.Utils.Outputable ( ppr, showSDocUnsafe )
-import GHC.Types.Id ( modifyIdInfo )
-import GHC.Core.Rules ( addLocalRules, emptyRuleEnv, mkRule, updExternalPackageRules )
-import GHC.Core.Opt.Simplify.Env ( getInScope, mkSimplEnv, setInScopeSet )
-import GHC.Types.Id.Info ( RuleInfo(..), setRuleInfo )
+import GHC.Types.Id ( modifyIdInfo, idInfo )
+import GHC.Core.Rules ( addLocalRules, emptyRuleEnv, mkRule, updExternalPackageRules, lookupRule, roughTopNames, matchExprs )
+import GHC.Core.Opt.Simplify.Env ( getInScope, mkSimplEnv, setInScopeSet, pprSimplEnv, seRuleOpts, SimplEnv (seMode) )
+import GHC.Types.Id.Info ( RuleInfo(..), setRuleInfo, IdInfo (ruleInfo), ruleInfoRules )
 
 import AstInfo
 import PrettyString
 import SortDecls ( sorteDeclConvrs )
+import GHC.Core.Opt.Simplify.Utils
 
 
 main :: IO ()
@@ -69,7 +70,7 @@ main =
     _ <- setSessionDynFlags dflags
     session <- getSession
 
-    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example-5.5.hs"
+    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example4-fails.hs"
     coreMod <- compileToCoreModule filePath
 
     -- print CoreModule
@@ -147,12 +148,16 @@ orderConvrs :: [DeclConversions] -> [DeclConversions]
 orderConvrs = uncurry (++) . partition (isPrefixOf "lemma" . getStrById . fst)
 
 collectPostls :: HscEnv -> FuncDef -> [PostlDef]
-collectPostls hscEnv (f_id, f_body) = case pstl_rest of
-  App (App (App (Var app_id) _) pstl_lhs) pstl_rhs | getStrById app_id == "postulate"
-    -> [mkRulePstl hscEnv f_id pstl_binds pstl_lhs pstl_rhs]
-  _ -> []
+collectPostls hscEnv (f_id, f_body) = res
+  -- case pstl_rest of
+  -- App (App (App (Var app_id) _) pstl_lhs) pstl_rhs | getStrById app_id == "postulate"
+  --   -> [mkRulePstl hscEnv f_id pstl_binds pstl_lhs pstl_rhs]
+  -- _ -> []
 
   where
+  res = [mkRulePstl hscEnv f_id pstl_binds pstl_lhs pstl_rhs |
+    App (App (App (Var app_id) _) pstl_lhs) pstl_rhs <- universe pstl_rest,
+    "postulate" <- [getStrById app_id] ]
   (pstl_binds, pstl_rest) = collectBinders f_body
 
 collectConvrs :: FuncDef -> [DeclConversions]
@@ -162,7 +167,7 @@ collectConvrs (f_id, f_body) = case map getConvrs pairs of
   where
   argAddInfo = [(argExpr, argComm) |
     (App (App (App (Var exprName) _) argExpr) argComm) <- universe f_body,
-    "--." <- [getStrById exprName] ]    
+    "--." <- [getStrById exprName] ]
   pairs  = zip argAddInfo (drop 1 argAddInfo)
   getConvrs ((lhe, c1), (rhe, _)) = Conversion lhe rhe (toSideExprInfo c1)
 ---- END COLLECTING AST STATE
@@ -180,18 +185,24 @@ getStrById v = occNameString (getOccName v)
 
 toSideExprInfo :: CoreExpr -> SideExprInfo
 toSideExprInfo (App (Var expr_side) expr_info) = toSideInfo (toExprInfo expr_info)
+-- (L (FuncRec
+--                       (unpackCString# "myFoldl"#)
+--                       (fromInteger @Natural $fNumNatural (IS 1#))))
+-- (L (Func (unpackCString# "myConst"#)))
   where
   toSideInfo
-    | getStrById expr_side == "L"  = L
+    | getStrById expr_side == "L" = L
     | getStrById expr_side == "R" = R
     | otherwise = err "`L` or `R`" expr_side
   toExprInfo (Var v)
     | getStrById v == "Beta" = Beta
-    | getStrById v == "Eta" = Eta
+    | getStrById v == "Eta"  = Eta
   toExprInfo (App (Var v_id) (App _ (Lit (LitString pack_str))))
     | getStrById v_id == "Func"  = Func $ BS8.unpack pack_str
     | getStrById v_id == "Postl" = Postl $ BS8.unpack pack_str
-  toExprInfo _ = err "`Beta`, `Eta`, `Func comment`, or `Postl comment`" expr_side
+  toExprInfo (App (App (Var v_id) (App _ (Lit (LitString pack_str)))) (App _ (Lit (LitNumber _ n))))
+    | getStrById v_id == "FuncRec" && n > 0 = FuncRec (BS8.unpack pack_str) n
+  toExprInfo _ = err "`Beta`, `Eta`, `Func comment`, `Postl comment` or FuncRec comment n > 0" expr_info
   err str_expect e = error $ "Unexpected expression structure for comment, expected " ++ str_expect ++ ".\nGot: " ++ prettyString e
 toSideExprInfo e = error $ "Unexpected expression structure for comment, expected a function application with a string literal argument.\nGot: " ++ prettyString e
 
@@ -324,10 +335,11 @@ analyzeConvrs Conversion{..} =
   do
     incCnvrsCounter
     let analyzeExpr = case expr_info of
-          Func  comment -> analyzeFuncConv  comment
-          Postl comment -> analyzePostlConv comment
-          Eta           -> analyzeEtaConv
-          Beta          -> analyzeBetaConv
+          Func  comment  -> analyzeFuncConv  comment 0
+          Postl comment  -> analyzePostlConv comment
+          FuncRec cmnt n -> analyzeFuncConv cmnt n
+          Eta            -> analyzeEtaConv
+          Beta           -> analyzeBetaConv
     (ce, e) <- analyzeExpr control_expr expr
     cmpCnvrs ce e
     -- return (new_expr, control_expr)
@@ -361,7 +373,19 @@ getFirstDiff = go ([], [])-- (suc, _) (suc, err) (err, _)
         logMsg $ "Get diff:\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e ++ "\n"
         return (e, id)
 
+getNAppearance :: String -> Integer -> CoreExpr -> CheckerM (CoreExpr, CoreExpr -> CoreExpr)
+getNAppearance comnt m expr = go m expr >>= (\(x, y, _) -> return (x, y))
+  where
+    go n (Lam b body) = go n body <&> updBuilder (Lam b .)
+    go n (App f arg) = do
+      (new_e, new_builder, new_n) <- go n f
+      if new_n <= 0
+        then return (new_e, \x -> App (new_builder x) arg, new_n)
+        else go new_n arg <&> updBuilder (App f .)
+    go n f@(Var f_id) | getStrById f_id == comnt = return (f, id, n - 1)
+    go n e = return (e, id, n)
 
+    updBuilder updater (diff_expr, builder, n) = (diff_expr, updater builder, n)
 
 analyzeBetaConv :: CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
 analyzeBetaConv control_expr expr
@@ -378,10 +402,13 @@ analyzeEtaConv control_expr expr =
       _ -> throwError $ "Error in analyzeEtaConv:\n" ++ prettyString diff_expr
     return (control_expr, builder new_expr)
 
-analyzeFuncConv :: String -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
-analyzeFuncConv comment control_expr expr =
+analyzeFuncConv :: String -> Integer -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
+analyzeFuncConv comment n control_expr expr =
   do
-    (diff_expr, builder) <- getFirstDiff control_expr expr
+    (diff_expr, builder) <-
+      if n <= 0
+        then getFirstDiff control_expr expr
+        else getNAppearance comment n expr
     logMsg $ "Evaluate func substitution for expr:\n  " ++ prettyString diff_expr
     subst_expr      <- substitute diff_expr
     let restr_expr   = builder subst_expr

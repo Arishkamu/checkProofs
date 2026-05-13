@@ -18,7 +18,7 @@ import Control.Monad.State.Lazy (StateT)
 
 -- data ExprInfo = LFunc String | RFunc String | Beta | LEta | REta
 data SideExprInfo = L ExprInfo | R ExprInfo | QED
-data ExprInfo = Func String | Postl String | Beta | Eta
+data ExprInfo = Func String | Postl String | Beta | Eta | FuncRec String Integer
 
 data Conversion = Conversion {
   cn_lhs  :: CoreExpr,

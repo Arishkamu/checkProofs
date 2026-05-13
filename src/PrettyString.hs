@@ -40,10 +40,11 @@ instance PrettyString Id where
 
 instance PrettyString ExprInfo where
     prettyStringIdent _ expr_info = case expr_info of
-        Func  comment -> "Func: "  ++ comment
-        Postl comment -> "Postl: " ++ comment
-        Beta          -> "Beta reduction"
-        Eta           -> "Eta reduction"
+        Func  comment  -> "Func: "  ++ comment
+        FuncRec cmnt n -> "FuncRec: "  ++ cmnt ++ show n
+        Postl comment  -> "Postl: " ++ comment
+        Beta           -> "Beta reduction"
+        Eta            -> "Eta reduction"
 
 instance PrettyString Conversion where
   prettyStringIdent ident Conversion{..} = 
