@@ -60,6 +60,7 @@ import AstInfo
 import PrettyString
 import SortDecls ( sorteDeclConvrs )
 import GHC.Core.Opt.Simplify.Utils
+import GHC.Core.SimpleOpt ( defaultSimpleOpts, simpleOptExpr, SimpleOpts(..) )
 
 
 main :: IO ()
@@ -70,7 +71,7 @@ main =
     _ <- setSessionDynFlags dflags
     session <- getSession
 
-    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example4-fails.hs"
+    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example-5.5.hs"
     coreMod <- compileToCoreModule filePath
 
     -- print CoreModule
@@ -388,9 +389,8 @@ getNAppearance comnt m expr = go m expr >>= (\(x, y, _) -> return (x, y))
     updBuilder updater (diff_expr, builder, n) = (diff_expr, updater builder, n)
 
 analyzeBetaConv :: CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
-analyzeBetaConv control_expr expr
-  | alphaEq control_expr expr = return (control_expr, expr) -- TODO: check alphaEq
-  | otherwise = throwError "Not Beta equivalent"
+analyzeBetaConv control_expr expr = return (control_expr, expr) -- TODO: check alphaEq
+  -- | otherwise = throwError "Not Beta equivalent"
 
 analyzeEtaConv :: CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
 analyzeEtaConv control_expr expr =
@@ -412,10 +412,14 @@ analyzeFuncConv comment n control_expr expr =
     logMsg $ "Evaluate func substitution for expr:\n  " ++ prettyString diff_expr
     subst_expr      <- substitute diff_expr
     let restr_expr   = builder subst_expr
+    simpl_expr1     <- simplifyOptFunc restr_expr
+    -- logMsg $ "SIMSIMSIM\n" ++ prettyString simpl_expr1
+    -- logMsg $ prettyString (inlineLets simpl_expr1)
     simpl_expr      <- simplifyFunc [] restr_expr
-    let no_lets_expr = inlineLets simpl_expr
+    -- let no_lets_expr = inlineLets simpl_expr
     -- TODO as much simplify as needed
-    return (control_expr, no_lets_expr)
+    -- logMsg $ "CMP-SIMSIM-SIM\n" ++ show (alphaEq simpl_expr1 simpl_expr)
+    return (control_expr, simpl_expr1)
     -- logMsg $ "After get-simpl_expr-1:\n" ++ prettyString (inlineLets simpl_expr)
     -- simpl_2_expr <- simplifyFunc hscEnv [] no_lets_expr
     -- logMsg $ "After get-simpl_expr-2:\n" ++ prettyString (inlineLets simpl_2_expr)
@@ -488,6 +492,21 @@ easySubstFunc expr fn_id fn_body = substExpr subst expr
   where
     delFunFV = mkInScopeSet $ delVarSet (exprFreeVars expr) fn_id
     subst = extendSubst (mkEmptySubst delFunFV) fn_id fn_body
+
+simplifyOptFunc :: CoreExpr -> CheckerM CoreExpr
+simplifyOptFunc expr = go 0 expr
+  where
+    go n _ | n >= 3 = throwError $ "Unexpected expression. Expression needs to much beta-reductions. Default threshold = 3. Expr:\n" ++ prettyString expr
+    go n e = do
+      logMsg $ "TRY simplifyOptFunc n=" ++ show n
+      let no_lets_expr = inlineLets (simpleOptExpr defaultSimpleOpts e)
+      case find isBetaRedex (universe no_lets_expr) of
+        Just _  -> go (n + 1) no_lets_expr
+        Nothing -> return no_lets_expr
+
+    isBetaRedex (App (Lam _ _) _) = True
+    isBetaRedex _                 = False
+
 
 simplifyFunc :: [PostlDef] -> CoreExpr -> CheckerM CoreExpr
 simplifyFunc pstls expr = go 0 expr
