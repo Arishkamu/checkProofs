@@ -71,7 +71,7 @@ main =
     _ <- setSessionDynFlags dflags
     session <- getSession
 
-    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example-5.5.hs"
+    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example6.hs"
     coreMod <- compileToCoreModule filePath
 
     -- print CoreModule
