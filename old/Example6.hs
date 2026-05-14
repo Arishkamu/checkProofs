@@ -67,28 +67,28 @@ flip f x y              =  f y x
 --- ANOTHER FILE
 composeAssoc4 :: (c -> d) -> (b -> c) -> (a -> b) -> a -> d
 composeAssoc4 f g h =
-    (f . (g . h))                   --. L (Decl ".")
- === (\x -> f ((g . h) x))          --. L (Decl ".")
+    (f . (g . h))                    --. L (Decl ".")
+ === (\x -> f ((g . h) x))           --. L (Decl ".")
  === (\x -> f ((\x' -> g (h x')) x)) --. L Beta
  === (\x -> f (g (h x)))             --. L Beta
  === (\x -> (\x' -> f (g x')) (h x)) --. R (Decl ".")
- === (\x -> (f . g) (h x))          --. R (Decl ".")
- === ((f . g) . h)                 --. QED
+ === (\x -> (f . g) (h x))           --. R (Decl ".")
+ === ((f . g) . h)                   --. QED
 
 
 composeLeftNeutral :: (a -> b) -> a -> b
 composeLeftNeutral f =
       (id . f)           --. L (Decl ".")
  === (\x -> id (f x))    --. L (Decl "id")
- === (\x -> f x)           --. L Eta
- === f                     --. QED
+ === (\x -> f x)         --. L Eta
+ === f                   --. QED
 
 composeRightNeutral :: (a -> b) -> a -> b
 composeRightNeutral f =
       (f . id)        --. L (Decl ".")
  === (\x -> f (id x)) --. L (Decl "id")
- === (\x -> f x)        --. L Eta
- === f                  --. QED
+ === (\x -> f x)      --. L Eta
+ === f                --. QED
 
 
 flipFlipIsId :: (a -> b -> c) -> a -> b -> c
@@ -97,19 +97,19 @@ flipFlipIsId  =
  === (\f -> flip (flip f))                 --. R Eta
  === (\f -> \x -> flip (flip f) x)         --. R Eta
  === (\f -> \x -> \y -> flip (flip f) x y) --. L (Decl "flip")
- === (\f -> \x -> \y -> flip f y x)          --. L (Decl "flip")
- === (\f -> \x -> \y -> f x y)                 --. L Eta
- === (\f -> \x -> f x)                         --. L Eta
- === (\f -> f)                                 --. R (Decl "id")
- === (\f -> id f)                            --. L Eta
- === id                                      --. QED
+ === (\f -> \x -> \y -> flip f y x)        --. L (Decl "flip")
+ === (\f -> \x -> \y -> f x y)             --. L Eta
+ === (\f -> \x -> f x)                     --. L Eta
+ === (\f -> f)                             --. R (Decl "id")
+ === (\f -> id f)                          --. L Eta
+ === id                                    --. QED
 
 {- forall f x y. flip (flip f) x y === f x y -}
 flipFlipIsId' :: (a -> b -> c) -> a -> b -> c
 flipFlipIsId' f x y =
       flip (flip f) x y  --. L (Decl "flip")
- === flip f y x           --. L (Decl "flip")
- === f x y                  --. QED
+ === flip f y x          --. L (Decl "flip")
+ === f x y               --. QED
 
 
 
@@ -168,16 +168,16 @@ liftM (f . g) xs == liftM f (liftM g xs)
 -}
 theoremFunctor2 :: Monad m => (b -> c) -> (a -> b) -> m a -> m c
 theoremFunctor2 f g xs =
-       (liftM f (liftM g xs))                     --. L (Decl "liftM")-- liftM
-  === (liftM f (xs >>= return . g))               --. L (Decl "liftM")-- liftM
+       (liftM f (liftM g xs))                      --. L (Decl "liftM")-- liftM
+  === (liftM f (xs >>= return . g))                --. L (Decl "liftM")-- liftM
   === ((xs >>= return . g) >>= return . f)         --. L (Prop "m3")-- [m3]
   === (xs >>= \x -> (return . g) x >>= return . f) --. L (Decl ".")-- (.)
-  === (xs >>= \x -> return (g x) >>= return . f)    --. L (Prop "m1")-- [m1]
-  === (xs >>= \x -> (return . f) (g x))             --. R (Decl ".")-- (.)
+  === (xs >>= \x -> return (g x) >>= return . f)   --. L (Prop "m1")-- [m1]
+  === (xs >>= \x -> (return . f) (g x))            --. R (Decl ".")-- (.)
   === (xs >>= \x -> ((return . f) . g) x)          --. L Eta-- eta-reduction
   === (xs >>= (return . f) . g)                    --. R (Prop "composeAssoc4")-- assoc (.) ?????????
   === (xs >>= return . (f . g))                    --. R (Decl "liftM")-- liftM
-  === (liftM (f . g) xs)                          --. QED
+  === (liftM (f . g) xs)                           --. QED
 
 -- f . (g . h) === (f . g) . h
 
@@ -198,7 +198,7 @@ liftM g xs == return g <*>.. xs
 -}
 theoremApplicative0 :: Monad m => (a -> b) -> m a -> m b
 theoremApplicative0 g xs =
-       (return g <*>.. xs)                --. L (Decl "<*>..")-- (<*>..)
+       (return g <*>.. xs)             --. L (Decl "<*>..")-- (<*>..)
   === (return g >>= \f -> liftM f xs)  --. L (Prop "m1")-- [m1]
   === ((\f -> liftM f xs) g)           --. L Beta-- L Beta-reduction
   === (liftM g xs)                     --. QED
@@ -209,11 +209,11 @@ return id <*>.. xs  == xs
 -}
 theoremApplicative1 :: Monad m => m b -> m b
 theoremApplicative1 xs =
-       (return id <*>.. xs)                 --. L (Decl "<*>..")-- (<*>..)
+       (return id <*>.. xs)              --. L (Decl "<*>..")-- (<*>..)
   === (return id >>= \f -> liftM f xs)   --. L (Prop "m1")-- [m1]
   === ((\f -> liftM f xs) id)            --. L Beta-- L Beta-reduction
   === (liftM id xs)                      --. L (Prop "theoremFunctor1")-- [theoremFunctor1]
-  === xs                                     --. QED
+  === xs                                 --. QED
 
 {-
 2 Applicative law (Homomorphism)
@@ -221,13 +221,13 @@ return g <*>.. return x  == return (g x)
 -}
 theoremApplicative2 :: Monad m => (a -> b) ->  a -> m b
 theoremApplicative2 g x =
-       (return g <*>.. return x)                 --. L (Decl "<*>..")-- (<*>..)
+       (return g <*>.. return x)              --. L (Decl "<*>..")-- (<*>..)
   === (return g >>= \f -> liftM f (return x)) --. L (Prop "m1")-- [m1]
   === ((\f -> liftM f (return x)) g)          --. L Beta-- L Beta-reduction
   === (liftM g (return x))                    --. L (Decl "liftM")-- liftM
-  === (return x >>= return . g)                --. L (Prop "m1")-- [m1]
-  === ((return . g) x )                        --. L (Decl ".")-- (.)
-  === (return (g x))                             --. QED
+  === (return x >>= return . g)               --. L (Prop "m1")-- [m1]
+  === ((return . g) x )                       --. L (Decl ".")-- (.)
+  === (return (g x))                          --. QED
 
 {-
 3 Applicative law (Interchange)
@@ -235,26 +235,26 @@ fs <*>.. return x  ===  return ($ x) <*>.. fs
 -}
 theoremApplicative3 :: Monad m => m (a -> b) -> a -> m b
 theoremApplicative3 fs x =
-       (fs <*>.. return x )         --. L  (Prop "lemma1")-- [lemma1]
+       (fs <*>.. return x )        --. L  (Prop "lemma1")-- [lemma1]
   === (fs >>= \f -> return (f x))  --. R (Prop "lemma2")-- [lemma2]
   === (return ($ x) <*>.. fs)      --. QED
 
 
 lemma1 fs x = -- L hand side transformation
-        (fs <*>.. return x )                     --. L (Decl "<*>..")-- (<*>..)
-    === (fs >>= \f -> liftM f (return x))      --. L (Decl "liftM") -- liftM
+        (fs <*>.. return x )                    --. L (Decl "<*>..")-- (<*>..)
+    === (fs >>= \f -> liftM f (return x))       --. L (Decl "liftM") -- liftM
     === (fs >>= \f -> return x >>= return . f)  --. L (Prop "m1")-- [m1]
     === (fs >>= \f -> (return . f) x )          --. L (Decl ".")-- (.)
-    === (fs >>= \f -> return (f x))              --. QED
+    === (fs >>= \f -> return (f x))             --. QED
 
 lemma2 fs x = -- R hand side transformation
-        (return ($ x) <*>.. fs)                --. L (Decl "<*>..")-- (<*>..)
+        (return ($ x) <*>.. fs)              --. L (Decl "<*>..")-- (<*>..)
     === (return ($ x) >>= \f -> liftM f fs)  --. L (Prop "m1")-- [m1]
     === ((\f -> liftM f fs) ($ x))           --. L Beta-- L Beta-reduction
     === (liftM ($ x) fs )                    --. L (Decl "liftM")-- liftM
-    === (fs >>= return . ($ x))               --. L (Decl ".")-- (.)
-    === (fs >>= \f -> return (($ x) f))       --. L (Decl "$")-- ($)
-    === (fs >>= \f -> return (f x))            --. QED
+    === (fs >>= return . ($ x))              --. L (Decl ".")-- (.)
+    === (fs >>= \f -> return (($ x) f))      --. L (Decl "$")-- ($)
+    === (fs >>= \f -> return (f x))          --. QED
 
 -- Expected: App :: >>=
 --   @m_a1mZ
@@ -279,26 +279,26 @@ return (.) <*>.. us <*>.. vs <*>.. xs  ==  us <*>.. (vs <*>.. xs)
 theoremApplicative4 :: Monad m => m (b -> c) -> m (a -> b) -> m a -> m c
 theoremApplicative4 us vs xs =
       (return (.) <*>.. us <*>.. vs <*>.. xs )      --. L (Prop "ta4_lemma1")-- [lemma1]
- === (us >>= \u -> vs >>= \v -> liftM (u . v) xs) --. R (Prop "ta4_lemma2")-- [lemma2]
- === (us <*>.. (vs <*>.. xs))                        --. QED
+ === (us >>= \u -> vs >>= \v -> liftM (u . v) xs)   --. R (Prop "ta4_lemma2")-- [lemma2]
+ === (us <*>.. (vs <*>.. xs))                       --. QED
 
 ta4_lemma1 :: Monad m => m (b -> c) -> m (a -> b) -> m a -> m c
 ta4_lemma1 us vs xs = -- L hand side transformation
-      (return (.) <*>.. us <*>.. vs <*>.. xs )                              --. L (Decl "<*>..")-- (<*>..)
- === ((return (.) >>= \c -> liftM c us) <*>.. vs <*>.. xs)               --. L (Prop "m1")-- [m1]
- === ((\c -> liftM c us) (.) <*>.. vs <*>.. xs)                          --. L Beta-- L Beta-reduction
- === (liftM (.) us <*>.. vs <*>.. xs)                                    --. L (Decl "liftM")-- liftM
+      (return (.) <*>.. us <*>.. vs <*>.. xs )                            --. L (Decl "<*>..")-- (<*>..)
+ === ((return (.) >>= \c -> liftM c us) <*>.. vs <*>.. xs)                --. L (Prop "m1")-- [m1]
+ === ((\c -> liftM c us) (.) <*>.. vs <*>.. xs)                           --. L Beta-- L Beta-reduction
+ === (liftM (.) us <*>.. vs <*>.. xs)                                     --. L (Decl "liftM")-- liftM
  === ((us >>= return . (.)) <*>.. vs <*>.. xs)                            --. L (Decl "<*>..")-- (<*>..)
- === (((us >>= return . (.)) >>= \r -> liftM r vs) <*>.. xs)            --. L (Prop "m3")-- [m3] 
- === ((us >>= \u -> (return . (.)) u >>= \r -> liftM r vs) <*>.. xs)    --. L (Decl ".")-- (.)
- === ((us >>= \u -> return (u .) >>= \r -> liftM r vs) <*>.. xs)         --. L (Prop "m1")-- [m1]
- === ((us >>= \u -> (\r -> liftM r vs) (u .)) <*>.. xs)                  --. L Beta-- L Beta-reduction
- === ((us >>= \u -> liftM (u .) vs) <*>.. xs)                            --. L (Decl "liftM")-- liftM
+ === (((us >>= return . (.)) >>= \r -> liftM r vs) <*>.. xs)              --. L (Prop "m3")-- [m3] 
+ === ((us >>= \u -> (return . (.)) u >>= \r -> liftM r vs) <*>.. xs)      --. L (Decl ".")-- (.)
+ === ((us >>= \u -> return (u .) >>= \r -> liftM r vs) <*>.. xs)          --. L (Prop "m1")-- [m1]
+ === ((us >>= \u -> (\r -> liftM r vs) (u .)) <*>.. xs)                   --. L Beta-- L Beta-reduction
+ === ((us >>= \u -> liftM (u .) vs) <*>.. xs)                             --. L (Decl "liftM")-- liftM
  === ((us >>= \u -> vs >>= return . (u .)) <*>.. xs)                      --. L (Decl "<*>..")-- (<*>..)
- === ((us >>= \u -> vs >>= return . (u .)) >>= \f -> liftM f xs)         --. L (Prop "m3")
+ === ((us >>= \u -> vs >>= return . (u .)) >>= \f -> liftM f xs)          --. L (Prop "m3")
 --  === ((us >>= \u -> vs >>= return . (u .)) >>= \f -> liftM f xs)         --. L Beta-- [m3] + L Beta-reduction ??????? TODO продумать многошаговость, если не вложенная, то, вроде, несложно
- === (us >>= \u -> vs >>= return . (u .) >>= \f -> liftM f xs)           --. L (Prop "m3")-- [m3] 
- === (us >>= \u -> vs >>= \v -> (return . (u .)) v >>= \f -> liftM f xs) --. L (Decl ".")-- L Beta-reduction
+ === (us >>= \u -> vs >>= return . (u .) >>= \f -> liftM f xs)            --. L (Prop "m3")-- [m3] 
+ === (us >>= \u -> vs >>= \v -> (return . (u .)) v >>= \f -> liftM f xs)  --. L (Decl ".")-- L Beta-reduction
  === (us >>= \u -> vs >>= \v -> return  (u . v) >>= \f -> liftM f xs)     --. L (Prop "m1")-- [m1]
  === (us >>= \u -> vs >>= \v ->  (\f -> liftM f xs) (u . v))              --. L Beta-- L Beta-reduction
  === (us >>= \u -> vs >>= \v ->  liftM (u . v) xs)                        --. QED
@@ -307,13 +307,13 @@ ta4_lemma1 us vs xs = -- L hand side transformation
 
 ta4_lemma2 :: Monad m => m (b -> c) -> m (a -> b) -> m a -> m c
 ta4_lemma2 us vs xs = -- R hand side transformation
-      (us <*>.. (vs <*>.. xs) )                                   --. L (Decl "<*>..")-- (<*>..)
- === (us >>= \u -> liftM u (vs <*>.. xs))                      --. L (Decl "<*>..")-- (<*>..)
- === (us >>= \u -> liftM u (vs >>= \v -> liftM v xs))        --. L (Decl "liftM") -- liftM
+      (us <*>.. (vs <*>.. xs) )                               --. L (Decl "<*>..")-- (<*>..)
+ === (us >>= \u -> liftM u (vs <*>.. xs))                     --. L (Decl "<*>..")-- (<*>..)
+ === (us >>= \u -> liftM u (vs >>= \v -> liftM v xs))         --. L (Decl "liftM") -- liftM
  === (us >>= \u -> (vs >>= \v -> liftM v xs) >>= return . u)  --. L (Prop "m3")-- [m3] + L Beta-reduction ??????
 --  === (us >>= \x -> (\u -> (vs >>= \v -> liftM v xs)) x >>= return . u)  -- [m3] + L Beta-reduction ??????
  === (us >>= \u -> vs >>= \v -> liftM v xs >>= return . u)    --. R (Decl "liftM")-- liftM
- === (us >>= \u -> vs >>= \v -> liftM u (liftM v xs) )       --. L (Prop "theoremFunctor2") -- [theoremFunctor2]
+ === (us >>= \u -> vs >>= \v -> liftM u (liftM v xs) )        --. L (Prop "theoremFunctor2") -- [theoremFunctor2]
  === (us >>= \u -> vs >>= \v -> liftM (u . v) xs)             --. QED
 
 --------------------------------------------
@@ -341,7 +341,7 @@ g >=> h = \x -> g x >>= h
 -- return >=> k  ==  k
 fishLeftNeutral :: Monad m => (a -> m b) -> a -> m b
 fishLeftNeutral k =
-      (return >=> k)         --. L (Decl ">=>") -- >=>
+      (return >=> k)        --. L (Decl ">=>") -- >=>
  === (\a -> return a >>= k) --. L (Prop "m1")-- [m1]
  === (\a -> k a)            --. L Eta-- eta-reduction
  === k                      --. QED
@@ -349,7 +349,7 @@ fishLeftNeutral k =
 -- k >=> return  ==  k
 fishRightNeutral :: Monad m => (a -> m b) -> a -> m b
 fishRightNeutral k =
-      (k >=> return)         --. L (Decl ">=>")  -- >=>
+      (k >=> return)        --. L (Decl ">=>")  -- >=>
  === (\a -> k a >>= return) --. L (Prop "m2")-- [m2]
  === (\a -> k a)            --. L Eta-- eta-reduction
  === k                      --. QED
@@ -357,7 +357,7 @@ fishRightNeutral k =
 -- (u >=> v) >=> w  ==  u >=> (v >=> w)
 fishAssoc :: Monad m => (a -> m b) -> (b -> m c) -> (c -> m d) -> a -> m d
 fishAssoc u v w =
-      ((u >=> v) >=> w)                      --. L (Decl ">=>")-- >=>
+      ((u >=> v) >=> w)                     --. L (Decl ">=>")-- >=>
  === (\a -> (u >=> v) a >>= w)              --. L (Decl ">=>")-- >=>
  === (\a -> (\a' -> u a' >>= v) a >>= w)    --. L Beta-- L Beta-reduction
  === (\a -> (u a >>= v) >>= w)              --. L (Prop "m3")-- [m3]
@@ -395,44 +395,44 @@ mjfr1 :: Monad m => m a -> m a
 mjfr1 xs =
       ((join . return) xs)   --. L (Decl ".")-- (.)
  === (join (return xs))      --. L (Decl "join")-- join
- === ( return xs >>= id)   --. L (Prop "m1")-- [m1]
- === ( id xs)              --. L (Decl "id")-- id
+ === ( return xs >>= id)     --. L (Prop "m1")-- [m1]
+ === ( id xs)                --. L (Decl "id")-- id
  === ( xs)                   --. QED -- id
 
 ---
 --   join . fmap return == id  -- :: m a -> m a
 mjfr2 :: Monad m => m a -> m a
 mjfr2 xs =
-     ((join . liftM return) xs )                 --. L (Decl ".")-- (.)
- === ( join (liftM return xs)  )                 --. L (Decl "join")-- join
- === ( liftM return xs >>= id   )              --. L (Decl "liftM") -- liftM
+     ((join . liftM return) xs )                --. L (Decl ".")-- (.)
+ === ( join (liftM return xs)  )                --. L (Decl "join")-- join
+ === ( liftM return xs >>= id   )               --. L (Decl "liftM") -- liftM
  === ( xs >>= return . return >>= id  )         --. L (Prop "m3")-- [m3]
  === ( xs >>= \x -> (return . return) x >>= id) --. L (Decl ".")-- (.)
- === ( xs >>= \x -> return (return x) >>= id)    --. L (Prop "m1")-- [m1]
- === ( xs >>= \x -> id (return x))               --. L (Decl "id")-- id
- === ( xs >>= \x -> return x  )                    --. L Eta-- eta-reduction
- === ( xs >>= return)                              --. L (Prop "m2")-- [m2]
- === ( xs      )                                   --. R (Decl "id")-- id
- === ( id xs)                                    --. QED -- id
+ === ( xs >>= \x -> return (return x) >>= id)   --. L (Prop "m1")-- [m1]
+ === ( xs >>= \x -> id (return x))              --. L (Decl "id")-- id
+ === ( xs >>= \x -> return x  )                 --. L Eta-- eta-reduction
+ === ( xs >>= return)                           --. L (Prop "m2")-- [m2]
+ === ( xs      )                                --. R (Decl "id")-- id
+ === ( id xs)                                   --. QED -- id
 
 ---
 --  join . fmap join  ==  join . join  -- :: m (m (m a)) -> m a
 mjfr3 :: Monad m => m (m (m a)) -> m a
 mjfr3 x3s =
-     ((join . liftM join) x3s  )                    --. L (Decl ".")-- (.)
- === ( join (liftM join x3s)     )                  --. L (Decl "liftM")-- liftM
- === ( join (x3s >>= return . join) )                --. L (Decl "join")-- join
+     ((join . liftM join) x3s  )                   --. L (Decl ".")-- (.)
+ === ( join (liftM join x3s)     )                 --. L (Decl "liftM")-- liftM
+ === ( join (x3s >>= return . join) )              --. L (Decl "join")-- join
  === ( x3s >>= return . join >>= id )              --. L (Prop "m3")-- [m3]
  === ( x3s >>= \x2s -> (return . join) x2s >>= id) --. L (Decl ".")-- (.)
- === ( x3s >>= \x2s -> return (join x2s) >>= id)    --. L (Prop "m1")-- [m1]
- === ( x3s >>= \x2s -> id (join x2s))               --. L (Decl "id")-- id
- === ( x3s >>= \x2s -> join x2s     )                 --. L (Decl "join")-- join
- === ( x3s >>= \x2s -> x2s >>= id )                 --. R (Decl "id")-- id
- === ( x3s >>= \x2s -> id x2s >>= id )            --. L (Prop "m3")-- [m3]
- === ( x3s >>= id >>= id )                        --. R (Decl "join")  -- join
- === ( join x3s >>= id )                            --. R (Decl "join") -- join
- === ( join (join x3s)   )                            --. R (Decl ".") -- (.)
- === ( (join . join) x3s)                            --. QED -- id
+ === ( x3s >>= \x2s -> return (join x2s) >>= id)   --. L (Prop "m1")-- [m1]
+ === ( x3s >>= \x2s -> id (join x2s))              --. L (Decl "id")-- id
+ === ( x3s >>= \x2s -> join x2s     )              --. L (Decl "join")-- join
+ === ( x3s >>= \x2s -> x2s >>= id )                --. R (Decl "id")-- id
+ === ( x3s >>= \x2s -> id x2s >>= id )             --. R (Prop "m3")-- [m3]
+ === ( x3s >>= id >>= id )                         --. R (Decl "join")  -- join
+ === ( join x3s >>= id )                           --. R (Decl "join") -- join
+ === ( join (join x3s)   )                         --. R (Decl ".") -- (.)
+ === ( (join . join) x3s)                          --. QED -- id
 
 
 
