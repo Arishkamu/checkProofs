@@ -40,9 +40,9 @@ instance PrettyString Id where
 
 instance PrettyString ExprInfo where
     prettyStringIdent _ expr_info = case expr_info of
-        Func  comment  -> "Func: "  ++ comment
-        FuncRec cmnt n -> "FuncRec: "  ++ cmnt ++ show n
-        Postl comment  -> "Postl: " ++ comment
+        Decl  comment  -> "Decl: "  ++ comment
+        DeclRec cmnt n -> "DeclRec: "  ++ cmnt ++ show n
+        Prop comment   -> "Prop: " ++ comment
         Beta           -> "Beta reduction"
         Eta            -> "Eta reduction"
 
@@ -130,6 +130,7 @@ instance PrettyString SideExprInfo where
   prettyStringIdent ident (L l)  = "L-" ++ prettyStringIdent ident l
   prettyStringIdent ident (R r) = "R-" ++ prettyStringIdent ident r
   prettyStringIdent _ QED = "QED"
+  prettyStringIdent _ Postulate = "Postulate"
 
 -- type Report = ([Id], [String])
 prettyStringReport :: Report -> String
@@ -161,6 +162,10 @@ instance (PrettyString a) => PrettyString [a] where
 instance (PrettyString a) => PrettyString (Either String a) where
   prettyStringIdent ident (Left e)  = "Either-Left:"  ++ bslN (ident + 2) ++ e
   prettyStringIdent ident (Right a) = "Either-Right:" ++ bslN (ident + 2) ++ prettyString a
+
+instance (PrettyString a) => PrettyString (Maybe a) where
+  prettyStringIdent _ Nothing  = "Nothing"
+  prettyStringIdent _ (Just a) = "Just" ++ prettyString a
 
 
 

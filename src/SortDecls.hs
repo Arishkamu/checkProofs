@@ -8,6 +8,7 @@ import Data.List (find)
 import Data.List.NonEmpty (toList)
 
 import AstInfo
+import PrettyString
 
 sorteDeclConvrs :: [DeclConversions] -> Either Cyrcles [DeclConversions]
 sorteDeclConvrs declConvrs = topoSort $ toNodes declConvrs
@@ -25,13 +26,14 @@ toNodes decls = map (\dc@(decl_id, cnvrs) -> (dc, decl_id, cnInfoStr cnvrs)) dec
     cnInfoStr :: [Conversion] -> [Id]
     cnInfoStr = mapMaybe (exprInfoToStr . cnToExprInfo)
     exprInfoToStr cnvr = case cnvr of
-      Func s  -> findIdByStr s
-      Postl s -> findIdByStr s
-      _ -> Nothing
+      Just (Decl s) -> findIdByStr s
+      Just (Prop s) -> findIdByStr s
+      _             -> Nothing
     cnToExprInfo  cnvr = case cn_info cnvr of
-      L ei -> ei
-      R ei -> ei
-      QED -> error "Unexpected comment for conversion. Expected L or R get QED"
+      L ei -> Just ei
+      R ei -> Just ei
+      Postulate -> Nothing
+      info -> error $ "Unexpected comment for conversion. Expected L or R. Got:" ++ prettyString info
     findIdByStr s_id = find (cmpIdString s_id) (map fst decls)
 
 

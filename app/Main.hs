@@ -114,7 +114,7 @@ getState :: HscEnv -> CoreModule -> CheckerST
 getState hscEnv CoreModule{..} = CheckerST {
   st_declconvrs   = sortedDeclConvrs,
   st_funcdefs     = binds,
-  st_postldefs    = concatMap (collectPostls hscEnv) binds,
+  st_postldefs    = [],
   st_hscenv       = hscEnv,
   st_cnvrs_count  = 0,
   st_declconvr_id = Nothing
@@ -199,12 +199,13 @@ toSideExprInfo (App (Var expr_side) expr_info) = toSideInfo (toExprInfo expr_inf
     | getStrById v == "Beta" = Beta
     | getStrById v == "Eta"  = Eta
   toExprInfo (App (Var v_id) (App _ (Lit (LitString pack_str))))
-    | getStrById v_id == "Func"  = Func $ BS8.unpack pack_str
-    | getStrById v_id == "Postl" = Postl $ BS8.unpack pack_str
+    | getStrById v_id == "Decl" = Decl $ BS8.unpack pack_str
+    | getStrById v_id == "Prop" = Prop $ BS8.unpack pack_str
   toExprInfo (App (App (Var v_id) (App _ (Lit (LitString pack_str)))) (App _ (Lit (LitNumber _ n))))
-    | getStrById v_id == "FuncRec" && n > 0 = FuncRec (BS8.unpack pack_str) n
-  toExprInfo _ = err "`Beta`, `Eta`, `Func comment`, `Postl comment` or FuncRec comment n > 0" expr_info
+    | getStrById v_id == "DeclRec" && n > 0 = DeclRec (BS8.unpack pack_str) n
+  toExprInfo _ = err "`Beta`, `Eta`, `Decl comment`, `Prop comment` or DeclRec comment n > 0" expr_info
   err str_expect e = error $ "Unexpected expression structure for comment, expected " ++ str_expect ++ ".\nGot: " ++ prettyString e
+toSideExprInfo (Var expr_side) | getStrById expr_side == "Postulate" = Postulate
 toSideExprInfo e = error $ "Unexpected expression structure for comment, expected a function application with a string literal argument.\nGot: " ++ prettyString e
 
 getModule :: HscEnv -> Module
@@ -335,21 +336,23 @@ analyzeConvrs :: Conversion -> CheckerM ()
 analyzeConvrs Conversion{..} =
   do
     incCnvrsCounter
-    let analyzeExpr = case expr_info of
-          Func  comment  -> analyzeFuncConv  comment 0
-          Postl comment  -> analyzePostlConv comment
-          FuncRec cmnt n -> analyzeFuncConv cmnt n
-          Eta            -> analyzeEtaConv
-          Beta           -> analyzeBetaConv
-    (ce, e) <- analyzeExpr control_expr expr
-    cmpCnvrs ce e
-    -- return (new_expr, control_expr)
--- TODO no simplify subs or postulate. raw substing
+    case cn_info of
+      Postulate -> return ()
+      L info    -> analyze cn_lhs cn_rhs info
+      R info    -> analyze cn_rhs cn_lhs info
+      info      -> throwError $ "Unexpected converseion_info. Expected useful information. Get:" ++ prettyString info
 
   where
-    (expr, control_expr, expr_info) = case cn_info of
-      L info -> (cn_lhs, cn_rhs, info)
-      R info -> (cn_rhs, cn_lhs, info)
+    analyze expr control_expr expr_info = 
+      do
+        let analyzeExpr = case expr_info of
+              Decl  comment  -> analyzeFuncConv  comment 0
+              Prop comment   -> analyzePostlConv comment
+              DeclRec cmnt n -> analyzeFuncConv cmnt n
+              Eta            -> analyzeEtaConv
+              Beta           -> analyzeBetaConv
+        (ce, e) <- analyzeExpr control_expr expr
+        cmpCnvrs ce e
 
 ---- just believe that this is enought
 getFirstDiff :: CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr -> CoreExpr)
