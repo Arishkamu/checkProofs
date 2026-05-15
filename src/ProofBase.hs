@@ -1,4 +1,4 @@
-module ProofsBase where
+module ProofBase where
 
 data SideExprInfo = L ExprInfo | R ExprInfo | QED | Postulate
 data ExprInfo = Decl String | Prop String | Beta | Eta | DeclRec String Integer

@@ -12,7 +12,7 @@ import Data.List (intercalate)
 import Data.Data (toConstr)
 
 import AstInfo
-import ProofsBase
+import ProofBase
 
 class PrettyString a where
   prettyStringIdent :: Int -> a -> String

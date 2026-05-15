@@ -58,7 +58,7 @@ import GHC.Types.Id.Info ( RuleInfo(..), setRuleInfo, IdInfo (ruleInfo), ruleInf
 
 import AstInfo
 import PrettyString
-import ProofsBase
+import ProofBase
 import SortDecls ( sorteDeclConvrs )
 import GHC.Core.Opt.Simplify.Utils
 import GHC.Core.SimpleOpt ( defaultSimpleOpts, simpleOptExpr, SimpleOpts(..) )
@@ -75,8 +75,8 @@ main =
     _ <- setSessionDynFlags dflags
     session <- getSession
 
-    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example6.hs"
-    let filePath_base = "/Users/arina/hse/nir/moskvinPrj/checkProofs/src/ProofsBase.hs"
+    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/ExampleInst.hs"
+    let filePath_base = "/Users/arina/hse/nir/moskvinPrj/checkProofs/src/ProofBase.hs"
     -- coreMod <- compileToCoreModule filePath
     -- -- liftIO $ putStrLn $ (showSDocUnsafe (ppr coreMod))
 
@@ -99,8 +99,8 @@ main =
     -- print CoreModule
     -- liftIO $ putStrLn "\n=== Core cm_types ===\n"
     -- liftIO $ putStrLn (showSDocUnsafe $ ppr $ cm_types coreMod)
-    -- liftIO $ putStrLn "\n=== Core cm_binds ===\n"
-    -- -- liftIO $ putStrLn (showSDocUnsafe $ ppr $ cm_binds coreMod)
+    liftIO $ putStrLn "\n=== Core cm_binds ===\n"
+    liftIO $ putStrLn (showSDocUnsafe $ ppr $ cm_binds coreMod)
     -- liftIO $ putStrLn (showSDocUnsafe $ ppr $ mg_binds mg1)
     -- liftIO $ putStrLn "\n=== Core cm_binds ===\n"
     -- -- liftIO $ putStrLn (showSDocUnsafe $ ppr $ cm_binds coreMod)

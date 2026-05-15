@@ -8,7 +8,7 @@ import GHC.Utils.Outputable (Outputable)
 import Control.Monad.Except (ExceptT)
 import Control.Monad.State.Lazy (StateT)
 
-import ProofsBase
+import ProofBase
 
 -- data Conversion = Conversion {
 --   lhsCN     :: CoreExpr,
