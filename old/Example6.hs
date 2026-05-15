@@ -1,5 +1,6 @@
 module ProofsMonad where
 
+import ProofsBase
 import Prelude hiding ((.), ($), id, flip)
 -- доказательства в виде равенств, не проверяемых системой содержательно, но контролируемых по типу 
 -- псевдоэквивалентность, обеспечивает только правильность типизации
@@ -26,19 +27,19 @@ inst return       -- применено или контрпременено оп
 
 -}
 
-data SideExprInfo = L ExprInfo | R ExprInfo | QED | Postulate
-data ExprInfo = Decl String | Prop String | Beta | Eta
--- data WithInfo a = WithInfo { value :: a, info :: SideExprInfo}
+-- data SideExprInfo = L ExprInfo | R ExprInfo | QED | Postulate
+-- data ExprInfo = Decl String | Prop String | Beta | Eta
+-- -- data WithInfo a = WithInfo { value :: a, info :: SideExprInfo}
 
-(--.) :: a -> SideExprInfo -> a
-(--.) x _ = x
+-- (--.) :: a -> SideExprInfo -> a
+-- (--.) x _ = x
 
--- postulate :: a -> a -> a
--- postulate = const
+-- -- postulate :: a -> a -> a
+-- -- postulate = const
 
-infixl 0 ===
-(===) :: a -> a -> a
-(===) x y = y
+-- infixl 0 ===
+-- (===) :: a -> a -> a
+-- (===) x y = y
 
 
 -- MY FUNCTIONS

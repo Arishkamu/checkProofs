@@ -8,6 +8,8 @@ import GHC.Utils.Outputable (Outputable)
 import Control.Monad.Except (ExceptT)
 import Control.Monad.State.Lazy (StateT)
 
+import ProofsBase
+
 -- data Conversion = Conversion {
 --   lhsCN     :: CoreExpr,
 --   rhsCN     :: CoreExpr,
@@ -17,8 +19,8 @@ import Control.Monad.State.Lazy (StateT)
 -- }
 
 -- data ExprInfo = LFunc String | RFunc String | Beta | LEta | REta
-data SideExprInfo = L ExprInfo | R ExprInfo | QED | Postulate
-data ExprInfo = Decl String | Prop String | Beta | Eta | DeclRec String Integer
+-- data SideExprInfo = L ExprInfo | R ExprInfo | QED | Postulate
+-- data ExprInfo = Decl String | Prop String | Beta | Eta | DeclRec String Integer
 
 data Conversion = Conversion {
   cn_lhs  :: CoreExpr,

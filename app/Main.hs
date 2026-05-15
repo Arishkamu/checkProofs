@@ -13,7 +13,7 @@ import GHC
       GeneralFlag(..),
       GhcMonad(..),
       NamedThing(..),
-      Module, Name, guessTarget, setTargets, depanal, mgModSummaries, parseModule, typecheckModule, desugarModule, DesugaredModule (dm_core_module), LoadHowMuch (LoadAllTargets), load, coreModule )
+      Module, Name, guessTarget, setTargets, depanal, mgModSummaries, parseModule, typecheckModule, desugarModule, DesugaredModule (dm_core_module), LoadHowMuch (LoadAllTargets), load, coreModule, addTarget )
 import GHC.Paths (libdir)
 import GHC.Core
 import GHC.Core.Map.Type (DeBruijn(..), deBruijnize, extendCMEs)
@@ -58,6 +58,7 @@ import GHC.Types.Id.Info ( RuleInfo(..), setRuleInfo, IdInfo (ruleInfo), ruleInf
 
 import AstInfo
 import PrettyString
+import ProofsBase
 import SortDecls ( sorteDeclConvrs )
 import GHC.Core.Opt.Simplify.Utils
 import GHC.Core.SimpleOpt ( defaultSimpleOpts, simpleOptExpr, SimpleOpts(..) )
@@ -75,14 +76,15 @@ main =
     session <- getSession
 
     let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/Example6.hs"
-    -- let filePath_base = "/Users/arina/hse/nir/moskvinPrj/checkProofs/src/ProofsBase.hs"
-    coreMod <- compileToCoreModule filePath
+    let filePath_base = "/Users/arina/hse/nir/moskvinPrj/checkProofs/src/ProofsBase.hs"
+    -- coreMod <- compileToCoreModule filePath
     -- -- liftIO $ putStrLn $ (showSDocUnsafe (ppr coreMod))
 
     -- target1 <- guessTarget filePath Nothing Nothing
-    -- target2 <- guessTarget filePath_base Nothing Nothing
-    -- setTargets [target1, target2]
+    target2 <- guessTarget filePath_base Nothing Nothing
+    addTarget target2
     -- _ <- load LoadAllTargets
+    coreMod <- compileToCoreModule filePath
     
     -- modGraph <- depanal [] False
     -- let ms1 = mgModSummaries modGraph !! 0

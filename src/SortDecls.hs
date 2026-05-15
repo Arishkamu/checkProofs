@@ -9,6 +9,7 @@ import Data.List.NonEmpty (toList)
 
 import AstInfo
 import PrettyString
+import ProofsBase
 
 sorteDeclConvrs :: [DeclConversions] -> Either Cyrcles [DeclConversions]
 sorteDeclConvrs declConvrs = topoSort $ toNodes declConvrs
