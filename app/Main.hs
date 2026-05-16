@@ -118,16 +118,16 @@ main =
     liftIO $ putStrLn $ prettyString astState
     liftIO $ putStrLn "\n===== End AstState =====\n"
     liftIO $ analyzeModuleSt astState
-    liftIO $ putStrLn "\n===== Sorted DeclConvers =====\n"
-    liftIO $ putStrLn $ prettyString (map fst (st_declconvrs astState))
-    liftIO $ putStrLn "\n===== End Sorted DeclConvers =====\n"
+    -- liftIO $ putStrLn "\n===== Sorted DeclConvers =====\n"
+    -- liftIO $ putStrLn $ prettyString (map fst (st_declconvrs astState))
+    -- liftIO $ putStrLn "\n===== End Sorted DeclConvers =====\n"
 
-    liftIO $ putStrLn "\n===== Occur Anal =====\n"
-    liftIO $ putStrLn $ showSDocUnsafe $ ppr $ [ unfoldingTemplate (idUnfolding nam) | (x, y) <- flattenBinds (mg_binds mg1), App (App (Var nam) _) dict <- universe y, "mapmap" <- [getStrById nam], let (ClassOpId cls bl) = idDetails nam, let (Var f, _) = collectArgs dict]
-    liftIO $ putStrLn $ showSDocUnsafe $ ppr $ [ (x, isDFunId x) | (x, y) <- flattenBinds (mg_binds mg1)]
-    liftIO $ putStrLn "\n===== Occur Anal =====\n"
-    liftIO $ putStrLn $ showSDocUnsafe $ ppr $ mg_insts mg1
-    liftIO $ putStrLn $ showSDocUnsafe $ ppr $ map instanceDFunId (instEnvElts $ mg_inst_env mg1)
+    -- liftIO $ putStrLn "\n===== Occur Anal =====\n"
+    -- liftIO $ putStrLn $ showSDocUnsafe $ ppr $ [ unfoldingTemplate (idUnfolding nam) | (x, y) <- flattenBinds (mg_binds mg1), App (App (Var nam) _) dict <- universe y, "mapmap" <- [getStrById nam], let (ClassOpId cls bl) = idDetails nam, let (Var f, _) = collectArgs dict]
+    -- liftIO $ putStrLn $ showSDocUnsafe $ ppr $ [ (x, isDFunId x) | (x, y) <- flattenBinds (mg_binds mg1)]
+    -- liftIO $ putStrLn "\n===== Occur Anal =====\n"
+    -- liftIO $ putStrLn $ showSDocUnsafe $ ppr $ mg_insts mg1
+    -- liftIO $ putStrLn $ showSDocUnsafe $ ppr $ map instanceDFunId (instEnvElts $ mg_inst_env mg1)
     -- liftIO $ putStrLn result
     -- let result = analyzeConversions astState
     -- case result of
@@ -201,7 +201,7 @@ collectPostls hscEnv (f_id, f_body) = res
   (pstl_binds, pstl_rest) = collectBinders f_body
 
 collectConvrs :: FuncDef -> [DeclConversions]
-collectConvrs (f_id, f_body) = case map getConvrs pairs of
+collectConvrs (f_id, f_body) = case map getConvrs pairs_skip_lhe_qed of
     []      -> []
     convrs  -> [(f_id, convrs)]
   where
@@ -209,6 +209,11 @@ collectConvrs (f_id, f_body) = case map getConvrs pairs of
     (App (App (App (Var exprName) _) argExpr) argComm) <- universe f_body,
     "--." <- [getStrById exprName] ]
   pairs  = zip argAddInfo (drop 1 argAddInfo)
+  pairs_skip_lhe_qed = filter (\((_, v_cmnt), _) -> 
+    case v_cmnt of 
+      (Var cmnt) | getStrById cmnt == "QED" -> False
+      _ -> True
+    ) pairs
   getConvrs ((lhe, c1), (rhe, _)) = Conversion lhe rhe (toSideExprInfo c1)
 ---- END COLLECTING AST STATE
 
@@ -308,10 +313,7 @@ madePostulate :: Id -> CheckerM ()
 madePostulate f_id =
   do
     f_body     <- getBodyByFuncId f_id
-    let (pstl_binds, pstl_rest) = collectBinders (inlineLets f_body)
-    logMsg $ "Made postl f_body\n" ++ prettyString f_body
-    logMsg $ "Made postl f_body\n" ++ prettyString pstl_rest
-    logMsg $ "Made postl binds\n" ++ prettyString pstl_binds
+    let (pstl_binds, _) = collectBinders (inlineLets f_body)
     declConvrs <- gets st_declconvrs
 
     (convrs_fst, convrs_lst) <- case lookup f_id declConvrs of
