@@ -65,6 +65,7 @@ executable checkProofs
         PrettyString
         AstInfo
         SortDecls
+        ProofBase
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
