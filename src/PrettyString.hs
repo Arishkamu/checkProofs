@@ -42,8 +42,8 @@ instance PrettyString Id where
 
 instance PrettyString ExprInfo where
     prettyStringIdent _ expr_info = case expr_info of
-        Decl  comment  -> "Decl: "  ++ comment
-        DeclRec cmnt n -> "DeclRec: "  ++ cmnt ++ show n
+        Def  comment   -> "Def: "  ++ comment
+        DefRec cmnt n  -> "DefRec: "  ++ cmnt ++ show n
         Prop comment   -> "Prop: " ++ comment
         Inst comment   -> "Inst: " ++ comment
         Beta           -> "Beta reduction"

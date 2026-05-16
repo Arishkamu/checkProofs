@@ -32,25 +32,25 @@ flip f x y              =  f y x
 
 composeAssoc :: (c -> d) -> (b -> c) -> (a -> b) -> a -> d
 composeAssoc f g h = 
-     (f . (g . h))                   --. L (Decl ".")
- === (\x -> f ((g . h) x))           --. L (Decl ".")
+     (f . (g . h))                   --. L (Def  ".")
+ === (\x -> f ((g . h) x))           --. L (Def  ".")
  === (\x -> f ((\x' -> g (h x')) x)) --. L Beta 
  === (\x -> f (g (h x)))             --. L Beta 
- === (\x -> (\x' -> f (g x')) (h x)) --. R (Decl ".")
- === (\x -> (f . g) (h x))           --. R (Decl ".")
+ === (\x -> (\x' -> f (g x')) (h x)) --. R (Def  ".")
+ === (\x -> (f . g) (h x))           --. R (Def  ".")
  === ((f . g) . h)                   --. QED
 
 composeLeftNeutral :: (a -> b) -> a -> b
 composeLeftNeutral f =
-     (id . f)          --. L (Decl ".")
- === (\x -> id (f x))  --. L (Decl "id")
+     (id . f)          --. L (Def  ".")
+ === (\x -> id (f x))  --. L (Def  "id")
  === (\x -> f x)       --. L Eta
  === f                 --. QED
 
 composeRightNeutral :: (a -> b) -> a -> b
 composeRightNeutral f =
-     (f . id)          --. L (Decl ".")
- === (\x -> f (id x))  --. L (Decl "id")
+     (f . id)          --. L (Def  ".")
+ === (\x -> f (id x))  --. L (Def  "id")
  === (\x -> f x)       --. L Eta
  === f                 --. QED
 
@@ -60,22 +60,22 @@ composeRightNeutral f =
 {- flip . flip === id -}
 flipFlipIsId :: (a -> b -> c) -> a -> b -> c
 flipFlipIsId  = 
-     (flip . flip)                         --. L (Decl ".") 
+     (flip . flip)                         --. L (Def  ".") 
  === (\f -> flip (flip f))                 --. R Eta
  === (\f -> \x -> flip (flip f) x)         --. R Eta
- === (\f -> \x -> \y -> flip (flip f) x y) --. L (Decl "flip")
- === (\f -> \x -> \y -> flip f y x)        --. L (Decl "flip")
+ === (\f -> \x -> \y -> flip (flip f) x y) --. L (Def  "flip")
+ === (\f -> \x -> \y -> flip f y x)        --. L (Def  "flip")
  === (\f -> \x -> \y -> f x y)             --. L Eta
  === (\f -> \x -> f x)                     --. L Eta
- === (\f -> f)                             --. R (Decl "id")
+ === (\f -> f)                             --. R (Def  "id")
  === (\f -> id f)                          --. L Eta
  === id                                    --. QED
 
 {- forall f x y. flip (flip f) x y === f x y -}
 flipFlipIsId' :: (a -> b -> c) -> a -> b -> c
 flipFlipIsId' f x y  = 
-     flip (flip f) x y  --. L (Decl "flip")
- === flip f y x         --. L (Decl "flip")
+     flip (flip f) x y  --. L (Def  "flip")
+ === flip f y x         --. L (Def  "flip")
  === f x y              --. QED
 
 
@@ -133,8 +133,8 @@ f2fromf1 :: Functor f => (b -> c) -> (a -> b) -> f a -> f c
 f2fromf1 g h =
      (fmap g . fmap h)               --. L (Prop "fmapFREE")
  === (fmap id . fmap (g . h))        --. L (Prop "f1")
- === (id . fmap (g . h))             --. L (Decl ".")
- === (\xs -> id (fmap (g . h) xs))   --. L (Decl "id")
+ === (id . fmap (g . h))             --. L (Def  ".")
+ === (\xs -> id (fmap (g . h) xs))   --. L (Def  "id")
  === (\xs -> fmap (g . h) xs)        --. L Eta
  === (fmap (g . h))                  --. QED
  
@@ -151,21 +151,21 @@ functor1LawMaybe Nothing =
  === Nothing          --. QED
 functor1LawMaybe (Just a) =
      fmap id (Just a) --. L (Inst "fmap")
- === Just (id a)      --. L (Decl "id")
+ === Just (id a)      --. L (Def  "id")
  === Just a           --. QED
 
 functor2LawMaybe :: (b -> c) -> (a -> b) -> Maybe a -> Maybe c
 functor2LawMaybe g h Nothing =
-     ((fmap g . fmap h) Nothing) --. L (Decl ".")
+     ((fmap g . fmap h) Nothing) --. L (Def  ".")
  === fmap g (fmap h Nothing)     --. L (Inst "fmap")
  === fmap g Nothing              --. L (Inst "fmap")
  === Nothing                     --. R (Inst "fmap")
  === (fmap (g . h) Nothing)      --. QED
 functor2LawMaybe g h (Just a) =
-     (fmap g . fmap h) (Just a) --. L (Decl ".")
+     (fmap g . fmap h) (Just a) --. L (Def  ".")
  === fmap g (fmap h (Just a))   --. L (Inst "fmap")
  === fmap g (Just (h a))        --. L (Inst "fmap")
- === Just (g (h a))             --. R (Decl ".")
+ === Just (g (h a))             --. R (Def  ".")
  === Just ((g . h) a)           --. R (Inst "fmap")
  === fmap (g . h) (Just a)      --. QED
 
@@ -182,24 +182,24 @@ functor1LawList [] =
  === []          --. QED
 functor1LawList (x:xs) =
      fmap id  (x:xs)       --. L (Inst "fmap")
- === (id x : (fmap id xs)) --. L (Decl "id")
+ === (id x : (fmap id xs)) --. L (Def  "id")
  === (x : fmap id xs)      --. Postulate -- (IH)
  === (x : xs)              --. QED
 
 functor2LawList :: (b -> c) -> (a -> b) -> [a] -> [c]
 functor2LawList g h [] =
-     (fmap g . fmap h) []  --. L (Decl ".")
+     (fmap g . fmap h) []  --. L (Def  ".")
  === fmap g (fmap h [])   --. L (Inst "fmap")
  === fmap g []            --. L (Inst "fmap")
  === []                   --. R (Inst "fmap")
  === fmap (g . h) []      --. QED
 functor2LawList g h (x:xs) =
-     (fmap g . fmap h) (x:xs)         --. L (Decl ".")
+     (fmap g . fmap h) (x:xs)         --. L (Def  ".")
  === fmap g (fmap h (x:xs))           --. L (Inst "fmap")
  === fmap g ((h x) : (fmap h xs))     --. L (Inst "fmap")
- === (g (h x) : (fmap g (fmap h xs))) --. R (Decl ".")
+ === (g (h x) : (fmap g (fmap h xs))) --. R (Def  ".")
  === (g (h x) : (fmap g . fmap h) xs) --. Postulate -- (IH)
- === (g (h x) : (fmap (g . h) xs))    --. R (Decl ".")
+ === (g (h x) : (fmap (g . h) xs))    --. R (Def  ".")
  === ((g . h) x : (fmap (g . h) xs))  --. R (Inst "fmap")
  === fmap (g . h) (x:xs)              --. QED
 
@@ -216,21 +216,21 @@ functor2LawList g h (x:xs) =
     === Left e            --. QED
     functor1LawEither (Right a) =
         fmap id (Right a) --. L (Inst "fmap")
-    === Right (id a)      --. L (Decl "id")
+    === Right (id a)      --. L (Def  "id")
     === Right a           --. QED
 
     functor2LawEither :: (b -> c) -> (a -> b) -> Either e a -> Either e c
     functor2LawEither g h (Left e) =
-        (fmap g . fmap h) (Left e)  --. L (Decl ".")
+        (fmap g . fmap h) (Left e)  --. L (Def  ".")
     === fmap g (fmap h (Left e))    --. L (Inst "fmap")
     === fmap g (Left e)             --. L (Inst "fmap")
     === Left e                      --. L (Inst "fmap")
     === fmap (g . h) (Left e)       --. QED
     functor2LawEither g h (Right a) =
-        (fmap g . fmap h) (Right a) --. L (Decl ".")
+        (fmap g . fmap h) (Right a) --. L (Def  ".")
     === fmap g (fmap h (Right a))   --. L (Inst "fmap")
     === fmap g (Right (h a))        --. L (Inst "fmap")
-    === Right (g (h a))             --. L (Decl ".")
+    === Right (g (h a))             --. L (Def  ".")
     === Right ((g . h) a)           --. L (Inst "fmap")
     === fmap (g . h) (Right a)      --. QED
 BLOCK EITHER -}
@@ -244,15 +244,15 @@ BLOCK EITHER -}
     functor1LawPair ::  (s, a) -> (s, a)
     functor1LawPair (s, a) =
         fmap id (s, a) --. L (Inst "fmap")
-    === (s, id a)      --. L (Decl "id")
+    === (s, id a)      --. L (Def  "id")
     === (s, a)         --. QED
 
     functor2LawPair :: (b -> c) -> (a -> b) -> (s, a) -> (s, c)
     functor2LawPair g h (s, a) =
-        (fmap g . fmap h) (s, a) --. L (Decl ".")
+        (fmap g . fmap h) (s, a) --. L (Def  ".")
     === fmap g (fmap h (s, a))   --. L (Inst "fmap")
     === fmap g (s, (h a))        --. L (Inst "fmap")
-    === (s, g (h a))             --. L (Decl ".")
+    === (s, g (h a))             --. L (Def  ".")
     === (s, (g . h) a)           --. L (Inst "fmap")
     === fmap (g . h) (s, a)      --. QED
 BLOCK PAIR -}
@@ -264,17 +264,17 @@ instance Functor ((->) e) where
 functor1LawArrow ::  (e -> a) -> (e -> a)
 functor1LawArrow f =
      fmap id f          --. L (Inst "fmap")
- === (id . f)           --. L (Decl ".")
- === (\x -> id (f x))   --. L (Decl "id")
+ === (id . f)           --. L (Def  ".")
+ === (\x -> id (f x))   --. L (Def  "id")
  === (\x -> f x)        --. L Eta
  === f                  --. QED
 
 functor2LawArrow :: (b -> c) -> (a -> b) -> (e -> a) -> (e -> c)
 functor2LawArrow g h f =
-     (fmap g . fmap h) f   --. L (Decl ".")
+     (fmap g . fmap h) f   --. L (Def  ".")
  === fmap g (fmap h f)     --. L (Inst "fmap")
  === fmap g (h . f)        --. L (Inst "fmap")
- === (g . (h . f))         --. Postulate --L (Decl ".") assoc
+ === (g . (h . f))         --. Postulate --L (Def  ".") assoc
  === ((g . h) . f)         --. R (Inst "fmap")
  === fmap (g . h) f        --. QED
 
@@ -294,15 +294,15 @@ functor2LawArrow g h f =
         fmap id (Cmps xss)         --. L (Inst "fmap")
     === Cmps (fmap (fmap id) xss)  --. L (Prop "f1")
     === Cmps (fmap id xss)         --. L (Prop "f1")
-    === Cmps (id xss)              --. L (Decl "id")
+    === Cmps (id xss)              --. L (Def  "id")
     === Cmps xss                   --. QED
 
     functor2LawCmps ::  (Functor f, Functor g) => (b -> c) -> (a -> b) -> Cmps f g a -> Cmps f g c
     functor2LawCmps h1 h2 (Cmps xss) =
-        (fmap h1 . fmap h2) (Cmps xss)               --. L (Decl ".")
+        (fmap h1 . fmap h2) (Cmps xss)               --. L (Def  ".")
     === fmap h1 (fmap h2 (Cmps xss))                 --. L (Inst "fmap")
     === fmap h1 (Cmps (fmap (fmap h2) xss))          --. L (Inst "fmap")
-    === Cmps (fmap (fmap h1) (fmap (fmap h2) xss))   --. L (Decl ".")
+    === Cmps (fmap (fmap h1) (fmap (fmap h2) xss))   --. L (Def  ".")
     === Cmps ((fmap (fmap h1) . fmap (fmap h2)) xss) --. L (Prop "f2")
     === Cmps (fmap (fmap h1 . fmap h2) xss)          --. L (Prop "f2")
     === Cmps (fmap (fmap (h1 . h2)) xss)             --. L (Inst "fmap")
@@ -325,17 +325,17 @@ BLOCK CMPS -}
     functor1LawState :: State s b -> State s b
     functor1LawState (State g) =
         fmap id (State g)                               --. L (Inst "fmap")
-    === State (\s -> case g s of (s', a) -> (s', id a)) --. L (Decl "id")
+    === State (\s -> case g s of (s', a) -> (s', id a)) --. L (Def  "id")
     === State (\s -> case g s of (s', a) -> (s', a))    --. Postulate -- UNCASE??
     === State (\s -> g s)                               --. L Eta
     === State g                                         --. QED
 
     functor2LawState :: (b -> c) -> (a -> b) -> (e -> a) -> (e -> c)
     functor2LawState g h f =
-        (fmap g . fmap h) f   --. L (Decl ".")
+        (fmap g . fmap h) f   --. L (Def  ".")
     === fmap g (fmap h f)     --. L (Inst "fmap")
     === fmap g (h . f)        --. L (Inst "fmap")
-    === (g . (h . f))         --. Postulate --L (Decl ".")
+    === (g . (h . f))         --. Postulate --L (Def  ".")
     === ((g . h) . f)         --. L (Inst "fmap")
     === fmap (g . h) f        --. QED
 BLOCK STATE -}
@@ -385,7 +385,7 @@ app1Law :: Applicative f => f a -> f a
 app1Law as =
      pure id <*> as   --. L (Prop "a0")
  === fmap id as       --. L (Prop "f1")
- === id as            --. L (Decl "id")
+ === id as            --. L (Def  "id")
  === as               --. QED
 
 ---------------------------------------------------
@@ -398,19 +398,19 @@ liftA g as = pure g <*> as
  
 liftA_f1 :: Applicative f =>  f a -> f a
 liftA_f1 as  =
-     liftA id as     --. L (Decl "liftA")
+     liftA id as     --. L (Def  "liftA")
  === pure id <*> as  --. L (Prop "a1")
  === as              --. QED
 
 liftA_f2 :: Applicative f => (b -> c) -> (a -> b) ->  f a -> f c
 liftA_f2 g h as =
-      (liftA g . liftA h) as                --. L (Decl ".")
-  === liftA g (liftA h as)                  --. L (Decl "liftA")
-  === liftA g (pure h <*> as)               --. L (Decl "liftA")
+      (liftA g . liftA h) as                --. L (Def  ".")
+  === liftA g (liftA h as)                  --. L (Def  "liftA")
+  === liftA g (pure h <*> as)               --. L (Def  "liftA")
   === pure g <*> (pure h <*> as)            --. R (Prop "a4")
   === pure (.) <*> pure g <*> pure h <*> as --. L (Prop "a3")
   === pure ((.) g) <*> pure h <*> as        --. L (Prop "a3")
-  === pure (g . h) <*> as                   --. R (Decl "liftA")
+  === pure (g . h) <*> as                   --. R (Def  "liftA")
   === liftA (g . h) as                      --. QED                  
  
  
@@ -471,7 +471,7 @@ ap1LawMaybe v =
      pure id <*> v --. L (Inst "pure")
  === Just id <*> v --. L (Inst "<*>")
  === fmap id v     --. L (Prop "f1")
- === id v          --. L (Decl "id")
+ === id v          --. L (Def  "id")
  === v             --. QED
 
 -- нам неоднократно потребуется лемма
@@ -501,7 +501,7 @@ ap3LawMaybe Nothing x =
 ap3LawMaybe (Just f) x = 
      pure ($ x) <*> Just f --. L (Inst "pure")
  === Just ($ x) <*> Just f --. L (Prop "lemma_JJ2J")
- === Just (($ x) f)        --. L (Decl "$")
+ === Just (($ x) f)        --. L (Def  "$")
  === Just (f x)            --. R (Prop "lemma_JJ2J")
  === Just f <*> Just x     --. R (Inst "pure")
  === Just f <*> pure x     --. QED
@@ -521,7 +521,7 @@ ap4LawMaybe (Just f) (Just g) (Just z) =
  === Just (.) <*> Just f <*> Just g <*> Just z  --. L (Prop "lemma_JJ2J")
  === Just ((.) f)        <*> Just g <*> Just z  --. L (Prop "lemma_JJ2J")
  === Just ((.) f g)                 <*> Just z  --. L (Prop "lemma_JJ2J")
- === Just ((.) f g z)                           --. L (Decl ".")
+ === Just ((.) f g z)                           --. L (Def  ".")
  === Just (f (g z))                             --. R (Prop "lemma_JJ2J")
  === Just f <*> Just (g z)                      --. R (Prop "lemma_JJ2J")
  === Just f <*> (Just g <*> Just z)             --. QED
@@ -554,7 +554,7 @@ app0LawArrow :: (a -> b) -> (e -> a) -> e -> b
 app0LawArrow g h =
      pure g <*> h           --. L (Inst "<*>")
  === (\x -> pure g x (h x)) --. L (Inst "pure")
- === (\x -> g (h x))        --. R (Decl ".")
+ === (\x -> g (h x))        --. R (Def  ".")
  === (g . h)                --. R (Inst "fmap")
  === fmap g h               --. QED
 
@@ -566,7 +566,7 @@ app2LawArrow :: (e -> a -> b) -> a -> e -> b
 app2LawArrow g a =
      g <*> pure a               --. L (Inst "<*>")
  === (\x -> g x (pure a x))     --. L (Inst "pure")
- === (\x -> g x a)              --. R (Decl "$")
+ === (\x -> g x a)              --. R (Def  "$")
  === (\x -> ($) (g x) a)        --. Postulate -- {section}
  === (\x -> ($ a) (g x))        --. R (Inst "pure")
  === (\x -> pure ($ a) x (g x)) --. R (Inst "<*>")
@@ -597,7 +597,7 @@ app4LawArrow h g u =
  === (\y -> (\x -> (.) (h x)) y (g y)) <*> u --. L Beta
  === (\y -> (.) (h y) (g y)) <*> u           --. L (Inst "<*>")
  === (\z -> (\y -> (.) (h y) (g y)) z (u z)) --. L Beta
- === (\z -> (.) (h z) (g z) (u z))           --. L (Decl ".")
+ === (\z -> (.) (h z) (g z) (u z))           --. L (Def  ".")
  === (\z -> h z (g z (u z)))                 --. R (Inst "<*>")
  === (\z -> h z ((g <*> u) z))               --. R (Inst "<*>")
  === h <*> (g <*> u)                         --. QED
@@ -654,9 +654,9 @@ app4LawArrow h g u =
     === Cmps (pure ($ (pure a)) <*> (pure (<*>) <*> gss))            --. L (Prop "a4")
     === Cmps (pure (.) <*> pure ($ (pure a)) <*> pure (<*>) <*> gss) --. L (Prop "a3")
     === Cmps (pure ((.) ($ (pure a))) <*> pure (<*>) <*> gss)        --. L (Prop "a3")
-    === Cmps (pure (((.) ($ (pure a))) (<*>)) <*> gss)               --. L (Decl ".")
+    === Cmps (pure (((.) ($ (pure a))) (<*>)) <*> gss)               --. L (Def  ".")
     === Cmps (pure (\z -> ($ (pure a)) ((<*>) z)) <*> gss)           --. Postulate -- SECTION
-    === Cmps (pure (\z -> (((<*>) z) $ (pure a))) <*> gss)           --. L (Decl "$")
+    === Cmps (pure (\z -> (((<*>) z) $ (pure a))) <*> gss)           --. L (Def  "$")
     === Cmps (pure (\z -> z <*> pure a) <*> gss)                     --. L (Prop "a2")
     === Cmps (pure (\z -> pure ($ a) <*> z) <*> gss)                 --. L Eta
     === Cmps (pure ((<*>) (pure ($ a))) <*> gss)                     --. L (Prop "a3")
@@ -727,16 +727,16 @@ app4LawArrow h g u =
 
     lemma0 :: Applicative f => f (b -> c) -> f (a -> b) -> f a -> f c
     lemma0 hs gs as = 
-        ((.) ((.) (<*>)) ((.) (<*>) ((<*>) (pure (.))))) hs gs as --. L (Decl ".")
-    === ((.) (<*>) (((.) (<*>) ((<*>) (pure (.)))) hs)) gs as     --. L (Decl ".")
-    === ((.) (<*>) ((<*>) (pure (.)))) hs gs <*> as               --. L (Decl ".")
+        ((.) ((.) (<*>)) ((.) (<*>) ((<*>) (pure (.))))) hs gs as --. L (Def  ".")
+    === ((.) (<*>) (((.) (<*>) ((<*>) (pure (.)))) hs)) gs as     --. L (Def  ".")
+    === ((.) (<*>) ((<*>) (pure (.)))) hs gs <*> as               --. L (Def  ".")
     === pure (.) <*> hs <*> gs <*> as                             --. L (Prop "a4")
-    === hs <*> ( gs <*> as)                                       --. R (Decl ".")
-    === (.) ((<*>) hs) ((<*>) gs) as                              --. R (Decl ".")
-    === (.) ((.) ((<*>) hs)) (<*>) gs as                          --. R (Decl ".")
-    === (.) ((.) (.) (<*>) hs) (<*>) gs as                        --. R (Decl ".")
-    === ((.) (.) ((.) (.) (<*>)) hs) (<*>) gs as                  --. R (Decl "$")
-    === (($ (<*>)) ((.) (.) ((.) (.) (<*>)) hs)) gs as            --. R (Decl ".")
+    === hs <*> ( gs <*> as)                                       --. R (Def  ".")
+    === (.) ((<*>) hs) ((<*>) gs) as                              --. R (Def  ".")
+    === (.) ((.) ((<*>) hs)) (<*>) gs as                          --. R (Def  ".")
+    === (.) ((.) (.) (<*>) hs) (<*>) gs as                        --. R (Def  ".")
+    === ((.) (.) ((.) (.) (<*>)) hs) (<*>) gs as                  --. R (Def  "$")
+    === (($ (<*>)) ((.) (.) ((.) (.) (<*>)) hs)) gs as            --. R (Def  ".")
     === ((.) ($ (<*>)) ((.) (.) ((.) (.) (<*>)))) hs gs as        --. QED
 
 APPLICATIVE CMPS -}
@@ -797,9 +797,9 @@ forall xs. liftM id m == m
 -}
 theoremFunctor1 :: Monad m => m b -> m b
 theoremFunctor1 m =
-      liftM id m                    --. L (Decl "liftM")
-  === (m >>= return . id)           --. L (Decl ".")
-  === (m >>= \x -> return (id x))   --. L (Decl "id")
+      liftM id m                    --. L (Def  "liftM")
+  === (m >>= return . id)           --. L (Def  ".")
+  === (m >>= \x -> return (id x))   --. L (Def  "id")
   === (m >>= \x -> return x)        --. L Eta
   === (m >>= return)                --. L (Prop "m2")
   === m                             --. QED
@@ -809,15 +809,15 @@ forall f g m. liftM (f . g) m == liftM f (liftM g m)
 -}
 theoremFunctor2 :: Monad m => (b -> c) -> (a -> b) -> m a -> m c
 theoremFunctor2 f g m =
-      liftM f (liftM g m)                           --. L (Decl "liftM")
-  === liftM f (m >>= return . g)                    --. L (Decl "liftM")
+      liftM f (liftM g m)                           --. L (Def  "liftM")
+  === liftM f (m >>= return . g)                    --. L (Def  "liftM")
   === ((m >>= return . g) >>= return . f)           --. L (Prop "m3")
-  === (m >>= \x -> (return . g) x >>= return . f)   --. L (Decl ".")
+  === (m >>= \x -> (return . g) x >>= return . f)   --. L (Def  ".")
   === (m >>= \x -> return (g x) >>= return . f)     --. L (Prop "m1")
-  === (m >>= \x -> (return . f) (g x))              --. R (Decl ".")
+  === (m >>= \x -> (return . f) (g x))              --. R (Def  ".")
   === (m >>= \x -> ((return . f) . g) x)            --. L Eta
   === (m >>= (return . f) . g)                      --. Postulate -- [Compose.composeAssoc]
-  === (m >>= return . (f . g))                      --. R (Decl "liftM")
+  === (m >>= return . (f . g))                      --. R (Def  "liftM")
   === (liftM (f . g) m)                             --. QED
 
 
@@ -838,7 +838,7 @@ forall g xs. liftM g xs == return g <*>.. xs
 -}
 theoremApplicative0 :: Monad m => (a -> b) -> m a -> m b
 theoremApplicative0 g xs =
-      return g <*>.. xs                --. L (Decl "<*>..")
+      return g <*>.. xs                --. L (Def  "<*>..")
   === (return g >>= \f -> liftM f xs)  --. L (Prop "m1")
   === (\f -> liftM f xs) g             --. L Beta
   === liftM g xs                       --. QED
@@ -849,7 +849,7 @@ forall xs. return id <*>.. xs  == xs
 -}
 theoremApplicative1 :: Monad m => m b -> m b
 theoremApplicative1 xs =
-      return id <*>.. xs                 --. L (Decl "<*>..")
+      return id <*>.. xs                 --. L (Def  "<*>..")
   === (return id >>= \f -> liftM f xs)   --. L (Prop "m1")
   === (\f -> liftM f xs) id              --. L Beta
   === liftM id xs                        --. L (Prop "theoremFunctor1")
@@ -861,12 +861,12 @@ forall g x. return g <*>.. return x == return (g x)
 -}
 theoremApplicative2 :: Monad m => (a -> b) ->  a -> m b
 theoremApplicative2 g x =
-      return g <*>.. return x                  --. L (Decl "<*>..")
+      return g <*>.. return x                  --. L (Def  "<*>..")
   === (return g >>= \f -> liftM f (return x))  --. L (Prop "m1")
   === (\f -> liftM f (return x)) g             --. L Beta
-  === liftM g (return x)                       --. L (Decl "liftM")
+  === liftM g (return x)                       --. L (Def  "liftM")
   === (return x >>= return . g)                --. L (Prop "m1")
-  === (return . g) x                           --. L (Decl ".")
+  === (return . g) x                           --. L (Def  ".")
   === return (g x)                             --. QED
 
 
@@ -882,20 +882,20 @@ theoremApplicative3 fs x =
 
 lemma1_tha3 :: Monad m => m (a -> b) -> a -> m b
 lemma1_tha3 fs x = -- left hand side transformation
-        (fs <*>.. return x)                       --. L (Decl "<*>..")
-    === (fs >>= \f -> liftM f (return x))         --. L (Decl "liftM")
+        (fs <*>.. return x)                       --. L (Def  "<*>..")
+    === (fs >>= \f -> liftM f (return x))         --. L (Def  "liftM")
     === (fs >>= \f -> return x >>= return . f)    --. L (Prop "m1")
-    === (fs >>= \f -> (return . f) x)             --. L (Decl ".")
+    === (fs >>= \f -> (return . f) x)             --. L (Def  ".")
     === (fs >>= \f -> return (f x))               --. QED
 
 lemma2_tha3 :: Monad m => m (a -> b) -> a -> m b
 lemma2_tha3 fs x = -- right hand side transformation
-        (return ($ x) <*>.. fs)               --. L (Decl "<*>..")
+        (return ($ x) <*>.. fs)               --. L (Def  "<*>..")
     === (return ($ x) >>= \f -> liftM f fs)   --. L (Prop "m1")
     === (\f -> liftM f fs) ($ x)              --. L Beta
-    === (liftM ($ x) fs)                      --. L (Decl "liftM")
-    === (fs >>= return . ($ x))               --. L (Decl ".")
-    === (fs >>= \f -> return (($ x) f))       --. L (Decl "$")
+    === (liftM ($ x) fs)                      --. L (Def  "liftM")
+    === (fs >>= return . ($ x))               --. L (Def  ".")
+    === (fs >>= \f -> return (($ x) f))       --. L (Def  "$")
     === (fs >>= \f -> return (f x))           --. QED
 {-
 4 Applicative law (Composition)
@@ -909,31 +909,31 @@ theoremApplicative4 us vs xs =
 
 lemma1_tha4 :: Monad m => m (b -> c) -> m (a -> b) -> m a -> m c
 lemma1_tha4 us vs xs = -- left hand side transformation
-        (return (.) <*>.. us <*>.. vs <*>.. xs)                              --. L (Decl "<*>..")
+        (return (.) <*>.. us <*>.. vs <*>.. xs)                              --. L (Def  "<*>..")
     === ((return (.) >>= \c -> liftM c us) <*>.. vs <*>.. xs)                --. L (Prop "m1")
     === ((\c -> liftM c us) (.) <*>.. vs <*>.. xs)                           --. L Beta
-    === (liftM (.) us <*>.. vs <*>.. xs)                                     --. L (Decl "liftM")
-    === ((us >>= return . (.)) <*>.. vs <*>.. xs)                            --. L (Decl "<*>..")
+    === (liftM (.) us <*>.. vs <*>.. xs)                                     --. L (Def  "liftM")
+    === ((us >>= return . (.)) <*>.. vs <*>.. xs)                            --. L (Def  "<*>..")
     === (((us >>= return . (.)) >>= \r -> liftM r vs) <*>.. xs)              --. L (Prop "m3") 
-    === ((us >>= \u -> (return . (.)) u >>= \r -> liftM r vs) <*>.. xs)      --. L (Decl ".")
+    === ((us >>= \u -> (return . (.)) u >>= \r -> liftM r vs) <*>.. xs)      --. L (Def  ".")
     === ((us >>= \u -> return (u .) >>= \r -> liftM r vs) <*>.. xs)          --. L (Prop "m1")
     === ((us >>= \u -> (\r -> liftM r vs) (u .)) <*>.. xs)                   --. L Beta
-    === ((us >>= \u -> liftM (u .) vs) <*>.. xs)                             --. L (Decl "liftM")
-    === ((us >>= \u -> vs >>= return . (u .)) <*>.. xs)                      --. L (Decl "<*>..")
+    === ((us >>= \u -> liftM (u .) vs) <*>.. xs)                             --. L (Def  "liftM")
+    === ((us >>= \u -> vs >>= return . (u .)) <*>.. xs)                      --. L (Def  "<*>..")
     === ((us >>= \u -> vs >>= return . (u .)) >>= \f -> liftM f xs)          --. L (Prop "m3")
     === (us >>= \u -> vs >>= return . (u .) >>= \f -> liftM f xs)            --. L (Prop "m3") 
-    === (us >>= \u -> vs >>= \v -> (return . (u .)) v >>= \f -> liftM f xs)  --. L (Decl ".")
+    === (us >>= \u -> vs >>= \v -> (return . (u .)) v >>= \f -> liftM f xs)  --. L (Def  ".")
     === (us >>= \u -> vs >>= \v -> return  (u . v) >>= \f -> liftM f xs)     --. L (Prop "m1")
     === (us >>= \u -> vs >>= \v ->  (\f -> liftM f xs) (u . v))              --. L Beta
     === (us >>= \u -> vs >>= \v ->  liftM (u . v) xs)                        --. QED
 
 lemma2_tha4 :: Monad m => m (b -> c) -> m (a -> b) -> m a -> m c
 lemma2_tha4 us vs xs = -- right hand side transformation
-        (us <*>.. (vs <*>.. xs))                                   --. L (Decl "<*>..")
-    === (us >>= \u -> liftM u (vs <*>.. xs))                       --. L (Decl "<*>..")
-    === (us >>= \u -> liftM u (vs >>= \v -> liftM v xs))           --. L (Decl "liftM")
+        (us <*>.. (vs <*>.. xs))                                   --. L (Def  "<*>..")
+    === (us >>= \u -> liftM u (vs <*>.. xs))                       --. L (Def  "<*>..")
+    === (us >>= \u -> liftM u (vs >>= \v -> liftM v xs))           --. L (Def  "liftM")
     === ((us >>= \u -> (vs >>= \v -> liftM v xs) >>= return . u))  --. L (Prop "m3")
-    === ((us >>= \u -> vs >>= \v -> liftM v xs >>= return . u))    --. R (Decl "liftM")
+    === ((us >>= \u -> vs >>= \v -> liftM v xs >>= return . u))    --. R (Def  "liftM")
     === (us >>= \u -> vs >>= \v -> liftM u (liftM v xs))           --. L (Prop "theoremFunctor2")
     === (us >>= \u -> vs >>= \v -> liftM (u . v) xs)               --. QED
 
@@ -963,7 +963,7 @@ g >=> h = \x -> g x >>= h
 -- forall k. return >=> k  ==  k
 fishLeftNeutral :: Monad m => (a -> m b) -> a -> m b
 fishLeftNeutral k =
-      (return >=> k)          --. L (Decl ">=>")
+      (return >=> k)          --. L (Def  ">=>")
  === (\a -> return a >>= k)   --. L (Prop "m1")
  === (\a -> k a)              --. L Eta
  === k                        --. QED
@@ -971,7 +971,7 @@ fishLeftNeutral k =
 -- forall k. k >=> return  ==  k
 fishRightNeutral :: Monad m => (a -> m b) -> a -> m b
 fishRightNeutral k =
-     (k >=> return)           --. L (Decl ">=>")
+     (k >=> return)           --. L (Def  ">=>")
  === (\a -> k a >>= return)   --. L (Prop "m2")
  === (\a -> k a)              --. L Eta
  === k                        --. QED
@@ -979,12 +979,12 @@ fishRightNeutral k =
 -- forall u v w. (u >=> v) >=> w  ==  u >=> (v >=> w)
 fishAssoc :: Monad m => (a -> m b) -> (b -> m c) -> (c -> m d) -> a -> m d
 fishAssoc u v w =
-     ((u >=> v) >=> w)                    --. L (Decl ">=>")
- === (\a -> (u >=> v) a >>= w)            --. L (Decl ">=>")
+     ((u >=> v) >=> w)                    --. L (Def  ">=>")
+ === (\a -> (u >=> v) a >>= w)            --. L (Def  ">=>")
  === (\a -> (\a' -> u a' >>= v) a >>= w)  --. L Beta
  === (\a -> (u a >>= v) >>= w)            --. L (Prop "m3")
- === (\a -> u a >>= \b -> v b >>= w)      --. R (Decl ">=>")
- === (\a -> u a >>= (v >=> w))            --. R (Decl ">=>")
+ === (\a -> u a >>= \b -> v b >>= w)      --. R (Def  ">=>")
+ === (\a -> u a >>= (v >=> w))            --. R (Def  ">=>")
  === (u >=> (v >=> w))                    --. QED
 
 -----------------------------------------------------
@@ -1016,8 +1016,8 @@ join x  =  x >>= id
 --  join . return === id  -- :: m a -> m a
 mjfr1 :: Monad m => m a -> m a
 mjfr1 xs = 
-     (join . return) xs   --. L (Decl ".")
- === join (return xs)     --. L (Decl "join")
+     (join . return) xs   --. L (Def  ".")
+ === join (return xs)     --. L (Def  "join")
  === (return xs >>= id)   --. L (Prop "m1")
  === id xs                --. QED
 
@@ -1025,35 +1025,35 @@ mjfr1 xs =
 --   join . fmap return === id  -- :: m a -> m a
 mjfr2 :: Monad m => m a -> m a
 mjfr2 xs = 
-     ((join . liftM return) xs)                --. L (Decl ".")
- === (join (liftM return xs))                  --. L (Decl "join")
- === (liftM return xs >>= id)                  --. L (Decl "liftM")
+     ((join . liftM return) xs)                --. L (Def  ".")
+ === (join (liftM return xs))                  --. L (Def  "join")
+ === (liftM return xs >>= id)                  --. L (Def  "liftM")
  === (xs >>= return . return >>= id)           --. L (Prop "m3")
- === (xs >>= \x -> (return . return) x >>= id) --. L (Decl ".")
+ === (xs >>= \x -> (return . return) x >>= id) --. L (Def  ".")
  === (xs >>= \x -> return (return x) >>= id)   --. L (Prop "m1")
- === (xs >>= \x -> id (return x))              --. L (Decl "id")
+ === (xs >>= \x -> id (return x))              --. L (Def  "id")
  === (xs >>= \x -> return x)                   --. L Eta
  === (xs >>= return)                           --. L (Prop "m2")
- === xs                                        --. R (Decl "id")
+ === xs                                        --. R (Def  "id")
  === id xs                                     --. QED
 
 ---
 --  join . fmap join  ===  join . join  -- :: m (m (m a)) -> m a
 mjfr3 :: Monad m => m (m (m a)) -> m a
 mjfr3 x3s = 
-     ((join . liftM join) x3s)                      --. L (Decl ".")
- === (join (liftM join x3s))                        --. L (Decl "liftM")
- === (join (x3s >>= return . join))                 --. L (Decl "join")
+     ((join . liftM join) x3s)                      --. L (Def  ".")
+ === (join (liftM join x3s))                        --. L (Def  "liftM")
+ === (join (x3s >>= return . join))                 --. L (Def  "join")
  === (x3s >>= return . join >>= id)                 --. L (Prop "m3")
- === ((x3s >>= \x2s -> (return . join) x2s >>= id)) --. L (Decl ".")
+ === ((x3s >>= \x2s -> (return . join) x2s >>= id)) --. L (Def  ".")
  === (x3s >>= \x2s -> return (join x2s) >>= id)     --. L (Prop "m1")
- === (x3s >>= \x2s -> id (join x2s))                --. L (Decl "id")
- === (x3s >>= \x2s -> join x2s)                     --. L (Decl "join")
- === (x3s >>= \x2s -> x2s >>= id)                   --. R (Decl "id")
+ === (x3s >>= \x2s -> id (join x2s))                --. L (Def  "id")
+ === (x3s >>= \x2s -> join x2s)                     --. L (Def  "join")
+ === (x3s >>= \x2s -> x2s >>= id)                   --. R (Def  "id")
  === (x3s >>= \x2s -> id x2s >>= id)                --. R (Prop "m3")
- === (x3s >>= id >>= id)                            --. R (Decl "join")
- === (join x3s >>= id)                              --. R (Decl "join")
- === (join (join x3s))                              --. R (Decl ".")
+ === (x3s >>= id >>= id)                            --. R (Def  "join")
+ === (join x3s >>= id)                              --. R (Def  "join")
+ === (join (join x3s))                              --. R (Def  ".")
  === ((join . join) x3s)                            --. QED
 
 

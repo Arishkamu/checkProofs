@@ -22,69 +22,172 @@ module ProofsMonad where
 -- (====) :: WithInfo a -> WithInfo a -> WithInfo a
 -- (====) x y = y
 
-data SideExprInfo = L ExprInfo | R ExprInfo | QED
-data ExprInfo = Func String | Postl String | Beta | Eta | FuncRec String Integer
--- data WithInfo a = WithInfo { value :: a, info :: SideExprInfo}
+-- import ProofBase hiding ((.))
+import ProofBase
+import Prelude hiding ((.), id, ($), const, flip)
 
-(--.) :: a -> SideExprInfo -> a
-(--.) x _ = x
+--------------------------------------------------------
+class Functor m => AltMonad m where 
+  ret :: a -> m a
+  joi :: m (m a) -> m a
 
-postulate :: a -> a -> a
-postulate = const
+mjfr3 :: AltMonad m => m (m (m a)) -> m a
+mjfr3  = 
+     (joi . fmap joi)  --. Postulate
+ === (joi . joi)       --. QED
 
-infixl 0 ===
-(===) :: a -> a -> a
-(===) x y = y
+(>=>..) :: AltMonad m => (a -> m b) -> (b -> m c) -> a -> m c
+g >=>.. h = joi . fmap h . g
 
-
--- MY FUNCTIONS
-infixr 9 =.
-(=.)    :: (b -> c) -> (a -> b) -> a -> c
-(=.) f g = \x -> f (g x)
-
-infixr 0 =$
-(=$)    :: (a -> b) -> a -> b
-(=$) f x = f x
-
-
-myId                      :: a -> a
-myId x                    =  x
-
-myFlip :: (a -> b -> c) -> b -> a -> c
-myFlip f x y              =  f y x
-
-myLiftM :: Monad m => (a -> b) -> m a -> m b
-myLiftM f xs  =  xs >>= return =. f
+-- (fish3)  (u >=> v) >=> w  ===  u >=> (v >=> w)
+fish3 :: AltMonad m => (a -> m b) -> (b -> m c) -> (c -> m d) -> a -> m d
+fish3 u v w =
+     ((u >=>.. v) >=>.. w)                           --. Postulate
+ === ((joi . joi) . fmap (fmap w) . fmap v . u)      --. R (Prop "mjfr3")
+ === ((joi . fmap joi) . fmap (fmap w) . fmap v . u) --. QED
+-- mjfr3  = 
+--      (joi . fmap joi) === (joi . joi)       --. QED
 
 
 
 
+{-
+(--.
+   @(a_aZm -> m_aZl d_aZp)
+   (. @(m_aZl (m_aZl (m_aZl d_aZp)))
+      @(m_aZl d_aZp)
+      @a_aZm
+      (. @(m_aZl (m_aZl d_aZp))
+         @(m_aZl d_aZp)
+         @(m_aZl (m_aZl (m_aZl d_aZp)))
+         (joi @m_aZl $dAltMonad_aZq @d_aZp)
+         (joi @m_aZl $dAltMonad_aZq @(m_aZl d_aZp)))
+      (. @(m_aZl (m_aZl c_aZo))
+         @(m_aZl (m_aZl (m_aZl d_aZp)))
+         @a_aZm
+         (fmap
+            @m_aZl
+            ($p1AltMonad @m_aZl $dAltMonad_aZq)
+            @(m_aZl c_aZo)
+            @(m_aZl (m_aZl d_aZp))
+            (fmap
+               @m_aZl
+               ($p1AltMonad @m_aZl $dAltMonad_aZq)
+               @c_aZo
+               @(m_aZl d_aZp)
+               w_aWp))
+         (. @(m_aZl b_aZn)
+            @(m_aZl (m_aZl c_aZo))
+            @a_aZm
+            (fmap
+               @m_aZl
+               ($p1AltMonad @m_aZl $dAltMonad_aZq)
+               @b_aZn
+               @(m_aZl c_aZo)
+               v_aWo)
+            u_aWn)))
+   (R (Prop (unpackCString# "mjfr3"#)))))
+(--.
+   @(a_aZm -> m_aZl d_aZp)
+   (. @(m_aZl (m_aZl (m_aZl d_aZp)))
+      @(m_aZl d_aZp)
+      @a_aZm
+      (. @(m_aZl (m_aZl d_aZp))
+         @(m_aZl d_aZp)
+         @(m_aZl (m_aZl (m_aZl d_aZp)))
+         (joi @m_aZl $dAltMonad_aZq @d_aZp)
+         (fmap
+            @m_aZl
+            ($p1AltMonad @m_aZl $dAltMonad_aZq)
+            @(m_aZl (m_aZl d_aZp))
+            @(m_aZl d_aZp)
+            (joi @m_aZl $dAltMonad_aZq @d_aZp)))
+      (. @(m_aZl (m_aZl c_aZo))
+         @(m_aZl (m_aZl (m_aZl d_aZp)))
+         @a_aZm
+         (fmap
+            @m_aZl
+            ($p1AltMonad @m_aZl $dAltMonad_aZq)
+            @(m_aZl c_aZo)
+            @(m_aZl (m_aZl d_aZp))
+            (fmap
+               @m_aZl
+               ($p1AltMonad @m_aZl $dAltMonad_aZq)
+               @c_aZo
+               @(m_aZl d_aZp)
+               w_aWp))
+         (. @(m_aZl b_aZn)
+            @(m_aZl (m_aZl c_aZo))
+            @a_aZm
+            (fmap
+               @m_aZl
+               ($p1AltMonad @m_aZl $dAltMonad_aZq)
+               @b_aZn
+               @(m_aZl c_aZo)
+               v_aWo)
+            u_aWn)))
+       QED)
 
-myM1 :: Monad m => a -> (a -> m b) -> m b
-myM1 a k =
-     (return a >>= k) -- {POSTULATE}
- `postulate` (k a)
+-}
 
-myM2 :: Monad m => m a -> m a
-myM2 m =
-     (m >>= return)    -- {POSTULATE}
- `postulate` m
 
-myM3 :: Monad m => m a -> (a -> m b) -> (b -> m c) -> m c
-myM3 m k k' =
-     (m >>= k >>= k')   -- {POSTULATE}
- `postulate`  (m >>= \x -> k x >>= k')
 
--- composeAssoc4 :: (c -> d) -> (b -> c) -> (a -> b) -> a -> d
--- composeAssoc4 f g h =
---      (f =. (g =. h)) 
---   `postulate` ((f =. g) =. h)
 
-(<*>..) :: Monad m => m (a -> b) -> m a -> m b
-fs <*>.. xs = fs >>= \f -> myLiftM f xs -- см. liftM выше
+-- data SideExprInfo = L ExprInfo | R ExprInfo | QED | Postulate
+-- data ExprInfo = Def  String | Prop String | Beta | Eta
+-- -- data WithInfo a = WithInfo { value :: a, info :: SideExprInfo}
 
-(>=>) :: Monad m => (a -> m b) -> (b -> m c) -> a -> m c
-g >=> h = \x -> g x >>= h
+-- (--.) :: a -> SideExprInfo -> a
+-- (--.) x _ = x
+
+-- -- postulate :: a -> a -> a
+-- -- postulate = const
+
+-- infixl 0 ===
+-- (===) :: a -> a -> a
+-- (===) x y = y
+
+
+-- -- MY FUNCTIONS
+-- infixr 9 .
+-- (.)    :: (b -> c) -> (a -> b) -> a -> c
+-- (.) f g = \x -> f (g x)
+
+-- infixr 0 $
+-- ($)    :: (a -> b) -> a -> b
+-- ($) f x = f x
+
+-- id                      :: a -> a
+-- id x                    =  x
+
+-- flip :: (a -> b -> c) -> b -> a -> c
+-- flip f x y              =  f y x
+
+
+-- m1 :: Monad m => a -> (a -> m b) -> m b
+-- m1 a k =
+--      (return a >>= k) --. Postulate
+--  === (k a)            --. QED
+
+-- m2 :: Monad m => m a -> m a
+-- m2 m =
+--      (m >>= return) --. Postulate
+--  === m              --. QED
+
+-- m3 :: Monad m => m a -> (a -> m b) -> (b -> m c) -> m c
+-- m3 m k k' =
+--      (m >>= k >>= k')          --. Postulate
+--  ===  (m >>= \x -> k x >>= k') --. QED
+
+-- {-
+-- Покажите, что каждая монада - это функтор. 
+-- Для этого выразите fmap через (>>=) и return:
+-- -}
+-- liftM :: Monad m => (a -> b) -> m a -> m b
+-- liftM f xs  =  xs >>= return . f
+
+-- (<*>..) :: Monad m => m (a -> b) -> m a -> m b
+-- fs <*>.. xs = fs >>= \f -> liftM f xs -- см. liftM выше
 
 -- theoremFunctor1 :: Monad m => m b -> m b
 -- theoremFunctor1 xs =
@@ -494,8 +597,8 @@ g >=> h = \x -> g x >>= h
 --                myLiftM @m_a3iV @a_a3iY @c_a3iX $dMonad_a3iZ f_a2t8 xs_a2sN))))
 -- (Left @ExprInfo @ExprInfo (Postl (unpackCString# "myM1"#)))))
 
-myConst :: a -> b -> a
-myConst x _ = x
+-- myConst :: a -> b -> a
+-- myConst x _ = x
 
 -- myConstConst :: Int
 -- myConstConst = 
@@ -504,42 +607,128 @@ myConst x _ = x
 --  === 42                     --. QED
 
 
-myConstConstConst :: Int
-myConstConstConst = 
-     (myConst myConst myConst 42 2) --. L (Func "myConst")
- === (myConst 42 2)                 --. L (Func "myConst")
- === 42                             --. QED
+-- myConstConstConst :: Int
+-- myConstConstConst = 
+--      (myConst myConst myConst 42 2) --. L (Func "myConst")
+--  === (myConst 42 2)                 --. L (Func "myConst")
+--  === 42                             --. QED
 
-myFoldl :: (a -> b -> a) -> a -> [b] -> a  
-myFoldl f z [] = z
-myFoldl f z (x:xs) = myFoldl f (f z x) xs
+-- myFoldl :: (a -> b -> a) -> a -> [b] -> a  
+-- myFoldl f z [] = z
+-- myFoldl f z (x:xs) = myFoldl f (f z x) xs
 
-myAdd :: Int -> Int -> Int
-myAdd 10 c = c
-myAdd n c = myAdd (n + 1) c
+-- myAdd :: Int -> Int -> Int
+-- myAdd 10 c = c
+-- myAdd n c = myAdd (n + 1) c
+
+-- mySub :: [a] -> Int
+-- mySub xs = 10
+
+-- mySub_postl :: [a] -> Int
+-- mySub_postl (x:xs) =
+--    case xss of
+--       (x:xs)
+--      mySub (x:xs)       --. Postulate
+--  === mySub xs --. QED
+
+-- {-# INLINE mySub #-}
+-- {-# RULES
+-- "mySun_postl/base"
+--   forall .
+--     mySub [] = 0
+-- #-}
+-- {-# RULES
+-- "mySun_postl/mmm"
+--   forall (x :: a) (xs :: [a]).
+--     mySub (x:xs) = mySub xs
+-- #-}
+
+-- mySubDecl :: [a] -> Int
+-- mySubDecl xss =
+--        (mySub xss)        --. L (Prop "mySub_postl")
+--    === (mySub xss)  --. QED
 
 -- myFoldl_2_postl :: (a -> b -> a) -> a -> [b] -> a  
--- myFoldl_2_postl f z xss = 
---    (myFoldl_2 f z xss) `postulate` (myFoldl_2 f z xss)
+-- myFoldl_2_postl f z (x:xs) = 
+--        (myFoldl f z (x:xs))   --. Postulate
+--    === (myFoldl f (f z x) xs) --. QED
 
--- {-# RULES
--- "myFoldl_2_postl/mmm"
---   forall (f :: a -> b -> a) (z :: a) (xss :: [b]).
---     (myFoldl_2 f z xss) = z
--- #-}
+-- -- {-# RULES
+-- -- "myFoldl_2_postl/mmm"
+-- --   forall (f :: a -> b -> a) (z :: a) (xss :: [b]).
+-- --     (myFoldl_2 f z xss) = z
+-- -- #-}
 
 -- foldlMy :: a -> [b] -> a
 -- foldlMy z xss = 
---    myFoldl_2 myConst z xss         --. L (Func "myFoldl_2")
---  === myFoldl_2 myConst (myConst z (head xss)) (tail xss) --. QED
+--    myFoldl myConst z xss         --. L (Func "myFoldl")
+--  === myFoldl myConst (myConst z (head xss)) (tail xss) --. QED
 
 
---  Actualy, the problem with diff is only
--- 
+-- --  Actualy, the problem with diff is only
+-- -- 
 
-foldlMy :: a -> [b] -> a
-foldlMy z (x:xs) = 
-   myFoldl myConst z (x:xs)           --. L (FuncRec "myFoldl" 1)
- === myFoldl myConst (myConst z x) xs --. L (FuncRec "myConst" 1)
- === myFoldl (\a b -> a) (myConst z x) xs             --. QED
+-- foldlMy :: (a -> b -> a) -> a -> [b] -> a
+-- foldlMy f z (x:xs) = 
+--    myFoldl f z (x:xs)           --. L (Prop "myFoldl_2_postl")
+--  === myFoldl f (myConst z x) xs --. L (DeclRec "myConst" 1)
+--  === myFoldl (\a b -> a) (myConst z x) xs             --. QED
 
+
+-- composeAssoc4 :: (c -> d) -> (b -> c) -> (a -> b) -> a -> d
+-- composeAssoc4 f g h =
+--     (f =. (g =. h))                   --. L (Func "=.")
+--  === (\x -> f ((g =. h) x))          --. L (Func "=.")
+--  === (\x -> f ((\x' -> g (h x')) x)) --. L Beta
+--  === (\x -> f (g (h x)))             --. L Beta
+--  === (\x -> (\x' -> f (g x')) (h x)) --. R (Func "=.")
+--  === (\x -> (f =. g) (h x))          --. R (Func "=.")
+--  === ((f =. g) =. h)                 --. QED
+
+-- lemma2 fs x = -- R hand side transformation
+--         (return (=$ x) <*>.. fs)                --. L (Func "<*>..")-- (<*>..)
+--     === (return (=$ x) >>= \f -> myLiftM f fs)  --. L (Postl "myM1")-- [m1]
+--     === ((\f -> myLiftM f fs) (=$ x))           --. L Beta-- L Beta-reduction
+--    --  myLiftM f xs  =  xs >>= return =. f
+--     === (myLiftM (=$ x) fs )                    --. L (Func "myLiftM")-- myLiftM
+--    --  fs >>= return =. (=$ x)
+--     === (fs >>= return =. (=$ x))               --. L (Func "=.")-- (=.)
+--    --  fs >>= return =. (\v -> v =$ x)
+--    --  (=.) f g = \x -> f (g x)
+--    -- fs >>= \f -> return ((\v -> v =$ x) f)
+--    -- fs >>= \f -> return ((\v -> v =$ x) f)
+--     === (fs >>= \f -> return (f =$ x))       --. L (Func "=$")-- ($)
+--     === (fs >>= \f -> return (f x))            --. QED
+
+-- theoremApplicative0 :: Monad m => (a -> b) -> m a -> m b
+-- theoremApplicative0 g xs =
+--        (return g <*>.. xs)             --. L (Def  "<*>..")-- (<*>..)
+--   === (return g >>= \f -> liftM f xs)  --. L (Prop "m1")-- [m1]
+--   === ((\f -> liftM f xs) g)           --. L Beta-- L Beta-reduction
+--   === (liftM g xs)                     --. QED
+
+-- theorem :: Monad m => m (b -> c) -> m (a -> b) -> m a -> m (a -> c)
+-- theorem us vs xs = 
+--        ((return (.) >>= \c -> liftM c us) <*>.. vs) --. L (Prop "m1")
+--    === (((\c -> liftM c us) (.)) <*>.. vs)         --. QED
+
+-- ta4_lemma1 :: Monad m => m (b -> c) -> m (a -> b) -> m a -> m c
+-- ta4_lemma1 us vs xs = -- L hand side transformation
+--       (return (.) <*>.. us <*>.. vs <*>.. xs )                            --. L (Def  "<*>..")-- (<*>..)
+--  === ((return (.) >>= \c -> liftM c us) <*>.. vs <*>.. xs)                --. L (Prop "m1")-- [m1]
+--  === ((\c -> liftM c us) (.) <*>.. vs <*>.. xs)                           --. L Beta-- L Beta-reduction
+--  === (liftM (.) us <*>.. vs <*>.. xs)                                     --. L (Def  "liftM")-- liftM
+--  === ((us >>= return . (.)) <*>.. vs <*>.. xs)                            --. L (Def  "<*>..")-- (<*>..)
+--  === (((us >>= return . (.)) >>= \r -> liftM r vs) <*>.. xs)              --. L (Prop "m3")-- [m3] 
+--  === ((us >>= \u -> (return . (.)) u >>= \r -> liftM r vs) <*>.. xs)      --. L (Def  ".")-- (.)
+--  === ((us >>= \u -> return (u .) >>= \r -> liftM r vs) <*>.. xs)          --. L (Prop "m1")-- [m1]
+--  === ((us >>= \u -> (\r -> liftM r vs) (u .)) <*>.. xs)                   --. L Beta-- L Beta-reduction
+--  === ((us >>= \u -> liftM (u .) vs) <*>.. xs)                             --. L (Def  "liftM")-- liftM
+--  === ((us >>= \u -> vs >>= return . (u .)) <*>.. xs)                      --. L (Def  "<*>..")-- (<*>..)
+--  === ((us >>= \u -> vs >>= return . (u .)) >>= \f -> liftM f xs)          --. L (Prop "m3")
+-- --  === ((us >>= \u -> vs >>= return . (u .)) >>= \f -> liftM f xs)         --. L Beta-- [m3] + L Beta-reduction ??????? TODO продумать многошаговость, если не вложенная, то, вроде, несложно
+--  === (us >>= \u -> vs >>= return . (u .) >>= \f -> liftM f xs)            --. L (Prop "m3")-- [m3] 
+--  === (us >>= \u -> vs >>= \v -> (return . (u .)) v >>= \f -> liftM f xs)  --. L (Def  ".")-- L Beta-reduction
+--  === (us >>= \u -> vs >>= \v -> return  (u . v) >>= \f -> liftM f xs)     --. L (Prop "m1")-- [m1]
+--  === (us >>= \u -> vs >>= \v ->  (\f -> liftM f xs) (u . v))              --. L Beta-- L Beta-reduction
+--  === (us >>= \u -> vs >>= \v ->  liftM (u . v) xs)                        --. QED

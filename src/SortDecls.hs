@@ -27,7 +27,7 @@ toNodes decls = map (\dc@(decl_id, cnvrs) -> (dc, decl_id, cnInfoStr cnvrs)) dec
     cnInfoStr :: [Conversion] -> [Id]
     cnInfoStr = mapMaybe (exprInfoToStr . cnToExprInfo)
     exprInfoToStr cnvr = case cnvr of
-      Just (Decl s) -> findIdByStr s
+      Just (Def  s) -> findIdByStr s
       Just (Prop s) -> findIdByStr s
       _             -> Nothing
     cnToExprInfo  cnvr = case cn_info cnvr of

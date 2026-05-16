@@ -3,7 +3,7 @@ module ProofBase where
 import Prelude hiding ((.), ($), id, flip)
 
 data SideExprInfo = L ExprInfo | R ExprInfo | QED | Postulate
-data ExprInfo = Decl String | Prop String | Inst String | Beta | Eta | DeclRec String Integer
+data ExprInfo = Def String | Prop String | Inst String | Beta | Eta | DefRec String Integer
 -- data WithInfo a = WithInfo { value :: a, info :: SideExprInfo}
 
 (--.) :: a -> SideExprInfo -> a

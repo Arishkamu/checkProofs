@@ -243,12 +243,12 @@ toSideExprInfo (App (Var expr_side) expr_info) = toSideInfo (toExprInfo expr_inf
     | getStrById v == "Beta" = Beta
     | getStrById v == "Eta"  = Eta
   toExprInfo (App (Var v_id) (App _ (Lit (LitString pack_str))))
-    | getStrById v_id == "Decl" = Decl $ BS8.unpack pack_str
+    | getStrById v_id == "Def"  = Def  $ BS8.unpack pack_str
     | getStrById v_id == "Prop" = Prop $ BS8.unpack pack_str
     | getStrById v_id == "Inst" = Inst $ BS8.unpack pack_str
   toExprInfo (App (App (Var v_id) (App _ (Lit (LitString pack_str)))) (App _ (Lit (LitNumber _ n))))
-    | getStrById v_id == "DeclRec" && n > 0 = DeclRec (BS8.unpack pack_str) n
-  toExprInfo _ = err "`Beta`, `Eta`, `Decl comment`, `Prop comment`, `Inst comment` or DeclRec comment n > 0" expr_info
+    | getStrById v_id == "DefRec" && n > 0 = DefRec (BS8.unpack pack_str) n
+  toExprInfo _ = err "`Beta`, `Eta`, `Def  comment`, `Prop comment`, `Inst comment` or DefRec comment n > 0" expr_info
   err str_expect e = error $ "Unexpected expression structure for comment, expected " ++ str_expect ++ ".\nGot: " ++ prettyString e
 toSideExprInfo (Var expr_side) | getStrById expr_side == "Postulate" = Postulate
 toSideExprInfo e = error $ "Unexpected expression structure for comment, expected a function application with a string literal argument.\nGot: " ++ prettyString e
@@ -397,10 +397,10 @@ analyzeConvrs Conversion{..} =
     analyze expr control_expr expr_info =
       do
         let analyzeExpr = case expr_info of
-              Decl comment   -> analyzeDeclConv  comment 0
+              Def  comment   -> analyzeDeclConv comment 0
               Prop comment   -> analyzePropConv comment
               Inst comment   -> analyzeInstConv comment
-              DeclRec cmnt n -> analyzeDeclConv cmnt n
+              DefRec cmnt n  -> analyzeDeclConv cmnt n
               Eta            -> analyzeEtaConv
               Beta           -> analyzeBetaConv
         (ce, e) <- analyzeExpr control_expr expr

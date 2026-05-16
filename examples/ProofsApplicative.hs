@@ -78,7 +78,7 @@ app1Law :: Applicative f => f a -> f a
 app1Law as =
      pure id <*> as   --. L (Prop "a0")
  === fmap id as       --. L (Prop "f1")
- === id as            --. L (Decl "id")
+ === id as            --. L (Def  "id")
  === as               --. QED
 
 ---------------------------------------------------
@@ -91,19 +91,19 @@ liftA g as = pure g <*> as
  
 liftA_f1 :: Applicative f =>  f a -> f a
 liftA_f1 as  =
-     liftA id as     --. L (Decl "liftA")
+     liftA id as     --. L (Def  "liftA")
  === pure id <*> as  --. L (Prop "a1")
  === as              --. QED
 
 liftA_f2 :: Applicative f => (b -> c) -> (a -> b) ->  f a -> f c
 liftA_f2 g h as =
-      (liftA g . liftA h) as                --. L (Decl ".")
-  === liftA g (liftA h as)                  --. L (Decl "liftA")
-  === liftA g (pure h <*> as)               --. L (Decl "liftA")
+      (liftA g . liftA h) as                --. L (Def  ".")
+  === liftA g (liftA h as)                  --. L (Def  "liftA")
+  === liftA g (pure h <*> as)               --. L (Def  "liftA")
   === pure g <*> (pure h <*> as)            --. R (Prop "a4")
   === pure (.) <*> pure g <*> pure h <*> as --. L (Prop "a3")
   === pure ((.) g) <*> pure h <*> as        --. L (Prop "a3")
-  === pure (g . h) <*> as                   --. R (Decl "liftA")
+  === pure (g . h) <*> as                   --. R (Def  "liftA")
   === liftA (g . h) as                      --. QED                  
  
  
@@ -170,7 +170,7 @@ ap1LawMaybe v =
      pure id <*> v --. L (Inst "pure")
  === Just id <*> v --. L (Inst "<*>")
  === fmap id v     --. L (Prop "f1")
- === id v          --. L (Decl "id")
+ === id v          --. L (Def  "id")
  === v             --. QED
 
 -- нам неоднократно потребуется лемма
@@ -200,7 +200,7 @@ ap3LawMaybe Nothing x =
 ap3LawMaybe (Just f) x = 
      pure ($ x) <*> Just f --. L (Inst "pure")
  === Just ($ x) <*> Just f --. L (Prop "lemma_JJ2J")
- === Just (($ x) f)        --. L (Decl "$")
+ === Just (($ x) f)        --. L (Def  "$")
  === Just (f x)            --. R (Prop "lemma_JJ2J")
  === Just f <*> Just x     --. R (Inst "pure")
  === Just f <*> pure x     --. QED
@@ -220,7 +220,7 @@ ap4LawMaybe (Just f) (Just g) (Just z) =
  === Just (.) <*> Just f <*> Just g <*> Just z  --. L (Prop "lemma_JJ2J")
  === Just ((.) f)        <*> Just g <*> Just z  --. L (Prop "lemma_JJ2J")
  === Just ((.) f g)                 <*> Just z  --. L (Prop "lemma_JJ2J")
- === Just ((.) f g z)                           --. L (Decl ".")
+ === Just ((.) f g z)                           --. L (Def  ".")
  === Just (f (g z))                             --. R (Prop "lemma_JJ2J")
  === Just f <*> Just (g z)                      --. R (Prop "lemma_JJ2J")
  === Just f <*> (Just g <*> Just z)             --. QED
@@ -256,7 +256,7 @@ app0LawArrow :: (a -> b) -> (e -> a) -> e -> b
 app0LawArrow g h =
      pure g <*> h           --. L (Inst "<*>")
  === (\x -> pure g x (h x)) --. L (Inst "pure")
- === (\x -> g (h x))        --. R (Decl ".")
+ === (\x -> g (h x))        --. R (Def  ".")
  === (g . h)                --. R (Inst "fmap")
  === fmap g h               --. QED
 
@@ -268,7 +268,7 @@ app2LawArrow :: (e -> a -> b) -> a -> e -> b
 app2LawArrow g a =
      g <*> pure a               --. L (Inst "<*>")
  === (\x -> g x (pure a x))     --. L (Inst "pure")
- === (\x -> g x a)              --. R (Decl "$")
+ === (\x -> g x a)              --. R (Def  "$")
  === (\x -> ($) (g x) a)        --. Postulate -- {section}
  === (\x -> ($ a) (g x))        --. R (Inst "pure")
  === (\x -> pure ($ a) x (g x)) --. R (Inst "<*>")
@@ -299,7 +299,7 @@ app4LawArrow h g u =
  === (\y -> (\x -> (.) (h x)) y (g y)) <*> u --. L Beta
  === (\y -> (.) (h y) (g y)) <*> u           --. L (Inst "<*>")
  === (\z -> (\y -> (.) (h y) (g y)) z (u z)) --. L Beta
- === (\z -> (.) (h z) (g z) (u z))           --. L (Decl ".")
+ === (\z -> (.) (h z) (g z) (u z))           --. L (Def  ".")
  === (\z -> h z (g z (u z)))                 --. R (Inst "<*>")
  === (\z -> h z ((g <*> u) z))               --. R (Inst "<*>")
  === h <*> (g <*> u)                         --. QED
@@ -356,9 +356,9 @@ app2LawCmps (Cmps gss) a =
  === Cmps (pure ($ (pure a)) <*> (pure (<*>) <*> gss))            --. L (Prop "a4")
  === Cmps (pure (.) <*> pure ($ (pure a)) <*> pure (<*>) <*> gss) --. L (Prop "a3")
  === Cmps (pure ((.) ($ (pure a))) <*> pure (<*>) <*> gss)        --. L (Prop "a3")
- === Cmps (pure (((.) ($ (pure a))) (<*>)) <*> gss)               --. L (Decl ".")
+ === Cmps (pure (((.) ($ (pure a))) (<*>)) <*> gss)               --. L (Def  ".")
  === Cmps (pure (\z -> ($ (pure a)) ((<*>) z)) <*> gss)           --. Postulate -- SECTION
- === Cmps (pure (\z -> (((<*>) z) $ (pure a))) <*> gss)           --. L (Decl "$")
+ === Cmps (pure (\z -> (((<*>) z) $ (pure a))) <*> gss)           --. L (Def  "$")
  === Cmps (pure (\z -> z <*> pure a) <*> gss)                     --. L (Prop "a2")
  === Cmps (pure (\z -> pure ($ a) <*> z) <*> gss)                 --. L Eta
  === Cmps (pure ((<*>) (pure ($ a))) <*> gss)                     --. L (Prop "a3")
@@ -429,16 +429,16 @@ app4LawCmps (Cmps h) (Cmps g) (Cmps u) =
 
 lemma0 :: Applicative f => f (b -> c) -> f (a -> b) -> f a -> f c
 lemma0 hs gs as = 
-     ((.) ((.) (<*>)) ((.) (<*>) ((<*>) (pure (.))))) hs gs as --. L (Decl ".")
- === ((.) (<*>) (((.) (<*>) ((<*>) (pure (.)))) hs)) gs as     --. L (Decl ".")
- === ((.) (<*>) ((<*>) (pure (.)))) hs gs <*> as               --. L (Decl ".")
+     ((.) ((.) (<*>)) ((.) (<*>) ((<*>) (pure (.))))) hs gs as --. L (Def  ".")
+ === ((.) (<*>) (((.) (<*>) ((<*>) (pure (.)))) hs)) gs as     --. L (Def  ".")
+ === ((.) (<*>) ((<*>) (pure (.)))) hs gs <*> as               --. L (Def  ".")
  === pure (.) <*> hs <*> gs <*> as                             --. L (Prop "a4")
- === hs <*> ( gs <*> as)                                       --. R (Decl ".")
- === (.) ((<*>) hs) ((<*>) gs) as                              --. R (Decl ".")
- === (.) ((.) ((<*>) hs)) (<*>) gs as                          --. R (Decl ".")
- === (.) ((.) (.) (<*>) hs) (<*>) gs as                        --. R (Decl ".")
- === ((.) (.) ((.) (.) (<*>)) hs) (<*>) gs as                  --. R (Decl "$")
- === (($ (<*>)) ((.) (.) ((.) (.) (<*>)) hs)) gs as            --. R (Decl ".")
+ === hs <*> ( gs <*> as)                                       --. R (Def  ".")
+ === (.) ((<*>) hs) ((<*>) gs) as                              --. R (Def  ".")
+ === (.) ((.) ((<*>) hs)) (<*>) gs as                          --. R (Def  ".")
+ === (.) ((.) (.) (<*>) hs) (<*>) gs as                        --. R (Def  ".")
+ === ((.) (.) ((.) (.) (<*>)) hs) (<*>) gs as                  --. R (Def  "$")
+ === (($ (<*>)) ((.) (.) ((.) (.) (<*>)) hs)) gs as            --. R (Def  ".")
  === ((.) ($ (<*>)) ((.) (.) ((.) (.) (<*>)))) hs gs as        --. QED
 CMPS -}
 
