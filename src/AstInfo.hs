@@ -8,7 +8,7 @@ import GHC.Utils.Outputable (Outputable)
 import Control.Monad.Except (ExceptT)
 import Control.Monad.State.Lazy (StateT)
 
-import ProofBase
+import ProofBase ( SideExprInfo )
 
 -- data Conversion = Conversion {
 --   lhsCN     :: CoreExpr,
@@ -55,6 +55,7 @@ data CheckerST = CheckerST {
   st_declconvrs   :: [DeclConversions], -- List of Conversion per decl
   st_funcdefs     :: [FuncDef], -- List of all function definitions (decls)
   st_postldefs    :: [PostlDef], -- List of all postulate definitions
+  st_base_defs    :: [FuncDef],
   st_cnvrs_count  :: Int,
   st_declconvr_id :: Maybe Id,
   st_hscenv       :: HscEnv

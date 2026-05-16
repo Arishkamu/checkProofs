@@ -12,7 +12,7 @@ import Data.List (intercalate)
 import Data.Data (toConstr)
 
 import AstInfo
-import ProofBase
+import ProofBase ( ExprInfo(..), SideExprInfo(..) )
 import GHC.Builtin.Names (Uniquable(getUnique))
 
 class PrettyString a where
@@ -78,6 +78,7 @@ instance PrettyString CheckerST where
     ++ bslN ident ++ "ST_declconvrs:"  ++ prettyStringStrs  (ident + 2) (concatMap makePretty st_declconvrs)  
     ++ bslN ident ++ "ST_funcDefs:"    ++ prettyStringIdent (ident + 2) st_funcdefs
     ++ bslN ident ++ "ST_postlDefs:"   ++ prettyStringIdent (ident + 2) st_postldefs
+    ++ bslN ident ++ "ST_baseDefs:"    ++ prettyStringIdent (ident + 2) st_base_defs
 
     where
     makePretty (decl, convrs) =
