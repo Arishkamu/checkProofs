@@ -79,7 +79,7 @@ main =
     _ <- setSessionDynFlags dflags
     session <- getSession
 
-    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/ExampleInst-fails.hs"
+    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/ExampleInst-good.hs"
     let filePath_base = "/Users/arina/hse/nir/moskvinPrj/checkProofs/src/ProofBase.hs"
     -- coreMod <- compileToCoreModule filePath
     -- -- liftIO $ putStrLn $ (showSDocUnsafe (ppr coreMod))
@@ -308,7 +308,10 @@ madePostulate :: Id -> CheckerM ()
 madePostulate f_id =
   do
     f_body     <- getBodyByFuncId f_id
-    let (pstl_binds, _) = collectBinders f_body
+    let (pstl_binds, pstl_rest) = collectBinders (inlineLets f_body)
+    logMsg $ "Made postl f_body\n" ++ prettyString f_body
+    logMsg $ "Made postl f_body\n" ++ prettyString pstl_rest
+    logMsg $ "Made postl binds\n" ++ prettyString pstl_binds
     declConvrs <- gets st_declconvrs
 
     (convrs_fst, convrs_lst) <- case lookup f_id declConvrs of
@@ -501,7 +504,7 @@ analyzePropConv :: String -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExp
 analyzePropConv comment control_expr expr =
   do
     (diff_expr, builder) <- getFirstDiff control_expr expr
-    d_id <- gets st_declconvr_id
+    Just d_id <- gets st_declconvr_id
     logMsg $ "POSTL_DIFF: " ++ prettyString d_id ++ "\n" ++ prettyString diff_expr
     postl_defs    <- gets st_postldefs
     declconv_defs <- gets st_declconvrs
@@ -511,9 +514,19 @@ analyzePropConv comment control_expr expr =
       (_:_)  -> throwError $ "Unexpected postulate. Found more than one matched with comment `" ++ comment ++ "`"
       []     -> throwError $ "Unexpected postulate. Not found match with comment `" ++ comment ++ "`" ++ "\nALL postuls:\n" ++ prettyString (map pstl_id postl_defs) ++ "\nOrder:\n" ++ prettyString (map fst declconv_defs)
 
+    if getStrById d_id == "app0Law"
+      then do
+        let a0Rule = head $ filter (("a0" ==) . getStrById . pstl_id) postl_defs
+        let a1Rule = head $ filter (("a1" ==) . getStrById . pstl_id) postl_defs
+        logMsg $ "A0-Rule\n" ++ prettyString a0Rule
+        logMsg $ "A1-Rule\n" ++ prettyString a1Rule
+      else return ()
+
+    logMsg $ "BEFORE_SUBST_RULE-1\n" ++ prettyString diff_expr
     lookup_expr <- substRule [rule] diff_expr
     logMsg $ "SUBST_RULE-1\n" ++ prettyString lookup_expr
     let lookup_restored = builder lookup_expr
+    logMsg $ "SUBST_RULE_lookup_restored\n" ++ prettyString lookup_restored
     simpl_expr1     <- simplifyOptFunc lookup_restored
     logMsg $ "SUBST_RULE-2\n" ++ prettyString simpl_expr1
 
@@ -713,9 +726,13 @@ substRule pstls expr =
 
     case lookupRule opts in_scope_env act_fun f_target args_targetgs rules of
       Nothing -> throwError $ "Rule `" ++ rules_id_str ++ "`not fired." ++ "\nRule:\n" ++ prettyString pstls ++ "\nExpr:\n" ++ prettyString expr
-      Just (_, new_expr) -> do
+      Just (applied_rule, new_expr) -> do
           logMsg $ "Rule fired:" ++ rules_id_str
-          return new_expr
+          return $ reapplyExtraArgs applied_rule new_expr
+    
+  where
+    reapplyExtraArgs applied_rule new_expr = mkApps new_expr (leftoverArgs applied_rule)
+    leftoverArgs ap_ru = drop (ruleArity ap_ru) $ snd (collectArgs expr)
 
 
 -- simplExprGently env expr = do
