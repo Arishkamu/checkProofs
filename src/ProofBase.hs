@@ -1,7 +1,7 @@
 module ProofBase where
 
 data SideExprInfo = L ExprInfo | R ExprInfo | QED | Postulate
-data ExprInfo = Decl String | Prop String | Beta | Eta | DeclRec String Integer
+data ExprInfo = Decl String | Prop String | Inst String | Beta | Eta | DeclRec String Integer
 -- data WithInfo a = WithInfo { value :: a, info :: SideExprInfo}
 
 (--.) :: a -> SideExprInfo -> a

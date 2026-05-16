@@ -13,7 +13,7 @@ import GHC
       GeneralFlag(..),
       GhcMonad(..),
       NamedThing(..),
-      Module, Name, guessTarget, setTargets, depanal, mgModSummaries, parseModule, typecheckModule, desugarModule, DesugaredModule (dm_core_module), LoadHowMuch (LoadAllTargets), load, coreModule, addTarget )
+      Module, Name, guessTarget, setTargets, depanal, mgModSummaries, parseModule, typecheckModule, desugarModule, DesugaredModule (dm_core_module), LoadHowMuch (LoadAllTargets), load, coreModule, addTarget, setTargets)
 import GHC.Paths (libdir)
 import GHC.Core
 import GHC.Core.Map.Type (DeBruijn(..), deBruijnize, extendCMEs)
@@ -51,10 +51,13 @@ import GHC.Core.Opt.Simplify.Iteration (simplExpr)
 
 -- DEBUG
 import GHC.Utils.Outputable ( ppr, showSDocUnsafe )
-import GHC.Types.Id ( modifyIdInfo, idInfo, Var )
+import GHC.Types.Id ( modifyIdInfo, idInfo, Var, idDetails, isDFunId, isClassOpId_maybe, idUnfolding)
+import GHC.Types.Id.Info
+import GHC.Core.Class
 import GHC.Core.Rules ( addLocalRules, emptyRuleEnv, mkRule, updExternalPackageRules, lookupRule, roughTopNames, matchExprs )
 import GHC.Core.Opt.Simplify.Env ( getInScope, mkSimplEnv, setInScopeSet, pprSimplEnv, seRuleOpts, SimplEnv (seMode) )
 import GHC.Types.Id.Info ( RuleInfo(..), setRuleInfo, IdInfo (ruleInfo), ruleInfoRules )
+import GHC.Core.InstEnv 
 
 import AstInfo
 import PrettyString
@@ -64,7 +67,8 @@ import GHC.Core.Opt.Simplify.Utils
 import GHC.Core.SimpleOpt ( defaultSimpleOpts, simpleOptExpr, SimpleOpts(..) )
 import GHC.Core.Utils
 import GHC.Types.Tickish
-import GHC.Plugins (ModGuts(..))
+import GHC.Plugins (ModGuts(..), getUnique)
+import GHC.Core.Opt.OccurAnal
 
 
 main :: IO ()
@@ -75,40 +79,41 @@ main =
     _ <- setSessionDynFlags dflags
     session <- getSession
 
-    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/ExampleInst.hs"
+    let filePath = "/Users/arina/hse/nir/moskvinPrj/checkProofs/old/ExampleInst-fails.hs"
     let filePath_base = "/Users/arina/hse/nir/moskvinPrj/checkProofs/src/ProofBase.hs"
     -- coreMod <- compileToCoreModule filePath
     -- -- liftIO $ putStrLn $ (showSDocUnsafe (ppr coreMod))
 
-    -- target1 <- guessTarget filePath Nothing Nothing
+    target1 <- guessTarget filePath Nothing Nothing
     target2 <- guessTarget filePath_base Nothing Nothing
-    addTarget target2
-    -- _ <- load LoadAllTargets
-    coreMod <- compileToCoreModule filePath
-    
-    -- modGraph <- depanal [] False
-    -- let ms1 = mgModSummaries modGraph !! 0
-    -- let ms2 = mgModSummaries modGraph !! 1
+    -- addTarget target2
+    setTargets [target1, target2]
+    _ <- load LoadAllTargets
+    -- coreMod <- compileToCoreModule filePath
 
-    -- desugared <- parseModule ms1 >>= typecheckModule >>= desugarModule
-    -- let mg1 = dm_core_module desugared
+    modGraph <- depanal [] False
+    let ms1 = mgModSummaries modGraph !! 0
+    let ms2 = mgModSummaries modGraph !! 1
 
-    -- desugared2 <- parseModule ms2 >>= typecheckModule >>= desugarModule
-    -- let mg2 = dm_core_module desugared2
+    desugared <- parseModule ms1 >>= typecheckModule >>= desugarModule
+    let mg1 = dm_core_module desugared
+
+    desugared2 <- parseModule ms2 >>= typecheckModule >>= desugarModule
+    let mg2 = dm_core_module desugared2
 
     -- print CoreModule
     -- liftIO $ putStrLn "\n=== Core cm_types ===\n"
     -- liftIO $ putStrLn (showSDocUnsafe $ ppr $ cm_types coreMod)
     liftIO $ putStrLn "\n=== Core cm_binds ===\n"
-    liftIO $ putStrLn (showSDocUnsafe $ ppr $ cm_binds coreMod)
+    -- liftIO $ putStrLn (showSDocUnsafe $ ppr $ cm_binds coreMod)
     -- liftIO $ putStrLn (showSDocUnsafe $ ppr $ mg_binds mg1)
     -- liftIO $ putStrLn "\n=== Core cm_binds ===\n"
     -- -- liftIO $ putStrLn (showSDocUnsafe $ ppr $ cm_binds coreMod)
-    -- liftIO $ putStrLn (showSDocUnsafe $ ppr $ mg_binds mg2)
+    liftIO $ putStrLn (showSDocUnsafe $ ppr $ mg_binds mg1)
 
     -- create State
-    -- let astState = getState session (mg_binds mg2)
-    let astState = getState session (cm_binds coreMod)
+    let astState = getState session (mg_binds mg1)
+    -- let astState = getState session (cm_binds coreMod)
     liftIO $ putStrLn "\n===== Collected AstState =====\n"
     liftIO $ putStrLn $ prettyString astState
     liftIO $ putStrLn "\n===== End AstState =====\n"
@@ -116,6 +121,13 @@ main =
     liftIO $ putStrLn "\n===== Sorted DeclConvers =====\n"
     liftIO $ putStrLn $ prettyString (map fst (st_declconvrs astState))
     liftIO $ putStrLn "\n===== End Sorted DeclConvers =====\n"
+
+    liftIO $ putStrLn "\n===== Occur Anal =====\n"
+    liftIO $ putStrLn $ showSDocUnsafe $ ppr $ [ unfoldingTemplate (idUnfolding nam) | (x, y) <- flattenBinds (mg_binds mg1), App (App (Var nam) _) dict <- universe y, "mapmap" <- [getStrById nam], let (ClassOpId cls bl) = idDetails nam, let (Var f, _) = collectArgs dict]
+    liftIO $ putStrLn $ showSDocUnsafe $ ppr $ [ (x, isDFunId x) | (x, y) <- flattenBinds (mg_binds mg1)]
+    liftIO $ putStrLn "\n===== Occur Anal =====\n"
+    liftIO $ putStrLn $ showSDocUnsafe $ ppr $ mg_insts mg1
+    liftIO $ putStrLn $ showSDocUnsafe $ ppr $ map instanceDFunId (instEnvElts $ mg_inst_env mg1)
     -- liftIO $ putStrLn result
     -- let result = analyzeConversions astState
     -- case result of
@@ -228,9 +240,10 @@ toSideExprInfo (App (Var expr_side) expr_info) = toSideInfo (toExprInfo expr_inf
   toExprInfo (App (Var v_id) (App _ (Lit (LitString pack_str))))
     | getStrById v_id == "Decl" = Decl $ BS8.unpack pack_str
     | getStrById v_id == "Prop" = Prop $ BS8.unpack pack_str
+    | getStrById v_id == "Inst" = Inst $ BS8.unpack pack_str
   toExprInfo (App (App (Var v_id) (App _ (Lit (LitString pack_str)))) (App _ (Lit (LitNumber _ n))))
     | getStrById v_id == "DeclRec" && n > 0 = DeclRec (BS8.unpack pack_str) n
-  toExprInfo _ = err "`Beta`, `Eta`, `Decl comment`, `Prop comment` or DeclRec comment n > 0" expr_info
+  toExprInfo _ = err "`Beta`, `Eta`, `Decl comment`, `Prop comment`, `Inst comment` or DeclRec comment n > 0" expr_info
   err str_expect e = error $ "Unexpected expression structure for comment, expected " ++ str_expect ++ ".\nGot: " ++ prettyString e
 toSideExprInfo (Var expr_side) | getStrById expr_side == "Postulate" = Postulate
 toSideExprInfo e = error $ "Unexpected expression structure for comment, expected a function application with a string literal argument.\nGot: " ++ prettyString e
@@ -370,12 +383,13 @@ analyzeConvrs Conversion{..} =
       info      -> throwError $ "Unexpected converseion_info. Expected useful information. Get:" ++ prettyString info
 
   where
-    analyze expr control_expr expr_info = 
+    analyze expr control_expr expr_info =
       do
         let analyzeExpr = case expr_info of
-              Decl  comment  -> analyzeFuncConv  comment 0
-              Prop comment   -> analyzePostlConv comment
-              DeclRec cmnt n -> analyzeFuncConv cmnt n
+              Decl comment   -> analyzeDeclConv  comment 0
+              Prop comment   -> analyzePropConv comment
+              Inst comment   -> analyzeInstConv comment
+              DeclRec cmnt n -> analyzeDeclConv cmnt n
               Eta            -> analyzeEtaConv
               Beta           -> analyzeBetaConv
         (ce, e) <- analyzeExpr control_expr expr
@@ -391,8 +405,8 @@ getFirstDiff contrl_expr expr = go ([], []) contrl_expr expr <&> \(x, y, _) -> (
       return $ updBuilder (Lam b .) res
     go cm_envs ce@(App _ (Type _)) e@(App _ (Type _)) = checkEq cm_envs ce e True
     go cm_envs (App cntr_f cntr_arg) (App f arg) =
-      (go cm_envs cntr_f f <&> 
-        \case 
+      (go cm_envs cntr_f f <&>
+        \case
           (diff, bldr, True)  -> (App diff arg, bldr, True)
           (diff, bldr, False) -> (diff, \x -> App (bldr x) arg, False))
         <|> (go cm_envs cntr_arg arg <&> updBuilder (App f .))
@@ -400,7 +414,7 @@ getFirstDiff contrl_expr expr = go ([], []) contrl_expr expr <&> \(x, y, _) -> (
     go cm_envs ce e = checkEq cm_envs ce e False
 
     updBuilder updater (diff_expr, builder, _) = (diff_expr, updater builder, False)
-    checkEq cm_envs ce e is_collect 
+    checkEq cm_envs ce e is_collect
       | alphaEqWithEnv cm_envs ce e = do
         logMsg $     "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
         throwError $ "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
@@ -436,8 +450,8 @@ analyzeEtaConv control_expr expr =
       _ -> throwError $ "Error in analyzeEtaConv:\n" ++ prettyString diff_expr
     return (control_expr, builder new_expr)
 
-analyzeFuncConv :: String -> Integer -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
-analyzeFuncConv comment n control_expr expr =
+analyzeDeclConv :: String -> Integer -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
+analyzeDeclConv comment n control_expr expr =
   do
     (diff_expr, builder) <-
       if n <= 0
@@ -446,18 +460,8 @@ analyzeFuncConv comment n control_expr expr =
     logMsg $ "Evaluate func substitution for expr:\n  " ++ prettyString diff_expr
     subst_expr      <- substitute diff_expr
     let restr_expr   = builder subst_expr
-    simpl_expr1     <- simplifyOptFunc restr_expr
-    -- logMsg $ "SIMSIMSIM\n" ++ prettyString simpl_expr1
-    -- logMsg $ prettyString (inlineLets simpl_expr1)
-    simpl_expr      <- simplifyFunc [] restr_expr
-    -- let no_lets_expr = inlineLets simpl_expr
-    -- TODO as much simplify as needed
-    -- logMsg $ "CMP-SIMSIM-SIM\n" ++ show (alphaEq simpl_expr1 simpl_expr)
-    return (control_expr, simpl_expr1)
-    -- logMsg $ "After get-simpl_expr-1:\n" ++ prettyString (inlineLets simpl_expr)
-    -- simpl_2_expr <- simplifyFunc hscEnv [] no_lets_expr
-    -- logMsg $ "After get-simpl_expr-2:\n" ++ prettyString (inlineLets simpl_2_expr)
-    -- return (control_expr, builder (inlineLets simpl_2_expr))
+    simpl_expr      <- simplifyOptFunc restr_expr
+    return (control_expr, simpl_expr)
 
   where
     substitute expr =
@@ -493,8 +497,8 @@ getBodyByFuncId func_id =
     (return a >>= (\a1 -> (return a1 >>= k)))
     (\a1 -> (return a1 >>= k)) a              (return a >>= (\a1 -> k a1))
 -}
-analyzePostlConv :: String -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
-analyzePostlConv comment control_expr expr =
+analyzePropConv :: String -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
+analyzePropConv comment control_expr expr =
   do
     (diff_expr, builder) <- getFirstDiff control_expr expr
     d_id <- gets st_declconvr_id
@@ -506,17 +510,79 @@ analyzePostlConv comment control_expr expr =
       [pstl] -> return pstl
       (_:_)  -> throwError $ "Unexpected postulate. Found more than one matched with comment `" ++ comment ++ "`"
       []     -> throwError $ "Unexpected postulate. Not found match with comment `" ++ comment ++ "`" ++ "\nALL postuls:\n" ++ prettyString (map pstl_id postl_defs) ++ "\nOrder:\n" ++ prettyString (map fst declconv_defs)
-    
+
     lookup_expr <- substRule [rule] diff_expr
     logMsg $ "SUBST_RULE-1\n" ++ prettyString lookup_expr
     let lookup_restored = builder lookup_expr
     simpl_expr1     <- simplifyOptFunc lookup_restored
     logMsg $ "SUBST_RULE-2\n" ++ prettyString simpl_expr1
-    
+
     -- new_expr        <- simplifyFunc [rule] expr
     -- new_contrl_expr <- simplifyFunc [rule] control_expr
     -- let no_lets_expr = inlineLets new_expr
     return (control_expr, simpl_expr1)
+
+
+analyzeInstConv :: String -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
+analyzeInstConv comment control_expr expr =
+  do
+    (diff_expr, builder) <- getFirstDiff control_expr expr
+    logMsg $ "Evaluate inst substitution for expr:\n  " ++ prettyString diff_expr
+    subst_inst      <- substitute diff_expr
+    subst_expr      <- ordinar_subst subst_inst
+    logMsg $ "WHAT HAVE YOU DONE:\n  " ++ prettyString subst_expr ++ "\n"
+    let restr_expr   = builder subst_expr
+    simpl_expr      <- simplifyOptFunc restr_expr
+    return (control_expr, simpl_expr)
+
+  where
+    substitute expr =
+      do
+        let (func, args)     = collectArgs expr
+            (Var inst_id, inst_args) = collectArgs (args !! 1)
+        func_id         <- checkComment func
+        let func_body    = unfoldingTemplate $ idUnfolding func_id
+        inst_body       <- getBodyByFuncId inst_id
+        logMsg $ "INST_ID\n" ++ prettyString inst_id
+        logMsg $ "INST_ARGS\n" ++ prettyString inst_args
+        logMsg $ "INST_BODY\n" ++ prettyString inst_body
+        -- logMsg $ prettyStringExpr inst_body
+        -- case isClassOpId_maybe func_id of
+        --   Nothing  -> throwError $ "Not an instance function"
+        --   Just cls -> case find () classAllSelIds cls of
+        --     Nothing -> throwError $ 
+        --     Just 
+        -- func_body <- getBodyByFuncId func_id
+        -- unfoldingTemplate (realIdUnfolding v) 
+
+        let subst_func = easySubstFunc func func_id func_body -- WHY NO?????
+        logMsg $ "SUBS_INST\n" ++ prettyString subst_func ++ "\n" ++ prettyString func ++ "\n" ++ prettyString func_id ++ "\n" ++ prettyString func_body
+        
+        let subst_selector = mkCoreApps func_body (take 2 args)
+        selector_simpl <- simplifyOptFunc subst_selector
+        logMsg $ "SUBST_INST_SIMPL_1\n" ++ prettyString selector_simpl
+        let subst_inst = easySubstFunc selector_simpl inst_id inst_body
+        logMsg $ "SUBST_INST_SIMPL_2\n" ++ prettyString subst_inst
+        selector_simp_2 <- simplifyOptFunc subst_inst
+        logMsg $ "SUBST_INST_IN_SELECTOR\n" ++ prettyString selector_simp_2
+        return $ mkCoreApps selector_simp_2 (drop 2 args) -- maybe mkApps
+    
+    ordinar_subst expr =
+      do
+        logMsg $ "BEFORE_ORD_SUBST\n" ++ prettyString expr
+        let (func@(Var func_id), args) = collectArgs expr
+        func_body <- getBodyByFuncId func_id
+
+        let subst_func = easySubstFunc func func_id func_body
+        return $ mkCoreApps subst_func args -- maybe mkApps
+
+    checkComment :: CoreExpr -> CheckerM Id
+    checkComment (Var func_id)
+      | getStrById func_id == comment = return func_id
+      | otherwise  = throwError $ "Applied function_id does not match comment:\n" ++ prettyString func_id ++ "\nExpected: " ++ comment
+    checkComment e = throwError $ "Applied expression not a function call!\nGot: " ++ prettyString e
+
+
 
 
 ---- SIMPLIFIERS
@@ -614,7 +680,7 @@ simplifyFuncIO hscEnv pstls expr =
 
 
 substRule :: [PostlDef] -> CoreExpr -> CheckerM CoreExpr
-substRule pstls expr = 
+substRule pstls expr =
   do
     hscEnv <- gets st_hscenv
     let opts   = initSimplifyExprOpts (hsc_dflags hscEnv) (hsc_IC hscEnv)

@@ -13,6 +13,7 @@ import Data.Data (toConstr)
 
 import AstInfo
 import ProofBase
+import GHC.Builtin.Names (Uniquable(getUnique))
 
 class PrettyString a where
   prettyStringIdent :: Int -> a -> String
@@ -34,7 +35,7 @@ prettyStringStrs ident = intercalate (bslN ident)
 --   prettyStringIdent _ x = "\n" ++ replicate ident ' ' ++ showSDocUnsafe (ppr x)
 
 instance PrettyString Id where
-  prettyStringIdent _ x = "ID: " ++ occNameString (getOccName x)
+  prettyStringIdent _ x = "ID: " ++ showSDocUnsafe (ppr x)
 
 -- instance PrettyString (GenLocated SrcSpanAnnN Id) where
 --   rettyString (L _ x) = rettyString x
@@ -44,6 +45,7 @@ instance PrettyString ExprInfo where
         Decl  comment  -> "Decl: "  ++ comment
         DeclRec cmnt n -> "DeclRec: "  ++ cmnt ++ show n
         Prop comment   -> "Prop: " ++ comment
+        Inst comment   -> "Inst: " ++ comment
         Beta           -> "Beta reduction"
         Eta            -> "Eta reduction"
 
