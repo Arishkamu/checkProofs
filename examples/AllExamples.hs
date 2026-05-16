@@ -203,59 +203,57 @@ functor2LawList g h (x:xs) =
  === ((g . h) x : (fmap (g . h) xs))  --. R (Inst "fmap")
  === fmap (g . h) (x:xs)              --. QED
 
-{- BLOCK EITHER
-    -- Either
-    instance Functor (Either a) where
-    fmap _ (Left a)  = Left  a     -- L (Inst "fmap")
-    fmap g (Right a) = Right (g a)  -- L (Inst "fmap")
+-- {- BLOCK EITHER
+instance Functor (Either a) where
+  fmap _ (Left a)  = Left  a     -- L (Inst "fmap")
+  fmap g (Right a) = Right (g a)  -- L (Inst "fmap")
 
 
-    functor1LawEither :: Either e a -> Either e a
-    functor1LawEither (Left e) =
-        fmap id (Left e)  --. L (Inst "fmap")
-    === Left e            --. QED
-    functor1LawEither (Right a) =
-        fmap id (Right a) --. L (Inst "fmap")
-    === Right (id a)      --. L (Def  "id")
-    === Right a           --. QED
+functor1LawEither :: Either e a -> Either e a
+functor1LawEither (Left e) =
+     fmap id (Left e)  --. L (Inst "fmap")
+ === Left e            --. QED
+functor1LawEither (Right a) =
+     fmap id (Right a) --. L (Inst "fmap")
+ === Right (id a)      --. L (Def  "id")
+ === Right a           --. QED
 
-    functor2LawEither :: (b -> c) -> (a -> b) -> Either e a -> Either e c
-    functor2LawEither g h (Left e) =
-        (fmap g . fmap h) (Left e)  --. L (Def  ".")
-    === fmap g (fmap h (Left e))    --. L (Inst "fmap")
-    === fmap g (Left e)             --. L (Inst "fmap")
-    === Left e                      --. L (Inst "fmap")
-    === fmap (g . h) (Left e)       --. QED
-    functor2LawEither g h (Right a) =
-        (fmap g . fmap h) (Right a) --. L (Def  ".")
-    === fmap g (fmap h (Right a))   --. L (Inst "fmap")
-    === fmap g (Right (h a))        --. L (Inst "fmap")
-    === Right (g (h a))             --. L (Def  ".")
-    === Right ((g . h) a)           --. L (Inst "fmap")
-    === fmap (g . h) (Right a)      --. QED
-BLOCK EITHER -}
+functor2LawEither :: (b -> c) -> (a -> b) -> Either e a -> Either e c
+functor2LawEither g h (Left e) =
+     (fmap g . fmap h) (Left e)  --. L (Def  ".")
+ === fmap g (fmap h (Left e))    --. L (Inst "fmap")
+ === fmap g (Left e)             --. L (Inst "fmap")
+ === Left e                      --. R (Inst "fmap")
+ === fmap (g . h) (Left e)       --. QED
+functor2LawEither g h (Right a) =
+     (fmap g . fmap h) (Right a) --. L (Def  ".")
+ === fmap g (fmap h (Right a))   --. L (Inst "fmap")
+ === fmap g (Right (h a))        --. L (Inst "fmap")
+ === Right (g (h a))             --. R (Def  ".")
+ === Right ((g . h) a)           --. R (Inst "fmap")
+ === fmap (g . h) (Right a)      --. QED
+-- BLOCK EITHER -}
 
 
-{- BLOCK Pair
-    -- Pair
-    instance Functor ((,) a) where
-    fmap g (a, b)  = (a, g b)     -- L (Inst "fmap")
+-- {- BLOCK Pair
+instance Functor ((,) a) where
+  fmap g (a, b)  = (a, g b)     -- L (Inst "fmap")
 
-    functor1LawPair ::  (s, a) -> (s, a)
-    functor1LawPair (s, a) =
-        fmap id (s, a) --. L (Inst "fmap")
-    === (s, id a)      --. L (Def  "id")
-    === (s, a)         --. QED
+functor1LawPair ::  (s, a) -> (s, a)
+functor1LawPair (s, a) =
+     fmap id (s, a) --. L (Inst "fmap")
+ === (s, id a)      --. L (Def  "id")
+ === (s, a)         --. QED
 
-    functor2LawPair :: (b -> c) -> (a -> b) -> (s, a) -> (s, c)
-    functor2LawPair g h (s, a) =
-        (fmap g . fmap h) (s, a) --. L (Def  ".")
-    === fmap g (fmap h (s, a))   --. L (Inst "fmap")
-    === fmap g (s, (h a))        --. L (Inst "fmap")
-    === (s, g (h a))             --. L (Def  ".")
-    === (s, (g . h) a)           --. L (Inst "fmap")
-    === fmap (g . h) (s, a)      --. QED
-BLOCK PAIR -}
+functor2LawPair :: (b -> c) -> (a -> b) -> (s, a) -> (s, c)
+functor2LawPair g h (s, a) =
+     (fmap g . fmap h) (s, a) --. L (Def  ".")
+ === fmap g (fmap h (s, a))   --. L (Inst "fmap")
+ === fmap g (s, (h a))        --. L (Inst "fmap")
+ === (s, g (h a))             --. R (Def  ".")
+ === (s, (g . h) a)           --. R (Inst "fmap")
+ === fmap (g . h) (s, a)      --. QED
+-- BLOCK PAIR -}
 
  -- Arrow
 instance Functor ((->) e) where
@@ -279,35 +277,34 @@ functor2LawArrow g h f =
  === fmap (g . h) f        --. QED
 
 
-{- BLOCK CMPS
-    -- Cmps
-    newtype Cmps f g x = Cmps (f (g x))  deriving (Eq, Show)
-    getCmps :: Cmps f g x -> f (g x)
-    getCmps (Cmps x) = x
+-- {- BLOCK CMPS
+newtype Cmps f g x = Cmps (f (g x))  deriving (Eq, Show)
+getCmps :: Cmps f g x -> f (g x)
+getCmps (Cmps x) = x
 
-    instance (Functor f, Functor g) => Functor (Cmps f g) where
-    fmap :: (Functor f, Functor g) => (a -> b) -> Cmps f g a -> Cmps f g b
-    fmap f (Cmps xss) = Cmps (fmap (fmap f) xss)
+instance (Functor f, Functor g) => Functor (Cmps f g) where
+  fmap :: (Functor f, Functor g) => (a -> b) -> Cmps f g a -> Cmps f g b
+  fmap f (Cmps xss) = Cmps (fmap (fmap f) xss)
 
-    functor1LawCmps :: (Functor f, Functor g) => Cmps f g b -> Cmps f g b
-    functor1LawCmps (Cmps xss) =
-        fmap id (Cmps xss)         --. L (Inst "fmap")
-    === Cmps (fmap (fmap id) xss)  --. L (Prop "f1")
-    === Cmps (fmap id xss)         --. L (Prop "f1")
-    === Cmps (id xss)              --. L (Def  "id")
-    === Cmps xss                   --. QED
+functor1LawCmps :: (Functor f, Functor g) => Cmps f g b -> Cmps f g b
+functor1LawCmps (Cmps xss) =
+      fmap id (Cmps xss)         --. L (Inst "fmap")
+  === Cmps (fmap (fmap id) xss)  --. L (Prop "f1")
+  === Cmps (fmap id xss)         --. L (Prop "f1")
+  === Cmps (id xss)              --. L (Def  "id")
+  === Cmps xss                   --. QED
 
-    functor2LawCmps ::  (Functor f, Functor g) => (b -> c) -> (a -> b) -> Cmps f g a -> Cmps f g c
-    functor2LawCmps h1 h2 (Cmps xss) =
-        (fmap h1 . fmap h2) (Cmps xss)               --. L (Def  ".")
-    === fmap h1 (fmap h2 (Cmps xss))                 --. L (Inst "fmap")
-    === fmap h1 (Cmps (fmap (fmap h2) xss))          --. L (Inst "fmap")
-    === Cmps (fmap (fmap h1) (fmap (fmap h2) xss))   --. L (Def  ".")
-    === Cmps ((fmap (fmap h1) . fmap (fmap h2)) xss) --. L (Prop "f2")
-    === Cmps (fmap (fmap h1 . fmap h2) xss)          --. L (Prop "f2")
-    === Cmps (fmap (fmap (h1 . h2)) xss)             --. L (Inst "fmap")
-    === fmap (h1 . h2) (Cmps xss)                    --. QED
-BLOCK CMPS -}
+functor2LawCmps ::  (Functor f, Functor g) => (b -> c) -> (a -> b) -> Cmps f g a -> Cmps f g c
+functor2LawCmps h1 h2 (Cmps xss) =
+      (fmap h1 . fmap h2) (Cmps xss)               --. L (Def  ".")
+  === fmap h1 (fmap h2 (Cmps xss))                 --. L (Inst "fmap")
+  === fmap h1 (Cmps (fmap (fmap h2) xss))          --. L (Inst "fmap")
+  === Cmps (fmap (fmap h1) (fmap (fmap h2) xss))   --. R (Def  ".")
+  === Cmps ((fmap (fmap h1) . fmap (fmap h2)) xss) --. L (Prop "f2")
+  === Cmps (fmap (fmap h1 . fmap h2) xss)          --. L (Prop "f2")
+  === Cmps (fmap (fmap (h1 . h2)) xss)             --. R (Inst "fmap")
+  === fmap (h1 . h2) (Cmps xss)                    --. QED
+-- BLOCK CMPS -}
 
 
 {- BLOCK STATE

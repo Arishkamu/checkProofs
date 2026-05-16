@@ -81,7 +81,7 @@ main =
     _ <- setSessionDynFlags dflags
     session <- getSession
 
-    let file_path = "/Users/arina/hse/nir/moskvinPrj/checkProofs/examples/AllExamples.hs"
+    let file_path = "/Users/arina/hse/nir/moskvinPrj/checkProofs/examples/ProofsFunctor.hs"
     (mg_main, mg_base) <- getModulesGuts file_path
 
     -- liftIO $ putStrLn "\n=== Imported Func ===\n"
@@ -172,7 +172,7 @@ getState hscEnv core_binds base_binds = CheckerST {
   where
   -- declConvrs = orderConvrs $ concatMap collectConvrs binds
   -- declConvrsOrdered = uncurry (++) $ partition (isPrefixOf "lemma" . getStrById . fst) declConvrs
-  binds    = map (fmap inlineLets) $ flattenBinds core_binds
+  binds    = map (fmap inlineLetsIgnoreCast) $ flattenBinds core_binds
   sortedDeclConvrs = case sorteDeclConvrs $ concatMap collectConvrs binds of
     Left cyrcles -> error $ "Error. Cyrcle dependencies were found.\n" ++ showSDocUnsafe (ppr cyrcles)
     Right sdc    -> sdc
@@ -596,6 +596,7 @@ analyzeInstConv comment control_expr expr =
     ordinar_subst expr =
       do
         logMsg $ "BEFORE_ORD_SUBST\n" ++ prettyString expr
+        logMsg $ "BEFORE_ORD_SUBST\n" ++ prettyString (collectArgs expr)
         let (func@(Var fn_id), args) = collectArgs expr
         (func_id, func_body)        <- getBodyByFuncId fn_id
 
@@ -612,15 +613,17 @@ analyzeInstConv comment control_expr expr =
 
 
 ---- SIMPLIFIERS
-inlineLets :: CoreExpr -> CoreExpr
-inlineLets expr =
+
+inlineLetsIgnoreCast :: CoreExpr -> CoreExpr
+inlineLetsIgnoreCast expr =
   case expr of
     Let (NonRec b rhs) body ->
-      inlineLets (easySubstFunc body b rhs)
+      inlineLetsIgnoreCast (easySubstFunc body b rhs)
     App f x ->
-      App (inlineLets f) (inlineLets x)
+      App (inlineLetsIgnoreCast f) (inlineLetsIgnoreCast x)
     Lam b e ->
-      Lam b (inlineLets e)
+      Lam b (inlineLetsIgnoreCast e)
+    Cast e _ -> inlineLetsIgnoreCast e
     _ -> expr
 
 easySubstFunc :: CoreExpr -> Id -> CoreExpr -> CoreExpr
@@ -635,7 +638,7 @@ simplifyOptFunc expr = go 0 expr
     go n _ | n >= 3 = throwError $ "Unexpected expression. Expression needs to much beta-reductions. Default threshold = 3. Expr:\n" ++ prettyString expr
     go n e = do
       logMsg $ "TRY simplifyOptFunc n=" ++ show n
-      let no_lets_expr = inlineLets (simpleOptExpr defaultSimpleOpts e)
+      let no_lets_expr = inlineLetsIgnoreCast (simpleOptExpr defaultSimpleOpts e)
       case find isBetaRedex (universe no_lets_expr) of
         Just _  -> go (n + 1) no_lets_expr
         Nothing -> return no_lets_expr
@@ -652,7 +655,7 @@ simplifyFunc pstls expr = go 0 expr
       hscEnv     <- gets st_hscenv
       logMsg $ "TRY simplify n=" ++ show n
       simplified <- liftIO $ simplifyFuncIO hscEnv pstls e
-      let no_lets_expr = inlineLets simplified
+      let no_lets_expr = inlineLetsIgnoreCast simplified
       case find isBetaRedex (universe no_lets_expr) of
         Just _  -> go (n + 1) no_lets_expr
         Nothing -> return no_lets_expr
