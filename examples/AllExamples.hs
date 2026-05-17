@@ -272,7 +272,7 @@ functor2LawArrow g h f =
      (fmap g . fmap h) f   --. L (Def  ".")
  === fmap g (fmap h f)     --. L (Inst "fmap")
  === fmap g (h . f)        --. L (Inst "fmap")
- === (g . (h . f))         --. Postulate --L (Def  ".") assoc
+ === (g . (h . f))         --. L (Prop "composeAssoc")
  === ((g . h) . f)         --. R (Inst "fmap")
  === fmap (g . h) f        --. QED
 
@@ -360,8 +360,8 @@ a1 as  =
 
 a2 :: Applicative f => f (a -> b) -> a -> f b
 a2 gs a  =
-     gs <*> pure a --. Postulate
- === pure ($ a) <*> gs
+     gs <*> pure a     --. Postulate
+ === pure ($ a) <*> gs --. QED
 
 a3 :: Applicative f => (a -> b) -> a -> f b
 a3 g a  =
@@ -813,7 +813,7 @@ theoremFunctor2 f g m =
   === (m >>= \x -> return (g x) >>= return . f)     --. L (Prop "m1")
   === (m >>= \x -> (return . f) (g x))              --. R (Def  ".")
   === (m >>= \x -> ((return . f) . g) x)            --. L Eta
-  === (m >>= (return . f) . g)                      --. Postulate -- [Compose.composeAssoc]
+  === (m >>= (return . f) . g)                      --. R (Prop "composeAssoc") -- [Compose.composeAssoc]
   === (m >>= return . (f . g))                      --. R (Def  "liftM")
   === (liftM (f . g) m)                             --. QED
 

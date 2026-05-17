@@ -56,8 +56,8 @@ a1 as  =
 
 a2 :: Applicative f => f (a -> b) -> a -> f b
 a2 gs a  =
-     gs <*> pure a --. Postulate
- === pure ($ a) <*> gs
+     gs <*> pure a     --. Postulate
+ === pure ($ a) <*> gs --. QED
 
 a3 :: Applicative f => (a -> b) -> a -> f b
 a3 g a  =
@@ -334,26 +334,28 @@ app0LawCmps :: (Applicative f, Applicative g) =>  (a -> b) -> Cmps f g a -> Cmps
 app0LawCmps g (Cmps ass) =
      pure g <*> Cmps ass                           --. L (Inst "pure")
  === Cmps (pure (pure g)) <*> Cmps ass             --. L (Inst "<*>")
- === Cmps (fmap (<*>) (pure (pure g)) <*> ass)     --. L (Prop "a0")
+ === Cmps (fmap (<*>) (pure (pure g)) <*> ass)     --. R (Prop "a0")
  === Cmps (pure (<*>) <*> (pure (pure g)) <*> ass) --. L (Prop "a3")
- === Cmps (pure ((<*>) (pure g)) <*> ass)          --. L Eta
+ === Cmps (pure ((<*>) (pure g)) <*> ass)          --. R Eta
  === Cmps (pure (\z -> pure g <*> z) <*> ass)      --. L (Prop "a0")
  === Cmps (pure (\z -> fmap g z) <*> ass)          --. L Eta
  === Cmps (pure (fmap g) <*> ass)                  --. L (Prop "a0")
- === Cmps (fmap (fmap g) ass)                      --. L (Inst "fmap")
+ === Cmps (fmap (fmap g) ass)                      --. R (Inst "fmap")
  === fmap g (Cmps ass)                             --. QED
 
 {-
 (2) interchange
 g <*> pure a = pure ($ a) <*> g
 -}
+--      gs <*> pure a --. Postulate
+--  === pure ($ a) <*> gs
 app2LawCmps :: (Applicative f, Applicative g) => Cmps f g (a -> b) -> a -> Cmps f g b
 app2LawCmps (Cmps gss) a =
      Cmps gss <*> pure a                                          --. L (Inst "pure")
  === Cmps gss <*> Cmps (pure (pure a))                            --. L (Inst "<*>")
- === Cmps (fmap (<*>) gss <*> pure (pure a))                      --. L (Prop "a0")
+ === Cmps (fmap (<*>) gss <*> pure (pure a))                      --. R (Prop "a0")
  === Cmps (pure (<*>) <*> gss <*> pure (pure a))                  --. L (Prop "a2")
- === Cmps (pure ($ (pure a)) <*> (pure (<*>) <*> gss))            --. L (Prop "a4")
+ === Cmps (pure ($ (pure a)) <*> (pure (<*>) <*> gss))            --. R (Prop "a4")
  === Cmps (pure (.) <*> pure ($ (pure a)) <*> pure (<*>) <*> gss) --. L (Prop "a3")
  === Cmps (pure ((.) ($ (pure a))) <*> pure (<*>) <*> gss)        --. L (Prop "a3")
  === Cmps (pure (((.) ($ (pure a))) (<*>)) <*> gss)               --. L (Def  ".")
@@ -381,7 +383,7 @@ app3LawCmps g a =
  === Cmps (pure (<*>) <*> pure (pure g) <*> pure (pure a)) --. L (Prop "a3")
  === Cmps (pure ((<*>) (pure g)) <*> pure (pure a))        --. L (Prop "a3")
  === Cmps (pure ((pure g) <*> (pure a)))                   --. L (Prop "a3")
- === Cmps (pure (pure (g a)))                              --. L (Inst "pure")
+ === Cmps (pure (pure (g a)))                              --. R (Inst "pure")
  === pure (g a)                                            --. QED
 
  {-
