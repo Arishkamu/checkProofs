@@ -348,7 +348,7 @@ BLOCK STATE -}
 
 -----------------------------------
 -- Aplicative
-a0 :: Applicative f => (a -> a) -> f a -> f a
+a0 :: Applicative f => (a -> b) -> f a -> f b
 a0 g as  =
      pure g <*> as  --. Postulate
  === fmap g as      --. QED
