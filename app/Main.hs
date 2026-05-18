@@ -71,7 +71,18 @@ import GHC.Plugins hiding (L, getModule)
 --  (ModGuts(..), getUnique)
 import GHC.Core.Opt.OccurAnal
 import GHC.RTS.Flags (GiveGCStats)
+import System.FilePath ( (</>) )
+import Control.Monad.IO.Class (MonadIO)
 
+
+logPath :: FilePath
+logPath = "logs" </> "app.log"
+
+proofbasePath :: FilePath
+proofbasePath = "src" </> "ProofBase.hs"
+
+filePath :: FilePath
+filePath = "examples" </> "allExamples.hs"
 
 main :: IO ()
 main =
@@ -81,72 +92,34 @@ main =
     _ <- setSessionDynFlags dflags
     session <- getSession
 
-    let file_path = "/Users/arina/hse/nir/moskvinPrj/checkProofs/examples/ProofsFunctor.hs"
-    (mg_main, mg_base) <- getModulesGuts file_path
+    liftIO $ writeFile logPath ""
+    (mg_main, mg_base) <- getModulesGuts
 
-    -- liftIO $ putStrLn "\n=== Imported Func ===\n"
-    -- -- liftIO $ putStrLn (showSDocUnsafe $ ppr $ (mg_binds mg1))
-    -- liftIO $ putStrLn $ showSDocUnsafe $ ppr $ [ isLocalId nam | (x, y) <- flattenBinds (mg_binds mg_main), (Var nam) <- universe y, "importThisFunc" <- [getStrById nam]]
-    -- liftIO $ putStrLn $ showSDocUnsafe $ ppr $ [ isLocalId nam | (x, y) <- flattenBinds (mg_binds mg_main), (Var nam) <- universe y, "importThisFuncHiding" <- [getStrById nam]]
-
-    -- print CoreModule
-    -- liftIO $ putStrLn "\n=== Core cm_types ===\n"
-    -- liftIO $ putStrLn (showSDocUnsafe $ ppr $ cm_types coreMod)
-    liftIO $ putStrLn "\n=== Core mg_binds ===\n"
-    liftIO $ putStrLn (showSDocUnsafe $ ppr $ mg_binds mg_main)
+    -- logMsg "\n=== Core mg_binds ===\n"
+    -- logMsg (showSDocUnsafe $ ppr $ mg_binds mg_main)
 
     -- create State
     let astState = getState session (mg_binds mg_main) (mg_binds mg_base)
-    -- let astState = getState session (cm_binds coreMod)
-    liftIO $ putStrLn "\n===== Collected AstState =====\n"
-    liftIO $ putStrLn $ prettyString astState
-    liftIO $ putStrLn "\n===== End AstState =====\n"
-    liftIO $ analyzeModuleSt astState
-    -- liftIO $ putStrLn "\n===== Sorted DeclConvers =====\n"
-    -- liftIO $ putStrLn $ prettyString (map fst (st_declconvrs astState))
-    -- liftIO $ putStrLn "\n===== End Sorted DeclConvers =====\n"
+    -- logMsg "\n===== Collected AstState =====\n"
+    -- logMsg $ prettyString astState
+    -- logMsg "\n===== End AstState =====\n"
+    _ <- liftIO $ analyzeModuleSt astState
 
-    -- liftIO $ putStrLn "\n===== Occur Anal =====\n"
-    -- liftIO $ putStrLn $ showSDocUnsafe $ ppr $ [ unfoldingTemplate (idUnfolding nam) | (x, y) <- flattenBinds (mg_binds mg1), App (App (Var nam) _) dict <- universe y, "mapmap" <- [getStrById nam], let (ClassOpId cls bl) = idDetails nam, let (Var f, _) = collectArgs dict]
-    -- liftIO $ putStrLn $ showSDocUnsafe $ ppr $ [ (x, isDFunId x) | (x, y) <- flattenBinds (mg_binds mg1)]
-    -- liftIO $ putStrLn "\n===== Occur Anal =====\n"
-    -- liftIO $ putStrLn $ showSDocUnsafe $ ppr $ mg_insts mg1
-    -- liftIO $ putStrLn $ showSDocUnsafe $ ppr $ map instanceDFunId (instEnvElts $ mg_inst_env mg1)
-    -- liftIO $ putStrLn result
-    -- let result = analyzeConversions astState
-    -- case result of
-    --   Left err -> liftIO $ putStrLn $ "Error: " ++ err
-    --   Right convrs -> do
-    --     liftIO $ putStrLn "\n=== Simplify Analysis ===\n"
-    --     liftIO $ printMy session convrs
-    --     liftIO $ putStrLn "\n=== End ===\n"
-    --     mapM_ (\(e1, e2) -> (liftIO (simplifyFunc session e1), e2)) convrs
-    --     liftIO $ putStrLn $ map prettyStringEqPairs $ map (\(e1, e2) -> (inlineLets e1, e2)) m
-
-
+    logMsg            "\n===== The End: App/Main ====="
     liftIO $ putStrLn "\n===== The End: App/Main ====="
-
--- checkModule :: HscEnv -> CoreModule -> IO ()
--- checkModule hscEnv CoreModule{..} = 
---   do
-
---     putStrLn "\n===== End: checkModule ====="
 
 
 
 ---- GET MOD GUTS
-getModulesGuts :: GhcMonad m => FilePath -> m (ModGuts, ModGuts)
-getModulesGuts file_path =
+getModulesGuts :: GhcMonad m => m (ModGuts, ModGuts)
+getModulesGuts =
   do
-    let file_path_base = "/Users/arina/hse/nir/moskvinPrj/checkProofs/src/ProofBase.hs"
-
-    target1 <- guessTarget file_path     Nothing Nothing
-    target2 <- guessTarget file_path_base Nothing Nothing
-    setTargets [target1, target2]
+    targets <- mapM (\fp -> guessTarget fp Nothing Nothing) [filePath, proofbasePath]
+    setTargets targets
     _ <- load LoadAllTargets
 
     modGraph <- depanal [] False
-    mg_base <-
+    mg_base  <-
       case find (\m -> "ProofBase" == showSDocUnsafe (ppr (moduleName (ms_mod m)))) $ mgModSummaries modGraph of
         Just ms -> getModGuts ms
         Nothing -> error $ "Error. Module `ProofBase` not found. All modules:\n" ++ showSDocUnsafe (ppr (map (moduleName . ms_mod) (mgModSummaries modGraph)))
@@ -155,6 +128,9 @@ getModulesGuts file_path =
         [ms] -> getModGuts ms
         _    -> error "Error. Expected to find single NOT `ProofBase` Module"
     return (mg_main, mg_base)
+  where
+    getModGuts :: GhcMonad m => ModSummary -> m ModGuts
+    getModGuts ms = parseModule ms >>= typecheckModule >>= desugarModule <&> dm_core_module
 
 
 ---- COLLECTING AST STATE
@@ -170,32 +146,11 @@ getState hscEnv core_binds base_binds = CheckerST {
   -- TODO. maybe add st_counter = CheckerCounter{}
 }
   where
-  -- declConvrs = orderConvrs $ concatMap collectConvrs binds
-  -- declConvrsOrdered = uncurry (++) $ partition (isPrefixOf "lemma" . getStrById . fst) declConvrs
   binds    = map (fmap inlineLetsIgnoreCast) $ flattenBinds core_binds
   sortedDeclConvrs = case sorteDeclConvrs $ concatMap collectConvrs binds of
     Left cyrcles -> error $ "Error. Cyrcle dependencies were found.\n" ++ showSDocUnsafe (ppr cyrcles)
     Right sdc    -> sdc
-  -- (funcDefs, postlDefs, proofsDefs) = foldr splitFunc ([], [], []) binds
-  -- splitFunc (fns, pstls, prfs) bind
-  --   | isAppliedFn bind value_id = (fns, pstls, bind : prfs)
-  --   | isAppliedFn bind postl_id = (fns, bind : pstls, prfs)
-  --   | otherwise                 = (bind : fns, pstls, prfs)
 
-  -- isAppliedFn (_, body) cmp_id = case getFirstApp body of
-  --   Var app_id -> app_id == cmp_id
-  --   _          -> False
-  -- getFirstApp = collectFunSimple . snd . collectBinders
-
-  -- value_id = head $ filterByStrName "value"
-  -- postl_id = head $ filterByStrName "postulate"
-
-  -- filterByStrName strName = filterNameEnv (\case
-  --   AnId elt_id -> getStrById elt_id == strName
-  --   _           -> False) cm_types
-
-orderConvrs :: [DeclConversions] -> [DeclConversions]
-orderConvrs = uncurry (++) . partition (isPrefixOf "lemma" . getStrById . fst)
 
 collectConvrs :: FuncDef -> [DeclConversions]
 collectConvrs (f_id, f_body) = case map getConvrs pairs_skip_lhe_qed of
@@ -214,10 +169,8 @@ collectConvrs (f_id, f_body) = case map getConvrs pairs_skip_lhe_qed of
   getConvrs ((lhe, c1), (rhe, _)) = Conversion lhe rhe (toSideExprInfo c1)
 ---- END COLLECTING AST STATE
 
----- UTILS
-getModGuts :: GhcMonad m => ModSummary -> m ModGuts
-getModGuts ms = parseModule ms >>= typecheckModule >>= desugarModule <&> dm_core_module
 
+---- UTILS
 createFail :: CheckerST -> String -> String
 createFail CheckerST{..} reason =
   "Fail in decl: " ++ str_decl_id ++ " in conversion number: " ++ show st_cnvrs_count ++ "\n"
@@ -230,10 +183,6 @@ getStrById v = occNameString (getOccName v)
 
 toSideExprInfo :: CoreExpr -> SideExprInfo
 toSideExprInfo (App (Var expr_side) expr_info) = toSideInfo (toExprInfo expr_info)
--- (L (FuncRec
---                       (unpackCString# "myFoldl"#)
---                       (fromInteger @Natural $fNumNatural (IS 1#))))
--- (L (Func (unpackCString# "myConst"#)))
   where
   toSideInfo
     | getStrById expr_side == "L" = L
@@ -253,14 +202,15 @@ toSideExprInfo (App (Var expr_side) expr_info) = toSideInfo (toExprInfo expr_inf
 toSideExprInfo (Var expr_side) | getStrById expr_side == "Postulate" = Postulate
 toSideExprInfo e = error $ "Unexpected expression structure for comment, expected a function application with a string literal argument.\nGot: " ++ prettyString e
 
-getModule :: HscEnv -> Module
-getModule = mainModIs . hsc_HUE
+{-
+ assume that any variable in convertion is OR
+  * in (\x ->) this convertion
+  * global func
+  * parametr for this function
 
--- assume that any variable in convertion is OR
--- in (\x ->) this convertion
--- global func
--- parametr for this function
--- Called for whole expr and works as needs 
+  alphaEq called for whole expr works correctly
+  for subexpr need to remember Lam-binds (\x ->)
+-}
 alphaEq :: (Eq (DeBruijn a)) => a -> a -> Bool
 alphaEq lhv rhv = deBruijnize lhv == deBruijnize rhv
 
@@ -272,11 +222,13 @@ alphaEqWithEnv (l_vars, r_vars) lhv rhv =
     deBrujinWithEnv e vars =
       case deBruijnize e of (D cm_env a) -> D (extendCMEs cm_env vars) a
 
+
 mapPassStM :: (Monad m) => (a -> s -> m (b, s)) -> [a] -> s -> m [(b, s)]
 mapPassStM _ [] _ = return []
 mapPassStM f (a:as) s = do
   r@(_, s1) <- f a s
   (r :) <$> mapPassStM f as s1
+
 
 mkRulePstl :: HscEnv -> Id -> [CoreBndr] -> CoreExpr -> CoreExpr -> Maybe PostlDef
 mkRulePstl hscEnv pstl_id pstl_binds pstl_lhs pstl_rhs = 
@@ -298,15 +250,22 @@ mkRulePstl hscEnv pstl_id pstl_binds pstl_lhs pstl_rhs =
           lhs_args
           pstl_rhs
         f_infoId = modifyIdInfo (`setRuleInfo` RuleInfo [rule] emptyDVarSet) f_id
+        getModule = mainModIs . hsc_HUE
 ---- UTILS
 
 
+logMsg :: (MonadIO m) => String -> m ()
+logMsg log_msg = liftIO $ appendFile logPath (log_msg ++ "\n")
 
-logMsg :: String -> CheckerM ()
-logMsg msg = liftIO $ putStrLn $ "LOG\n" ++ msg
 
 incCnvrsCounter :: CheckerM ()
-incCnvrsCounter = modify (\st -> st { st_cnvrs_count = st_cnvrs_count st + 1 })
+incCnvrsCounter = 
+  do
+    modify (\st -> st { st_cnvrs_count = st_cnvrs_count st + 1 })
+    cnvrs_count <- gets st_cnvrs_count
+    decl_id     <- gets st_declconvr_id
+    logMsg $ "\n----------------\n" ++ 
+      "Start analyzing: decl=`" ++ prettyString decl_id ++ "` conversion=" ++ show cnvrs_count ++ "\n"
 
 newDeclCnvrs :: Id -> CheckerM ()
 newDeclCnvrs decl_id = modify (\st -> st { st_cnvrs_count = 0, st_declconvr_id = Just decl_id })
@@ -319,27 +278,17 @@ madePostulate fn_id =
     declConvrs <- gets st_declconvrs
 
     (convrs_fst, convrs_lst) <- case lookup f_id declConvrs of
-      Just convrs -> return (head convrs, last convrs)
-      Nothing     -> throwError $ "Unexpected state. Succesfully analized " ++ getStrById f_id ++ " but it doesn't have conversions."
+      Just convrs@(cnvr:_) -> return (cnvr, last convrs)
+      _                    -> throwError $ 
+        "Unexpected state. Succesfully analized " ++ getStrById f_id ++ " but it doesn't have conversions."
     hscEnv     <- gets st_hscenv
     case mkRulePstl hscEnv f_id pstl_binds (cn_lhs convrs_fst) (cn_rhs convrs_lst) of
-      Nothing -> do
-        logMsg "Can't make postulate. Pstl_lhs must be of form (f e1 .. en) where f is not forall'd."
-        return ()
+      Nothing -> logMsg $ "Can't make postulate from `" ++ prettyString f_id ++ 
+        "`.\n  Pstl_lhs must be of form (f e1 .. en) where f is not forall'd.\n"
       Just new_postl -> do
-        logMsg $ "Made new postulate:\n  " ++ prettyString new_postl
+        logMsg $ "Made new postulate from: " ++ prettyString f_id ++ "\n"
         modify (\st -> st { st_postldefs = new_postl : st_postldefs st})
 
-
--- fff :: CheckerM ()
--- fff = return ()
-
--- checkModule :: HscEnv -> CoreModule -> IO ()
--- checkModule hscEnv coreModule = 
---   do
---     (r, st) <- runStateT (runExceptT fff) emptyCheckerST
---     fillCheckerSt hscEnv coreModule <|> 
---     return ()
 
 
 ------ Analyze
@@ -361,26 +310,26 @@ analyzeModuleSt checkerST =
     analyzeDeclCnvrs (decl_id, cnvrs) =
       do
         newDeclCnvrs decl_id
-        logMsg $ "Start analyze declConversion:" ++ prettyString decl_id
+        logMsg $ "\n-----------------------------\n" ++ 
+          "Start analyze declConversion: " ++ prettyString decl_id ++ "\n"
         mapM_ analyzeConvrs cnvrs
         madePostulate decl_id
         return decl_id
-        --- TODO 
-        -- replace throwError with createError and create in in place
-        -- return decl_id
 
 
 ---- ANALYZE SINGLE CONVERSION
 cmpCnvrs :: CoreExpr -> CoreExpr -> CheckerM ()
-cmpCnvrs e_cntr e = do
-  logMsg $
-    "EXPR: " ++ prettyString e ++ "\n" ++
-    "==?==\n" ++
-    "CNTR: " ++ prettyString e_cntr ++ "\n" ++
-    "Result: " ++ show (alphaEq e e_cntr)  ++ "\n"
-  if alphaEq e e_cntr
-    then return ()
-    else throwError $ "Error. Not equal.\n  Expected: " ++ prettyString e_cntr ++ "\n  Got: " ++ prettyString e
+cmpCnvrs e_cntr e | alphaEq e_cntr e = logMsg "Compare result: True\n"
+cmpCnvrs e_cntr e = 
+  do
+    logMsg $
+      "EXPR: " ++ prettyString e ++ "\n" ++
+      "==?==\n" ++
+      "CNTR: " ++ prettyString e_cntr ++ "\n" ++
+      "Compare result: False\n"
+    throwError $ "Error. Not equal." ++ 
+      "\n\nExpected: " ++ prettyString e_cntr ++ 
+      "\n\n.    Got: " ++ prettyString e ++ "\n"
 
 
 analyzeConvrs :: Conversion -> CheckerM ()
@@ -397,10 +346,10 @@ analyzeConvrs Conversion{..} =
     analyze expr control_expr expr_info =
       do
         let analyzeExpr = case expr_info of
-              Def  comment   -> analyzeDeclConv comment 0
+              Def  comment   -> analyzeDefConv  comment 0
               Prop comment   -> analyzePropConv comment
               Inst comment   -> analyzeInstConv comment
-              DefRec cmnt n  -> analyzeDeclConv cmnt n
+              DefRec cmnt n  -> analyzeDefConv  cmnt n
               Eta            -> analyzeEtaConv
               Beta           -> analyzeBetaConv
         (ce, e) <- analyzeExpr control_expr expr
@@ -408,7 +357,14 @@ analyzeConvrs Conversion{..} =
 
 ---- just believe that this is enought
 getFirstDiff :: CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr -> CoreExpr)
-getFirstDiff contrl_expr expr = go ([], []) contrl_expr expr <&> \(x, y, _) -> (x, y)
+getFirstDiff contrl_expr expr = 
+  do
+    (d_expr, bldr, _) <- go ([], []) contrl_expr expr 
+    logMsg $ "getFirstDiff result:" ++ 
+      "\ncntr_expr:\n" ++ prettyString contrl_expr ++ 
+      "\nexpr:\n" ++ prettyString d_expr ++ "\n"
+    return (d_expr, bldr)
+
   where
     go cm_envs (Lam cntr_b cntr_body) (Lam b body) = do
       let new_cm_envs = bimap (cntr_b :) (b :) cm_envs
@@ -426,9 +382,9 @@ getFirstDiff contrl_expr expr = go ([], []) contrl_expr expr <&> \(x, y, _) -> (
 
     updBuilder updater (diff_expr, builder, _) = (diff_expr, updater builder, False)
     checkEq cm_envs ce e is_collect
-      | alphaEqWithEnv cm_envs ce e = do
-        logMsg $     "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
-        throwError $ "No difference.\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e
+      | alphaEqWithEnv cm_envs ce e = throwError $ "No difference." ++ 
+        "\n  cntr_expr: " ++ prettyString ce ++ 
+        "\n       expr: " ++ prettyString e ++ "\n"
       | otherwise    = do
         logMsg $ "Get diff:\n  cntr_expr: " ++ prettyString ce ++ "\n       expr: " ++ prettyString e ++ "\n"
         return (e, id, is_collect)
@@ -449,54 +405,47 @@ getNAppearance comnt m expr = go m expr >>= (\(x, y, _) -> return (x, y))
 
 analyzeBetaConv :: CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
 analyzeBetaConv control_expr expr = return (control_expr, expr) -- TODO: check alphaEq
-  -- | otherwise = throwError "Not Beta equivalent"
 
 analyzeEtaConv :: CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
 analyzeEtaConv control_expr expr =
   do
+    logMsg "Evaluate eta-reduction"
     (diff_expr, builder) <- getFirstDiff control_expr expr
-    logMsg $ "Evaluate Eta for expr:\n  " ++ prettyString diff_expr
     new_expr <- case diff_expr of
       (Lam v1 (App f (Var v2))) | v1 == v2 -> return f  -- TODO: check and fix
       _ -> throwError $ "Error in analyzeEtaConv:\n" ++ prettyString diff_expr
     return (control_expr, builder new_expr)
 
-analyzeDeclConv :: String -> Integer -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
-analyzeDeclConv comment n control_expr expr =
+analyzeDefConv :: String -> Integer -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
+analyzeDefConv comment n control_expr expr =
   do
+    logMsg "Evaluate def-conversion"
     (diff_expr, builder) <-
       if n <= 0
         then getFirstDiff control_expr expr
         else getNAppearance comment n expr
-    logMsg $ "Evaluate func substitution for expr:\n  " ++ prettyString diff_expr
     subst_expr      <- substitute diff_expr
     let restr_expr   = builder subst_expr
     simpl_expr      <- simplifyOptFunc restr_expr
     return (control_expr, simpl_expr)
 
   where
-    substitute expr =
+    substitute e =
       do
-        let (func, args) = collectArgs expr
-        fn_id     <- checkComment func
+        let (func, args)      = collectArgs e
+        fn_id                <- checkComment func
         (func_id, func_body) <- getBodyByFuncId fn_id
-        logMsg $ "SUBST_F_ID:\n  " ++ prettyString func_id ++ "  " ++ showSDocUnsafe (ppr (getUnique func_id))
-        logMsg $ "SUBST_F_BODY:\n  " ++ prettyString func_body
-        let delFunFV = mkInScopeSet $ delVarSet (exprFreeVars expr) func_id
-            subst = extendSubst (mkEmptySubst delFunFV) func_id func_body
-            (Subst in_scope ids _ _) = subst
-        logMsg $ "SUBST_ENV\n" ++ showSDocUnsafe (ppr subst)
-        logMsg $ "AAA_SUBST\n" ++ showSDocUnsafe (ppr (assertPpr (isId func_id && not (isCoVar func_id)) (ppr func_id) not (isLocalId func_id)))
-        logMsg $ "SUBST_lookupIdSubst\n" ++ showSDocUnsafe (ppr (substExpr subst (Var func_id)))
-        logMsg $ "TTTTTTTTTT\n" ++ showSDocUnsafe (ppr control_expr)
-
-        let subst_func = easySubstFunc (Var func_id) func_id func_body
-        return $ mkCoreApps subst_func args -- maybe mkApps
+        logMsg $ "Substitute def for function: " ++ prettyString func_id ++ "\n"
+        let subst_func        = easySubstFunc (Var func_id) func_id func_body
+        return $ mkCoreApps subst_func args
 
     checkComment :: CoreExpr -> CheckerM Id
     checkComment (Var func_id)
       | getStrById func_id == comment = return func_id
-      | otherwise  = throwError $ "Applied function_id does not match comment:\n" ++ prettyString func_id ++ "\nExpected: " ++ comment
+      | otherwise                     = throwError $ 
+        "Applied function_id does not match comment:" ++ 
+        "\n Expected: " ++ comment ++ 
+        "\n Got     : " ++ prettyString func_id
     checkComment e = throwError $ "Applied expression not a function call!\nGot: " ++ prettyString e
 
 getBodyByFuncId :: Id -> CheckerM (Id, CoreExpr)
@@ -510,110 +459,87 @@ getBodyByFuncId func_id =
       Just func_body -> return (fl_id, func_body)
       Nothing        -> throwError $ "Function definition not found for:\n" ++ prettyString func_id
 
-{- 
-  when to do simplify and subst
-  problem
-    (m >>= return) `postulate` m
-    expr = (m >>= return) >>= return
 
-    (return a >>= k) `postulate` (k a)
-    (return a >>= (\a1 -> (return a1 >>= k)))
-    (\a1 -> (return a1 >>= k)) a              (return a >>= (\a1 -> k a1))
--}
 analyzePropConv :: String -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
 analyzePropConv comment control_expr expr =
   do
+    logMsg "Evaluate prop-conversion"
     (diff_expr, builder) <- getFirstDiff control_expr expr
-    Just d_id <- gets st_declconvr_id
-    logMsg $ "POSTL_DIFF: " ++ prettyString d_id ++ "\n" ++ prettyString diff_expr
-    postl_defs    <- gets st_postldefs
-    declconv_defs <- gets st_declconvrs
-    let matchedPstls = filter ((comment ==) . getStrById . pstl_id) postl_defs
+    postl_defs           <- gets st_postldefs
+    let matchedPstls      = filter ((comment ==) . getStrById . pstl_id) postl_defs
     rule <- case matchedPstls of
       [pstl] -> return pstl
       (_:_)  -> throwError $ "Unexpected postulate. Found more than one matched with comment `" ++ comment ++ "`"
-      []     -> throwError $ "Unexpected postulate. Not found match with comment `" ++ comment ++ "`" ++ "\nALL postuls:\n" ++ prettyString (map pstl_id postl_defs) ++ "\nOrder:\n" ++ prettyString (map fst declconv_defs)
+      []     -> throwError $ "Unexpected postulate. Not found match with comment `"             ++ comment ++ "`"
 
-    logMsg $ "BEFORE_SUBST_RULE-1\n" ++ prettyString diff_expr
-    lookup_expr <- substRule [rule] diff_expr
-    logMsg $ "SUBST_RULE-1\n" ++ prettyString lookup_expr
+    lookup_expr        <- substRule [rule] diff_expr
     let lookup_restored = builder lookup_expr
-    logMsg $ "SUBST_RULE_lookup_restored\n" ++ prettyString lookup_restored
-    simpl_expr1     <- simplifyOptFunc lookup_restored
-    logMsg $ "SUBST_RULE-2\n" ++ prettyString simpl_expr1
-
-    -- new_expr        <- simplifyFunc [rule] expr
-    -- new_contrl_expr <- simplifyFunc [rule] control_expr
-    -- let no_lets_expr = inlineLets new_expr
-    return (control_expr, simpl_expr1)
+    -- TODO
+    simpl_expr         <- simplifyOptFunc lookup_restored
+    return (control_expr, simpl_expr)
 
 
 analyzeInstConv :: String -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
 analyzeInstConv comment control_expr expr =
   do
+    logMsg "Evaluate inst-conversion"
     (diff_expr, builder) <- getFirstDiff control_expr expr
-    logMsg $ "Evaluate inst substitution for expr:\n  " ++ prettyString diff_expr
-    subst_inst      <- substitute diff_expr
+    subst_inst      <- substituteInst diff_expr
     subst_simp      <- simplifyOptFunc subst_inst
     subst_expr      <- ordinar_subst subst_simp
-    logMsg $ "WHAT HAVE YOU DONE:\n  " ++ prettyString subst_expr ++ "\n"
     let restr_expr   = builder subst_expr
     simpl_expr      <- simplifyOptFunc restr_expr
     return (control_expr, simpl_expr)
 
   where
-    substitute expr =
+    substituteInst expr =
       do
-        let (func, args)     = collectArgs expr
-            (Var instce_id, inst_args) = collectArgs (args !! 1)
-        func_id              <- checkComment func
-        let func_body         = unfoldingTemplate $ idUnfolding func_id
-        (inst_id, inst_body) <- getBodyByFuncId instce_id
-        logMsg $ "INST_ID\n" ++ prettyString inst_id
-        logMsg $ "INST_ARGS\n" ++ prettyString inst_args
-        logMsg $ "INST_BODY\n" ++ prettyString inst_body
-        -- logMsg $ prettyStringExpr inst_body
-        -- case isClassOpId_maybe func_id of
-        --   Nothing  -> throwError $ "Not an instance function"
-        --   Just cls -> case find () classAllSelIds cls of
-        --     Nothing -> throwError $ 
-        --     Just 
-        -- func_body <- getBodyByFuncId func_id
-        -- unfoldingTemplate (realIdUnfolding v) 
+        let (func, args) = collectArgs expr
+        func_id         <- checkComment func
+        let func_body    = unfoldingTemplate $ idUnfolding func_id
 
-        let subst_func = easySubstFunc func func_id func_body -- WHY NO?????
-        logMsg $ "SUBS_INST\n" ++ prettyString subst_func ++ "\n" ++ prettyString func ++ "\n" ++ prettyString func_id ++ "\n" ++ prettyString func_body
-
+        {- TODO check why doesn't work
+          logMsg $ "SUBS_INST" ++ 
+            "\nsubst_func:\n" ++ prettyString subst_func ++ 
+            "\n      func:\n" ++ prettyString func ++ 
+            "\n   func_id:\n" ++ prettyString func_id ++ 
+            "\n func_body:\n" ++ prettyString func_body
+        -}
         let subst_selector = mkCoreApps func_body (take 2 args)
-        selector_simpl <- simplifyOptFunc subst_selector
-        logMsg $ "SUBST_INST_SIMPL_1\n" ++ prettyString selector_simpl
-        let subst_inst = easySubstFunc selector_simpl inst_id inst_body
-        logMsg $ "SUBST_INST_SIMPL_2\n" ++ prettyString subst_inst
-        selector_simp_2 <- simplifyOptFunc subst_inst
-        logMsg $ "SUBST_INST_IN_SELECTOR\n" ++ prettyString selector_simp_2
-        return $ mkCoreApps selector_simp_2 (drop 2 args) -- maybe mkApps
+        selector_simpl    <- simplifyOptFunc subst_selector
+        logMsg $ "Substitute selector for instance_method: " ++ prettyString func_id ++ "\n"
+        -- logMsg $ "Selector implementation\n" ++ prettyString selector_simpl ++ "\n"
+
+
+        let (Var instce_id, _) = collectArgs (args !! 1)
+        (inst_id, inst_body)  <- getBodyByFuncId instce_id
+        let subst_inst         = easySubstFunc selector_simpl inst_id inst_body
+        selector_inst         <- simplifyOptFunc subst_inst
+        logMsg $ "Substitute instance for instance_method: " ++ prettyString instce_id ++ "\n"
+        -- logMsg $ "Selector instanced\n" ++ prettyString selector_inst
+        return $ mkCoreApps selector_inst (drop 2 args)
 
     ordinar_subst expr =
       do
-        logMsg $ "BEFORE_ORD_SUBST\n" ++ prettyString expr
-        logMsg $ "BEFORE_ORD_SUBST\n" ++ prettyString (collectArgs expr)
         let (func@(Var fn_id), args) = collectArgs expr
         (func_id, func_body)        <- getBodyByFuncId fn_id
-
         let subst_func = easySubstFunc func func_id func_body
-        return $ mkCoreApps subst_func args -- maybe mkApps
+        logMsg $ "Substitute instance method for inst: " ++ prettyString func_id ++ "\n"
+        return $ mkCoreApps subst_func args
 
     checkComment :: CoreExpr -> CheckerM Id
     checkComment (Var func_id)
       | getStrById func_id == comment = return func_id
-      | otherwise  = throwError $ "Applied function_id does not match comment:\n" ++ prettyString func_id ++ "\nExpected: " ++ comment
+      | otherwise  = throwError $ 
+        "Applied function_id does not match comment:" ++ 
+        "\n Expected: " ++ comment ++ 
+        "\n Got     : " ++ prettyString func_id
     checkComment e = throwError $ "Applied expression not a function call!\nGot: " ++ prettyString e
 
 
 
 
 ---- SIMPLIFIERS
-
 inlineLetsIgnoreCast :: CoreExpr -> CoreExpr
 inlineLetsIgnoreCast expr =
   case expr of
@@ -635,9 +561,12 @@ easySubstFunc expr fn_id fn_body = substExpr subst expr
 simplifyOptFunc :: CoreExpr -> CheckerM CoreExpr
 simplifyOptFunc expr = go 0 expr
   where
-    go n _ | n >= 3 = throwError $ "Unexpected expression. Expression needs to much beta-reductions. Default threshold = 3. Expr:\n" ++ prettyString expr
+    go :: Int -> CoreExpr -> CheckerM CoreExpr
+    go n _ | n >= 3 = throwError $ 
+      "Unexpected expression. Expression needs to much beta-reductions. " ++ 
+      "Default threshold = 3. Expr:\n" ++ prettyString expr ++ "\n"
     go n e = do
-      logMsg $ "TRY simplifyOptFunc n=" ++ show n
+      logMsg $ "Try simplifyOptFunc n=" ++ show n ++ "\n"
       let no_lets_expr = inlineLetsIgnoreCast (simpleOptExpr defaultSimpleOpts e)
       case find isBetaRedex (universe no_lets_expr) of
         Just _  -> go (n + 1) no_lets_expr
@@ -647,103 +576,42 @@ simplifyOptFunc expr = go 0 expr
     isBetaRedex _                 = False
 
 
-simplifyFunc :: [PostlDef] -> CoreExpr -> CheckerM CoreExpr
-simplifyFunc pstls expr = go 0 expr
-  where
-    go n _ | n >= 3 = throwError $ "Unexpected expression. Expression needs to much beta-reductions. Default threshold = 3. Expr:\n" ++ prettyString expr
-    go n e = do
-      hscEnv     <- gets st_hscenv
-      logMsg $ "TRY simplify n=" ++ show n
-      simplified <- liftIO $ simplifyFuncIO hscEnv pstls e
-      let no_lets_expr = inlineLetsIgnoreCast simplified
-      case find isBetaRedex (universe no_lets_expr) of
-        Just _  -> go (n + 1) no_lets_expr
-        Nothing -> return no_lets_expr
-
-    isBetaRedex (App (Lam _ _) _) = True
-    isBetaRedex _                 = False
-
-simplifyFuncIO :: HscEnv -> [PostlDef] -> CoreExpr -> IO CoreExpr
-simplifyFuncIO hscEnv pstls expr =
-  do
-    let opts   = initSimplifyExprOpts (hsc_dflags hscEnv) (hsc_IC hscEnv)
-        logger = hsc_logger hscEnv
-
-    euc <- initExternalUnitCache
-    eps <- eucEPS euc
-
-    let fam_envs =  ( eps_fam_inst_env eps
-                    , extendFamInstEnvList emptyFamInstEnv $ se_fam_inst opts
-                    )
-
-        -- simpl_env = mkSimplEnv (se_mode opts) fam_envs
-        -- my_in_scope = getInScope simpl_env `extendInScopeSetSet` exprFreeVars expr
-        -- my_env = setInScopeSet simpl_env my_in_scope
-        rules = map pstl_rule pstls
-        simpl_env = mkSimplEnv (se_mode opts) fam_envs
-        ru_rhs_fv = map ruleRhsFreeVars rules
-        fv_set    = foldl unionUniqSets (exprFreeVars expr) ru_rhs_fv
-          -- TODO order IS IMPORTANT. WANT TO SAVE MODIFied
-        fv_idInfo_set = fv_set `addListToUniqSet` map pstl_fid pstls
-        my_in_scope   = getInScope simpl_env `extendInScopeSetSet` fv_idInfo_set
-        my_env        = setInScopeSet simpl_env my_in_scope
-
-        top_env_cfg = se_top_env_cfg opts
-        read_eps_rules = eps_rule_base <$> eucEPS euc
-        my_rule_env = (`addLocalRules` rules) . updExternalPackageRules emptyRuleEnv <$> read_eps_rules
-
-    -- putStrLn $ "------MY-ENV-------"
-    -- putStrLn $ showSDocUnsafe $ pprSimplEnv my_env
-    -- putStrLn $ "------MY-ENV-------"
-    let sz = exprSize expr
-    (expr', _) <- initSmpl logger my_rule_env top_env_cfg sz $
-                          simplExpr my_env expr
-
-    if not (null rules)
-      then
-        if alphaEq expr' expr
-          then putStrLn $ "NOT FIRED: " ++ show (map (prettyString . pstl_id) pstls)
-          else putStrLn $ "RULE `" ++ show (map (prettyString . pstl_id) pstls) ++ "` FIRED"
-      else putStrLn "NO rules"
-    return expr'
-
-
 substRule :: [PostlDef] -> CoreExpr -> CheckerM CoreExpr
 substRule pstls expr =
   do
     hscEnv <- gets st_hscenv
     let opts   = initSimplifyExprOpts (hsc_dflags hscEnv) (hsc_IC hscEnv)
 
-    euc <- liftIO $ initExternalUnitCache
-    eps <- liftIO $ eucEPS euc
+    euc <- liftIO initExternalUnitCache
+    eps <- liftIO (eucEPS euc)
 
     let fam_envs =  ( eps_fam_inst_env eps
                     , extendFamInstEnvList emptyFamInstEnv $ se_fam_inst opts
                     )
-
-        -- simpl_env = mkSimplEnv (se_mode opts) fam_envs
-        -- my_in_scope = getInScope simpl_env `extendInScopeSetSet` exprFreeVars expr
-        -- my_env = setInScopeSet simpl_env my_in_scope
         rules = map pstl_rule pstls
         simpl_env = mkSimplEnv (se_mode opts) fam_envs
         ru_rhs_fv = map ruleRhsFreeVars rules
         fv_set    = foldl unionUniqSets (exprFreeVars expr) ru_rhs_fv
-          -- TODO order IS IMPORTANT. WANT TO SAVE MODIFied
+        -- NOTE order is important. We want to preserve modified pstl_fid
         fv_idInfo_set = fv_set `addListToUniqSet` map pstl_fid pstls
         my_in_scope   = getInScope simpl_env `extendInScopeSetSet` fv_idInfo_set
         my_env        = setInScopeSet simpl_env my_in_scope
 
     let
-      opts         = seRuleOpts my_env :: RuleOpts
+      ru_opts         = seRuleOpts my_env           :: RuleOpts
       in_scope_env = getUnfoldingInRuleMatch my_env :: InScopeEnv
-      act_fun      = activeRule (seMode my_env) :: Activation -> Bool
+      act_fun      = activeRule (seMode my_env)     :: Activation -> Bool
       rules_id_str = show $ map (prettyString . pstl_id) pstls
       (Var f_target, args_targetgs) = collectArgs expr
 
-    case lookupRule opts in_scope_env act_fun f_target args_targetgs rules of
-      Nothing -> throwError $ "Rule `" ++ rules_id_str ++ "`not fired." ++ "\nRule:\n" ++ prettyString pstls ++ "\nExpr:\n" ++ prettyString expr
+    case lookupRule ru_opts in_scope_env act_fun f_target args_targetgs rules of
+      Nothing -> do
+        logMsg     $ "Rule `" ++ rules_id_str ++ "`not fired." ++ "\n"
+        throwError $ "Rule `" ++ rules_id_str ++ "`not fired." ++ 
+          "\nRule:\n" ++ prettyString pstls ++ 
+          "\nExpr:\n" ++ prettyString expr ++ "\n"
       Just (applied_rule, new_expr) -> do
-          logMsg $ "Rule fired:" ++ rules_id_str
+          logMsg $ "Rule fired:" ++ rules_id_str ++ "\n"
           return $ reapplyExtraArgs applied_rule new_expr
 
   where
@@ -751,9 +619,6 @@ substRule pstls expr =
     leftoverArgs ap_ru = drop (ruleArity ap_ru) $ snd (collectArgs expr)
 
 
--- simplExprGently env expr = do
---     expr1 <- simplExpr env (occurAnalyseExpr expr)
---     simplExpr env (occurAnalyseExpr expr1)
 
 -- {- TODO:
 --     * collectModule no dif just yet
@@ -806,41 +671,3 @@ substRule pstls expr =
 --     match all variables from expr_o to expr_l (expr_l==expr_o)
 --     subst all variables into expr_r
 -- -}
-
--- -- myM1
--- -- \ (@(m_aIR :: Type -> Type))
--- --   (@a_aIS)
--- --   (@b_aIT)
--- --   ($dMonad_aIU :: Monad m_aIR)
--- --   (a_azv :: a_aIS)
--- --   (k_azw :: a_aIS -> m_aIR b_aIT)
-
--- -- FREE VARS l_postl: App :: >>=
--- --   @m_aIR
--- --   $dMonad_aIU
--- --   @a_aIS
--- --   @b_aIT
--- --   (return @m_aIR $dMonad_aIU @a_aIS a_azv)
--- --   k_azw
--- -- FREE VARS        : {a_azv, k_azw, m_aIR, a_aIS, b_aIT, $dMonad_aIU}
-
--- -- FREE VARS expr.  : App :: >>=
--- --   @m_aMV
--- --   $dMonad_aMY
--- --   @(a_aMW -> b_aMX)
--- --   @b_aMX
--- --   (return @m_aMV $dMonad_aMY @(a_aMW -> b_aMX) g_azQ)
--- --   (\ (f_azS :: a_aMW -> b_aMX) ->
--- --      myLiftM @m_aMV @a_aMW @b_aMX $dMonad_aMY f_azS xs_azR)
--- -- FREE VARS        : {g_azQ, xs_azR, m_aMV, a_aMW, b_aMX, $dMonad_aMY, myLiftM}
-
--- -- m_aIR       == m_aMV
--- -- $dMonad_aIU == $dMonad_aMY
--- -- a_aIS       == (a_aMW -> b_aMX)
--- -- b_aIT.      == b_aMX
--- -- a_azv       == g_azQ
--- -- k_azw       == (\ (f_azS :: a_aMW -> b_aMX) -> myLiftM @m_aMV @a_aMW @b_aMX $dMonad_aMY f_azS xs_azR)
-
--- -- k_azw a_azv ==
--- --   (\ (f_azS :: a_aMW -> b_aMX) -> myLiftM @m_aMV @a_aMW @b_aMX $dMonad_aMY f_azS xs_azR) g_azQ
--- --   myLiftM @m_aMV @a_aMW @b_aMX $dMonad_aMY g_azQ xs_azR
