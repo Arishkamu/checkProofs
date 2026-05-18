@@ -3,41 +3,24 @@
 module Main where
 
 import GHC
-    ( Id,
-      compileToCoreModule,
-      runGhc,
+    ( runGhc,
       setSessionDynFlags,
       getSessionDynFlags,
-      CoreModule(..),
-      HscEnv,
-      GeneralFlag(..),
-      GhcMonad(..),
-      NamedThing(..),
-      Module, Name, guessTarget, setTargets, depanal, mgModSummaries, parseModule, typecheckModule, desugarModule, DesugaredModule (dm_core_module), LoadHowMuch (LoadAllTargets), load, coreModule, addTarget, setTargets)
+      GhcMonad(..), guessTarget, setTargets, depanal, mgModSummaries, parseModule, typecheckModule, desugarModule, DesugaredModule (dm_core_module), LoadHowMuch (LoadAllTargets), load, setTargets)
 import GHC.Paths (libdir)
 import GHC.Core
 import GHC.Core.Map.Type (DeBruijn(..), deBruijnize, extendCMEs)
-import GHC.Core.Make (mkCoreApps) -- maybe mkApps
-import GHC.Driver.DynFlags ( gopt_set )
-import GHC.Driver.Env ( mainModIs, hsc_HUE, HscEnv(..) )
-import GHC.Types.Literal (Literal(..))
-import GHC.Types.Name.Occurrence (occNameString)
-import GHC.Types.Basic (Activation(..))
--- Subst
-import GHC.Core.Subst (extendSubst, mkEmptySubst, substExpr)
-import GHC.Core.FVs (exprFreeVars, ruleRhsFreeVars)
-import GHC.Types.Var.Env (mkInScopeSet, extendInScopeSetSet)
-import GHC.Types.Var.Set (delVarSet, emptyDVarSet)
-import GHC.Data.FastString (mkFastString)
-import GHC.Types.Unique.Set (addListToUniqSet, unionUniqSets)
+import GHC.Plugins hiding (L, getModule)
 
-import Control.Monad.State.Lazy ( runStateT, liftIO, gets, modify )
+import System.FilePath ((</>))
+import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.State.Lazy ( runStateT, gets, modify )
 import Control.Monad.Except ( runExceptT, MonadError(..) )
 import Control.Applicative ((<|>))
-import Data.Generics.Uniplate.Data (universe)
 import qualified Data.ByteString.Char8 as BS8
-import Data.Functor ( (<&>) )
-import Data.List (isPrefixOf, partition, find)
+import Data.Generics.Uniplate.Data (universe)
+import Data.Functor ((<&>))
+import Data.List (find)
 import Data.Bifunctor (bimap)
 
 -- Simplifier
@@ -45,34 +28,14 @@ import GHC.Unit.External (initExternalUnitCache, eucEPS, ExternalPackageState(..
 import GHC.Driver.Config.Core.Opt.Simplify (initSimplifyExprOpts)
 import GHC.Core.FamInstEnv (extendFamInstEnvList, emptyFamInstEnv)
 import GHC.Core.Opt.Simplify (SimplifyExprOpts(..))
-import GHC.Core.Stats (exprSize)
-import GHC.Core.Opt.Simplify.Monad (initSmpl)
-import GHC.Core.Opt.Simplify.Iteration (simplExpr)
-
--- DEBUG
-import GHC.Utils.Outputable ( ppr, showSDocUnsafe )
-import GHC.Types.Id ( modifyIdInfo, idInfo, Var, idDetails, isDFunId, isClassOpId_maybe, idUnfolding)
-import GHC.Types.Id.Info
-import GHC.Core.Class
-import GHC.Core.Rules ( addLocalRules, emptyRuleEnv, mkRule, updExternalPackageRules, lookupRule, roughTopNames, matchExprs )
-import GHC.Core.Opt.Simplify.Env ( getInScope, mkSimplEnv, setInScopeSet, pprSimplEnv, seRuleOpts, SimplEnv (seMode) )
-import GHC.Types.Id.Info ( RuleInfo(..), setRuleInfo, IdInfo (ruleInfo), ruleInfoRules )
-import GHC.Core.InstEnv
+import GHC.Core.Opt.Simplify.Env ( getInScope, mkSimplEnv, setInScopeSet, seRuleOpts, SimplEnv (seMode) )
+import GHC.Core.Opt.Simplify.Utils ( getUnfoldingInRuleMatch, activeRule )
+import GHC.Core.SimpleOpt ( defaultSimpleOpts, simpleOptExpr )
 
 import AstInfo
 import PrettyString
 import ProofBase ( ExprInfo(..), SideExprInfo(..) )
 import SortDecls ( sorteDeclConvrs )
-import GHC.Core.Opt.Simplify.Utils
-import GHC.Core.SimpleOpt ( defaultSimpleOpts, simpleOptExpr, SimpleOpts(..) )
-import GHC.Core.Utils
-import GHC.Types.Tickish
-import GHC.Plugins hiding (L, getModule)
---  (ModGuts(..), getUnique)
-import GHC.Core.Opt.OccurAnal
-import GHC.RTS.Flags (GiveGCStats)
-import System.FilePath ( (</>) )
-import Control.Monad.IO.Class (MonadIO)
 
 
 logPath :: FilePath
@@ -82,7 +45,7 @@ proofbasePath :: FilePath
 proofbasePath = "src" </> "ProofBase.hs"
 
 filePath :: FilePath
-filePath = "examples" </> "ExamplesNotImpl.hs"
+filePath = "examples" </> "AllExamples.hs"
 
 main :: IO ()
 main =
@@ -92,7 +55,9 @@ main =
     _ <- setSessionDynFlags dflags
     session <- getSession
 
-    liftIO $ writeFile logPath ""
+    let analyzing_file_str = "ANALUZING FILE: " ++ filePath ++ "\n"
+    liftIO $ writeFile logPath analyzing_file_str
+    liftIO $ putStrLn analyzing_file_str
     (mg_main, mg_base) <- getModulesGuts
 
     -- logMsg "\n=== Core mg_binds ===\n"
