@@ -76,13 +76,13 @@ import Control.Monad.IO.Class (MonadIO)
 
 
 logPath :: FilePath
-logPath = "logs" </> "app.log"
+logPath = "logs" </> "app.txt"
 
 proofbasePath :: FilePath
 proofbasePath = "src" </> "ProofBase.hs"
 
 filePath :: FilePath
-filePath = "examples" </> "allExamples.hs"
+filePath = "examples" </> "ExamplesNotImpl.hs"
 
 main :: IO ()
 main =
@@ -171,12 +171,14 @@ collectConvrs (f_id, f_body) = case map getConvrs pairs_skip_lhe_qed of
 
 
 ---- UTILS
-createFail :: CheckerST -> String -> String
-createFail CheckerST{..} reason =
-  "Fail in decl: " ++ str_decl_id ++ " in conversion number: " ++ show st_cnvrs_count ++ "\n"
-  ++ "  Reason: " ++ reason
+createFail :: CheckerST -> String -> (Id, String)
+createFail CheckerST{..} reason = (,) d_id $
+    "Fail in decl: " ++ str_decl_id ++ " in conversion number: " ++ show st_cnvrs_count ++ 
+    "\nReason:\n" ++ reason ++ "\n"
   where
-    str_decl_id = maybe "<No decl_id>" getStrById st_declconvr_id
+    (d_id, str_decl_id) = case st_declconvr_id of 
+      Just d  -> (d, getStrById d)
+      Nothing -> error "Have failure but no st_declconvr_id"
 
 getStrById :: Id -> String
 getStrById v = occNameString (getOccName v)
@@ -297,7 +299,8 @@ analyzeModuleSt checkerST =
 
   do
     result <- mapPassStM runChecker (st_declconvrs checkerST) checkerST
-    putStrLn $ prettyStringReport $ toReport result
+    logMsg   $ prettyStringReport True  $ toReport result
+    putStrLn $ prettyStringReport False $ toReport result
 
   where
     runChecker x = runStateT (runExceptT (analyzeDeclCnvrs x))
@@ -640,34 +643,3 @@ substRule pstls expr =
 --     * prettyStringBinds (cm_binds coreMod)
 -- -}
 
-
-
--- {-
---   Context: 
---     variables with types or Types
---     free variables?
-
---   Variables at the moment:
---     global
---     params
-
---   wrap in monad
---     except
---     store context
-
---   TODO make meaningfull subst
---     a==b
---     k==(\x = expr expr expr)
-
---     k a ==> (\x = expr expr expr) b
-
---     expr_l ==> (\x y -> expr_l) == (\x y -> expr_r) <== expr_r
---     expr_o ==> (\x y -> expr_o) x_o y_o
-
---     expr_o ==> (\x y -> expr_o) x_o y_o ==> (\x y -> (\x y -> expr_l)) x_o y_o ==> 
---     (\x_o y_o -> expr_l) ==> (\x_o y_o -> expr_r) ==> expr_r
-
---   TWO STEPS
---     match all variables from expr_o to expr_l (expr_l==expr_o)
---     subst all variables into expr_r
--- -}

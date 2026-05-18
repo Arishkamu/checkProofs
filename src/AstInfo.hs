@@ -77,7 +77,8 @@ data CheckerST = CheckerST {
 
 type CheckerM = ExceptT String (StateT CheckerST IO)
 
-type Report = ([Id], [String])
+type ReportFail = (Id, String)
+type Report = ([Id], [ReportFail])
 
 {-
   I WANT 

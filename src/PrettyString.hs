@@ -136,14 +136,23 @@ instance PrettyString SideExprInfo where
   prettyStringIdent _ QED = "QED"
   prettyStringIdent _ Postulate = "Postulate"
 
--- type Report = ([Id], [String])
-prettyStringReport :: Report -> String
-prettyStringReport (succs, fails) = 
-  "\n----- REPORT -----" ++ "\n" ++
-  "Succsessfully proved:" ++ "\n" ++
-  "  " ++ intercalate "\n  " (map (occNameString . getOccName) succs) ++ "\n" ++
-  "Failures proved:" ++ "\n" ++
-  "  " ++ intercalate (bslN 2) fails ++ "\n"
+-- type Report = ([Id], [(Id, String)])
+-- Bool - with reasons or without
+prettyStringReport :: Bool -> Report -> String
+prettyStringReport withReasons (succs, failsWithReasons) = 
+  "\n============================================" ++
+  "\n================== REPORT ==================" ++
+  "\nSuccsessfully proved:" ++ "\n  " ++ prettyRes succs ++ "\n" ++
+  "\nFailures proved:"      ++ "\n  " ++ prettyRes fails ++ "\n" ++
+  (if withReasons 
+    then "Reasons for failures:\n\n" ++ intercalate "\n" reasons ++ "\n"
+    else "\n")
+  ++ "============================================\n"
+  where
+    prettyRes [] = "<None>"
+    prettyRes xs = intercalate "\n  " $ map (showSDocUnsafe . ppr) xs
+    (fails, reasons) = unzip failsWithReasons
+    
 
 
 instance (PrettyString a, PrettyString b) => PrettyString (a, b) where
