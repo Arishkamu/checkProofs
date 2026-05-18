@@ -307,17 +307,18 @@ functor2LawCmps h1 h2 (Cmps xss) =
 -- BLOCK CMPS -}
 
 
-{- BLOCK STATE
+-- {- BLOCK STATE
     -- State
 
-    newtype State s a = State (s -> (s, a)) --{ runState :: s -> (s, a) }
-    runState :: State s a -> s -> (s, a)
-    runState (State f) a = f a
+newtype State s a = State (s -> (s, a)) --{ runState :: s -> (s, a) }
+runState :: State s a -> s -> (s, a)
+runState (State f) a = f a
 
-    instance Functor (State s) where
-    fmap :: (a -> b) -> State s a -> State s b
-    fmap f (State g) = State (\s -> case g s of (s', a) -> (s', f a)) -- let (s', a) = g s in (s', f a))
+instance Functor (State s) where
+  fmap :: (a -> b) -> State s a -> State s b
+  fmap f (State g) = State (\s -> case g s of (s', a) -> (s', f a)) -- let (s', a) = g s in (s', f a))
 
+{- BLOCK STATE F1L
     --functor1LawState ::  (e -> a) -> (e -> a)
     functor1LawState :: State s b -> State s b
     functor1LawState (State g) =
@@ -326,16 +327,17 @@ functor2LawCmps h1 h2 (Cmps xss) =
     === State (\s -> case g s of (s', a) -> (s', a))    --. Postulate -- UNCASE??
     === State (\s -> g s)                               --. L Eta
     === State g                                         --. QED
+BLOCK STATE F1L -}
 
-    functor2LawState :: (b -> c) -> (a -> b) -> (e -> a) -> (e -> c)
-    functor2LawState g h f =
-        (fmap g . fmap h) f   --. L (Def  ".")
-    === fmap g (fmap h f)     --. L (Inst "fmap")
-    === fmap g (h . f)        --. L (Inst "fmap")
-    === (g . (h . f))         --. Postulate --L (Def  ".")
-    === ((g . h) . f)         --. L (Inst "fmap")
-    === fmap (g . h) f        --. QED
-BLOCK STATE -}
+functor2LawState :: (b -> c) -> (a -> b) -> (e -> a) -> (e -> c)
+functor2LawState g h f =
+      (fmap g . fmap h) f   --. L (Def  ".")
+  === fmap g (fmap h f)     --. L (Inst "fmap")
+  === fmap g (h . f)        --. L (Inst "fmap")
+  === (g . (h . f))         --. Postulate --L (Def  ".")
+  === ((g . h) . f)         --. R (Inst "fmap")
+  === fmap (g . h) f        --. QED
+-- BLOCK STATE -}
 
 
 

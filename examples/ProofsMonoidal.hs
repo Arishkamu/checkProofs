@@ -149,7 +149,7 @@ l2r . r2l = id :: (a, (b, c)) -> (a, (b, c))
 -}
 isoTriple ::((a,b),c) -> ((a,b),c) 
 isoTriple = 
-    (r2l . l2r)                                    --. R Eta
+    (r2l . l2r)                                    --. Postulate -- --. R Eta
  === (\((a,b),c) -> (r2l . l2r) ((a,b),c))         --. L (Def  ".")
  === (\((a,b),c) -> (\x -> r2l (l2r x)) ((a,b),c)) --. L Beta
  === (\((a,b),c) -> r2l (l2r ((a,b),c)))           --. L (Def  "l2r")
@@ -160,7 +160,7 @@ isoTriple =
 
 isoTriple' :: (a,(b,c)) -> (a,(b,c)) 
 isoTriple' = 
-     (l2r . r2l)                                   --. R Eta
+     (l2r . r2l)                                   --. Postulate ----. R Eta
  === (\(a,(b,c)) -> (l2r . r2l) (a,(b,c)))         --. L (Def  ".")
  === (\(a,(b,c)) -> (\x -> l2r (r2l x)) (a,(b,c))) --. L Beta
  === (\(a,(b,c)) -> l2r (r2l (a,(b,c))))           --. L (Def  "r2l")
@@ -179,15 +179,15 @@ r2l <$> (as *&* (bs *&* cs)) = (as *&* bs) *&* cs
 ml3 :: Monoidal f => f a -> f b -> f c -> f ((a, b), c)
 ml3 as bs cs =
      fmap r2l (as *&* (bs *&* cs)) --. Postulate
- === (as *&* bs) *&* cs 
+ === (as *&* bs) *&* cs            --. QED
 
 ml3' :: Monoidal f => f a -> f b -> f c -> f (a, (b, c))
 ml3' as bs cs =
-    (as *&* (bs *&* cs))                      -- [f1]
- === fmap id (as *&* (bs *&* cs))             -- isoTriple'
- === fmap (l2r . r2l) (as *&* (bs *&* cs))    -- [f2]
- === fmap l2r (fmap r2l (as *&* (bs *&* cs))) -- [ml3]
- === fmap l2r ((as *&* bs) *&* cs)
+    (as *&* (bs *&* cs))                      --. Postulate -- [f1]
+ === fmap id (as *&* (bs *&* cs))             --. L (Prop "isoTriple'")
+ === fmap (l2r . r2l) (as *&* (bs *&* cs))    --. Postulate -- [f2]
+ === fmap l2r (fmap r2l (as *&* (bs *&* cs))) --. L (Prop "ml3")
+ === fmap l2r ((as *&* bs) *&* cs)            --. QED
 
 --------------------
 (***) :: (a -> a') -> (b -> b') -> (a, b) -> (a', b')
@@ -207,9 +207,9 @@ fmap (\(x, y) -> (g x, h y)) (as *&* bs) = fmap g as *&* fmap h bs
 ml4 :: Monoidal f => (a1 -> a2) -> (b1 -> b2) -> f a1 -> f b1 -> f (a2, b2)
 ml4 g h as bs = 
      fmap (\(x, y) -> (g x, h y)) (as *&* bs) --. Postulate
- === fmap g as *&* fmap h bs 
+ === fmap g as *&* fmap h bs                  --. QED
  
-
+-- {- AAAAAAA
 --------------------------------------------------------------
 {-
 instance Monoidal Maybe where
@@ -320,12 +320,12 @@ monLaw1 as =
  === fmap snd (pure (,) <*> unit' <*> as)    -- unit'
  === fmap snd (pure (,) <*> pure () <*> as)  -- [a3]
  === fmap snd (pure ((,) ()) <*> as)         -- [a0]
- === fmap snd (fmap ((,) ()) as)             -- [f2]
+ === fmap snd (fmap ((,) ()) as)             --. Postulate -- [f2]
  === fmap (snd . (,) ()) as                  --. L (Def  ".")
  === fmap (\x -> snd ((),x)) as              -- snd
  === fmap (\x -> x) as                       --. L (Def  "id")
  === fmap (\x -> id x) as                    --. L Eta
- === fmap id as                              -- [f1]
+ === fmap id as                              --. Postulate -- [f1]
  === id as                                   --. L (Def  "id")
  === as
 
@@ -342,9 +342,9 @@ monLaw2 as =
  === fmap fst (pure (.) <*> pure ($ ()) <*> pure (,) <*> as) -- [a2]
  === fmap fst (pure ((.) ($ ())) <*> pure (,) <*> as)        -- [a2]
  === fmap fst (pure (($ ()) . (,)) <*> as)                   -- [a0]
- === fmap fst (fmap (($ ()) . (,)) as)                       -- [f2]
+ === fmap fst (fmap (($ ()) . (,)) as)                       --. Postulate -- [f2]
  === fmap (fst . (($ ()) . (,))) as                          -- [lemmaML2]
- === fmap id as                                              -- [f1]
+ === fmap id as                                              --. Postulate -- [f1]
  === id as                                                   --. L (Def  "id")
  === as
 
@@ -517,9 +517,9 @@ ap' (g <$> as) bs  ==  uncurry g <$> (as *&* bs)
 lem1 :: Monoidal f => (a -> b -> c) -> f a -> f b -> f c
 lem1 g as bs  = 
      ap' (fmap g as) bs                     -- ap'
- === fmap apP (fmap g as *&* bs)            -- [f1]
+ === fmap apP (fmap g as *&* bs)            --. Postulate -- [f1]
  === fmap apP (fmap g as *&* fmap id bs)    -- [ml4]
- === fmap apP (fmap (g *** id) (as *&* bs)) -- [f2]
+ === fmap apP (fmap (g *** id) (as *&* bs)) --. Postulate -- [f2]
  === fmap (apP . (g *** id)) (as *&* bs)    -- [lem0']
  === fmap (uncurry g) (as *&* bs)
 {-
@@ -528,9 +528,9 @@ ap' hs (g <$> as) == uncurry (. g) <$> (hs *&* as)
 lem2 :: Monoidal f => (a -> b) -> f (b -> c) -> f a -> f c
 lem2 g hs as  = 
      ap' hs (fmap g as)                     -- ap'
- === fmap apP (hs *&* fmap g as)            -- [f1]
+ === fmap apP (hs *&* fmap g as)            --. Postulate -- [f1]
  === fmap apP (fmap id hs *&* fmap g as)    -- [ml4]
- === fmap apP (fmap (id *** g) (hs *&* as)) -- [f2]
+ === fmap apP (fmap (id *** g) (hs *&* as)) --. Postulate -- [f2]
  === fmap (apP . (id *** g)) (hs *&* as)    -- [lem0'']
   === fmap (uncurry (. g)) (hs *&* as)
 
@@ -556,7 +556,7 @@ appLaw0 g as =
      ap' (pure' g) as                       -- pure'
  === ap' (fmap (const g) unit) as           -- [lem1]
  === fmap (uncurry (const g)) (unit *&* as) -- [lemmaAL0]
- === fmap (g . snd) (unit *&* as)           -- [f2]
+ === fmap (g . snd) (unit *&* as)           --. Postulate -- [f2]
  === fmap g (fmap snd (unit *&* as))        -- [ml1]
  === fmap g as
 
@@ -567,7 +567,7 @@ pure id <*> as = as
 appLaw1' :: Monoidal f => f a -> f a
 appLaw1' as = 
      ap' (pure' id) as  -- [appLaw0]
- === fmap id as          -- [f1]
+ === fmap id as          --. Postulate -- [f1]
  === as 
 
 {-
@@ -602,7 +602,7 @@ appLaw2 gs a =
      ap' gs (pure' a)                         -- pure'
  === ap' gs (fmap (const a) unit)             -- [lem2] 
  === fmap (uncurry (. const a)) (gs *&* unit) -- [lemmaAL2]
- === fmap (($ a) . fst) (gs *&* unit)         -- [f2]
+ === fmap (($ a) . fst) (gs *&* unit)         --. Postulate -- [f2]
  === fmap ($ a) (fmap fst (gs *&* unit))      -- [ml2]
  === fmap ($ a) gs                            -- [a0]
  === ap' (pure' ($ a)) gs
@@ -628,7 +628,7 @@ appLaw3 :: Monoidal f => (a -> b) -> a -> f b
 appLaw3 g a = 
      ap' (pure' g)  (pure' a)     -- [a0]
  === fmap g (pure' a)             -- pure'
- === fmap g (fmap (const a) unit) -- [f2]
+ === fmap g (fmap (const a) unit) --. Postulate -- [f2]
  === fmap (g . const a) unit      -- [lemmaAL3]
  === fmap (const (g a)) unit      -- pure'
  === pure' (g a) 
@@ -678,7 +678,7 @@ appLaw4' gs hs as =
  === ap' (ap' (fmap (.) gs) hs) as                          -- [lem1]
  === ap' (fmap (uncurry (.)) (gs *&* hs)) as                -- [lem1]
  === fmap (uncurry (uncurry (.))) ((gs *&* hs) *&* as)      -- [lrLemma] 
- === fmap (uncurry (. apP) . l2r) ((gs *&* hs) *&* as)      -- [f2]
+ === fmap (uncurry (. apP) . l2r) ((gs *&* hs) *&* as)      --. Postulate -- [f2]
  === fmap (uncurry (. apP)) (fmap l2r ((gs *&* hs) *&* as)) -- [ml3']
  === fmap (uncurry (. apP)) (gs *&* (hs *&* as))            -- [lem2]
  === ap' gs (fmap apP (hs *&* as))                          -- ap'

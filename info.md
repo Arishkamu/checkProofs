@@ -174,3 +174,40 @@ WE have problem in diff only when it is recursion with the same function name
 
 
 Особенности постулатов с inst. Нельязя Monad => в правой части если нет в левой
+
+
+
+
+
+
+
+
+-- {-
+--   Context: 
+--     variables with types or Types
+--     free variables?
+
+--   Variables at the moment:
+--     global
+--     params
+
+--   wrap in monad
+--     except
+--     store context
+
+--   TODO make meaningfull subst
+--     a==b
+--     k==(\x = expr expr expr)
+
+--     k a ==> (\x = expr expr expr) b
+
+--     expr_l ==> (\x y -> expr_l) == (\x y -> expr_r) <== expr_r
+--     expr_o ==> (\x y -> expr_o) x_o y_o
+
+--     expr_o ==> (\x y -> expr_o) x_o y_o ==> (\x y -> (\x y -> expr_l)) x_o y_o ==> 
+--     (\x_o y_o -> expr_l) ==> (\x_o y_o -> expr_r) ==> expr_r
+
+--   TWO STEPS
+--     match all variables from expr_o to expr_l (expr_l==expr_o)
+--     subst all variables into expr_r
+-- -}
