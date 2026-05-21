@@ -10,7 +10,8 @@ Creating application for verifying proofs in equational reasoning style in Haske
 
 - This project is runned by Cabal
 - To process default file [AllGoodExamples.hs](examples/AllGoodExamples.hs) or pass your own to arguments
-- File [src\ProofBase.hs](src/ProofBase.hs) contains description of annotation language and 
+- File [src\ProofBase.hs](src/ProofBase.hs) contains description of annotation language and
+- [info.md](info.md) contains notes about developing process
 
 ---
 
