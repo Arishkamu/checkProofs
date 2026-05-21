@@ -227,6 +227,95 @@ ap4LawMaybe (Just f) (Just g) (Just z) =
 
 
 
+
+
+
+
+
+
+--------------------------------------------------
+-- Either
+instance Functor (Either e) where
+  fmap _ (Left e)  = (Left e)     -- L (Inst "fmap")
+  fmap g (Right a) = Right (g a)  -- L (Inst "fmap")
+
+instance Applicative (Either e) where
+  pure = Right                   -- L (Inst "pure")
+  (Left e) <*> _  = (Left e)      -- L (Inst "<*>")
+  Right g  <*> x  = fmap g x     -- L (Inst "<*>")
+
+
+
+-- fmap g v  =  pure g <*> v
+ap0LawEither :: (a -> b) -> Either e a -> Either e b
+ap0LawEither g v = 
+     pure g <*> v --. L (Inst "pure")
+ === Right g <*> v --. L (Inst "<*>")
+ === fmap g v     --. QED
+
+-- pure id <*> v  ===  v
+ap1LawEither :: Either e a -> Either e a
+ap1LawEither v = 
+     pure id <*> v  --. L (Inst "pure")
+ === Right id <*> v --. L (Inst "<*>")
+ === fmap id v      --. L (Prop "f1")
+ === id v           --. L (Def  "id")
+ === v              --. QED
+
+-- нам неоднократно потребуется лемма
+lemma_JJ2J_eth :: (a -> b) -> a -> Either e b
+lemma_JJ2J_eth f x =
+     Right f <*> Right x --. L (Inst "<*>")
+ === fmap f (Right x)    --. L (Inst "fmap")
+ === Right (f x)         --. QED
+
+-- pure g <*> pure x  ===  pure (g x)
+ap2LawEither :: (a -> b) -> a -> Either e b
+ap2LawEither g x = 
+     pure g <*> pure x   --. L (Inst "pure")
+ === Right g <*> pure x  --. L (Inst "pure")
+ === Right g <*> Right x --. L (Prop "lemma_JJ2J_eth")
+ === Right (g x)         --. R (Inst "pure")
+ === pure (g x)          --. QED
+
+-- u <*> pure x  ===  pure ($ x) <*> u
+ap3LawEither :: Either e (a -> b) -> a -> Either e b
+ap3LawEither (Left e) x = 
+     pure ($ x) <*> (Left e)  --. L (Inst "pure")
+ === Right ($ x) <*> (Left e) --. L (Inst "<*>")
+ === fmap ($ x) (Left e)      --. L (Inst "fmap")
+ === (Left e)                 --. R (Inst "<*>")
+ === (Left e) <*> pure x      --. QED
+ap3LawEither (Right f) x = 
+     pure ($ x) <*> Right f  --. L (Inst "pure")
+ === Right ($ x) <*> Right f --. L (Prop "lemma_JJ2J_eth")
+ === Right (($ x) f)         --. L (Def  "$")
+ === Right (f x)             --. R (Prop "lemma_JJ2J_eth")
+ === Right f <*> Right x     --. R (Inst "pure")
+ === Right f <*> pure x      --. QED
+
+-- pure (.) <*> u <*> v <*> w === u <*> (v <*> w)
+ap4LawEither :: Either e (b -> c) -> Either e (a -> b) -> Either e a -> Either e c
+ap4LawEither (Left e) gs zs =
+     pure (.) <*> (Left e) <*> gs <*> zs  --. L (Inst "pure")
+ === Right (.) <*> (Left e) <*> gs <*> zs --. L (Inst "<*>")
+ === fmap (.) (Left e) <*> gs <*> zs      --. L (Inst "fmap")
+ === (Left e)  <*> gs <*> zs              --. L (Inst "<*>")
+ === (Left e) <*> zs                      --. L (Inst "<*>")
+ === (Left e)                             --. R (Inst "<*>")
+ === (Left e) <*> (gs <*> zs)             --. QED
+ap4LawEither (Right f) (Right g) (Right z) = 
+     pure (.) <*> Right f <*> Right g <*> Right z   --. L (Inst "pure")
+ === Right (.) <*> Right f <*> Right g <*> Right z  --. L (Prop "lemma_JJ2J_eth")
+ === Right ((.) f)        <*> Right g <*> Right z   --. L (Prop "lemma_JJ2J_eth")
+ === Right ((.) f g)                 <*> Right z    --. L (Prop "lemma_JJ2J_eth")
+ === Right ((.) f g z)                              --. L (Def  ".")
+ === Right (f (g z))                                --. R (Prop "lemma_JJ2J_eth")
+ === Right f <*> Right (g z)                        --. R (Prop "lemma_JJ2J_eth")
+ === Right f <*> (Right g <*> Right z)              --. QED
+
+
+
 ---------------------------------------------------
 -- Arrow
 {-
@@ -306,7 +395,7 @@ app4LawArrow h g u =
 
 
 
-{- CMPS
+-- {- CMPS
 ---------------------------------------------------
 -- Cmps (Определен в ProofsFunctor)
 -- {-
@@ -442,5 +531,5 @@ lemma0 hs gs as =
  === ((.) (.) ((.) (.) (<*>)) hs) (<*>) gs as                  --. R (Def  "$")
  === (($ (<*>)) ((.) (.) ((.) (.) (<*>)) hs)) gs as            --. R (Def  ".")
  === ((.) ($ (<*>)) ((.) (.) ((.) (.) (<*>)))) hs gs as        --. QED
-CMPS -}
+-- CMPS -}
 

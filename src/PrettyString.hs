@@ -142,15 +142,15 @@ prettyStringReport :: Bool -> Report -> String
 prettyStringReport withReasons (succs, failsWithReasons) = 
   "\n============================================" ++
   "\n================== REPORT ==================" ++
-  "\nSuccsessfully proved:" ++ "\n  " ++ prettyRes succs ++ "\n" ++
-  "\nFailures proved:"      ++ "\n  " ++ prettyRes fails ++ "\n" ++
+  "\nSuccsessfully proved: " ++ prettyRes succs ++ "\n" ++
+  "\nFailures proved: "      ++ prettyRes fails ++ "\n" ++
   (if withReasons 
     then "Reasons for failures:\n\n" ++ intercalate "\n" reasons ++ "\n"
     else "\n")
   ++ "============================================\n"
   where
-    prettyRes [] = "<None>"
-    prettyRes xs = intercalate "\n  " $ map (showSDocUnsafe . ppr) xs
+    prettyRes [] = "0" ++ "\n  " ++ "<None>"
+    prettyRes xs = show (length xs) ++ "\n  " ++ intercalate "\n  " (map (showSDocUnsafe . ppr) xs)
     (fails, reasons) = unzip failsWithReasons
     
 

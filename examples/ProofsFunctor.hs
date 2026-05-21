@@ -239,7 +239,7 @@ instance Functor (State s) where
   fmap :: (a -> b) -> State s a -> State s b
   fmap f (State g) = State (\s -> case g s of (s', a) -> (s', f a)) -- let (s', a) = g s in (s', f a))
 
-{- STATE f1L
+-- {- STATE f1L
 --functor1LawState ::  (e -> a) -> (e -> a)
 functor1LawState :: State s b -> State s b
 functor1LawState (State g) =
@@ -248,7 +248,7 @@ functor1LawState (State g) =
  === State (\s -> case g s of (s', a) -> (s', a))    --. Postulate -- UNCASE??
  === State (\s -> g s)                               --. L Eta
  === State g                                         --. QED
-STATE f1L -}
+-- STATE f1L -}
 
 functor2LawState :: (b -> c) -> (a -> b) -> (e -> a) -> (e -> c)
 functor2LawState g h f =

@@ -1,0 +1,5780 @@
+ANALUZING FILE: /Users/arina/hse/nir/moskvinPrj/checkProofs/examples/ProofsApplicative.hs
+
+-----------------------------
+Start analyze declConversion: ID: lemma_JJ2J_eth
+
+
+----------------
+Start analyzing: decl=`JustID: lemma_JJ2J_eth` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: fmap @(Either e_a2Dq) ($fFunctorEither @e_a2Dq) @a_a2Do @b_a2Dp
+       expr: App :: <*> @(Either e_a2Dq) ($fApplicativeEither @e_a2Dq) @a_a2Do @b_a2Dp
+
+getFirstDiff result:
+cntr_expr:
+App :: fmap
+  @(Either e_a2Dq)
+  ($fFunctorEither @e_a2Dq)
+  @a_a2Do
+  @b_a2Dp
+  f_aLA
+  (Right @e_a2Dq @a_a2Do x_aLB)
+expr:
+App :: <*>
+  @(Either e_a2Dq)
+  ($fApplicativeEither @e_a2Dq)
+  @a_a2Do
+  @b_a2Dp
+  (Right @e_a2Dq @(a_a2Do -> b_a2Dp) f_aLA)
+  (Right @e_a2Dq @a_a2Do x_aLB)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3as
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: lemma_JJ2J_eth` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2Dq
+       expr: App :: fmap @(Either e_a2Dq) ($fFunctorEither @e_a2Dq) @a_a2Do @b_a2Dp
+
+getFirstDiff result:
+cntr_expr:
+App :: Right @e_a2Dq @b_a2Dp (f_aLA x_aLB)
+expr:
+App :: fmap
+  @(Either e_a2Dq)
+  ($fFunctorEither @e_a2Dq)
+  @a_a2Do
+  @b_a2Dp
+  f_aLA
+  (Right @e_a2Dq @a_a2Do x_aLB)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: fmap
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fFunctorEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cfmap_a3cm
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: lemma_JJ2J_eth
+
+
+-----------------------------
+Start analyze declConversion: ID: lemma_JJ2J
+
+
+----------------
+Start analyzing: decl=`JustID: lemma_JJ2J` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: fmap @Maybe $fFunctorMaybe @a_a2SD @b_a2SE
+       expr: App :: <*> @Maybe $fApplicativeMaybe @a_a2SD @b_a2SE
+
+getFirstDiff result:
+cntr_expr:
+App :: fmap
+  @Maybe $fFunctorMaybe @a_a2SD @b_a2SE f_aLl (Just @a_a2SD x_aLm)
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2SD
+  @b_a2SE
+  (Just @(a_a2SD -> b_a2SE) f_aLl)
+  (Just @a_a2SD x_aLm)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3bp
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: lemma_JJ2J` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Var :: Just
+       expr: App :: fmap @Maybe $fFunctorMaybe @a_a2SD @b_a2SE
+
+getFirstDiff result:
+cntr_expr:
+App :: Just @b_a2SE (f_aLl x_aLm)
+expr:
+App :: fmap
+  @Maybe $fFunctorMaybe @a_a2SD @b_a2SE f_aLl (Just @a_a2SD x_aLm)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: fmap
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fFunctorMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cfmap_a3cK
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: lemma_JJ2J
+
+
+-----------------------------
+Start analyze declConversion: ID: f2
+
+
+----------------
+Start analyzing: decl=`JustID: f2` conversion=1
+
+Made new postulate from: ID: f2
+
+
+-----------------------------
+Start analyze declConversion: ID: f1
+
+
+----------------
+Start analyzing: decl=`JustID: f1` conversion=1
+
+Made new postulate from: ID: f1
+
+
+-----------------------------
+Start analyze declConversion: ID: app4LawArrow
+
+
+----------------
+Start analyzing: decl=`JustID: app4LawArrow` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Lam :: \ (x_aM7 :: e_a2fp) ->
+  pure
+    @((->) e_a2fp)
+    ($fApplicativeFUN @e_a2fp)
+    @((b_a2fq -> c_a2fr) -> (a_a2fs -> b_a2fq) -> a_a2fs -> c_a2fr)
+    (. @b_a2fq @c_a2fr @a_a2fs)
+    x_aM7
+    (h_aM4 x_aM7)
+       expr: App :: <*>
+  @((->) e_a2fp)
+  ($fApplicativeFUN @e_a2fp)
+  @(b_a2fq -> c_a2fr)
+  @((a_a2fs -> b_a2fq) -> a_a2fs -> c_a2fr)
+  (pure
+     @((->) e_a2fp)
+     ($fApplicativeFUN @e_a2fp)
+     @((b_a2fq -> c_a2fr) -> (a_a2fs -> b_a2fq) -> a_a2fs -> c_a2fr)
+     (. @b_a2fq @c_a2fr @a_a2fs))
+  h_aM4
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @((->) e_a2fp)
+  ($fApplicativeFUN @e_a2fp)
+  @a_a2fs
+  @c_a2fr
+  (<*>
+     @((->) e_a2fp)
+     ($fApplicativeFUN @e_a2fp)
+     @(a_a2fs -> b_a2fq)
+     @(a_a2fs -> c_a2fr)
+     (\ (x_aM7 :: e_a2fp) ->
+        pure
+          @((->) e_a2fp)
+          ($fApplicativeFUN @e_a2fp)
+          @((b_a2fq -> c_a2fr) -> (a_a2fs -> b_a2fq) -> a_a2fs -> c_a2fr)
+          (. @b_a2fq @c_a2fr @a_a2fs)
+          x_aM7
+          (h_aM4 x_aM7))
+     g_aM5)
+  u_aM6
+expr:
+App :: <*>
+  @((->) e_a2fp)
+  ($fApplicativeFUN @e_a2fp)
+  @(b_a2fq -> c_a2fr)
+  @((a_a2fs -> b_a2fq) -> a_a2fs -> c_a2fr)
+  (pure
+     @((->) e_a2fp)
+     ($fApplicativeFUN @e_a2fp)
+     @((b_a2fq -> c_a2fr) -> (a_a2fs -> b_a2fq) -> a_a2fs -> c_a2fr)
+     (. @b_a2fq @c_a2fr @a_a2fs))
+  h_aM4
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a39J
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app4LawArrow` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: . @b_a2fq
+       expr: App :: pure
+  @((->) e_a2fp)
+  ($fApplicativeFUN @e_a2fp)
+  @((b_a2fq -> c_a2fr) -> (a_a2fs -> b_a2fq) -> a_a2fs -> c_a2fr)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @((->) e_a2fp)
+  ($fApplicativeFUN @e_a2fp)
+  @a_a2fs
+  @c_a2fr
+  (<*>
+     @((->) e_a2fp)
+     ($fApplicativeFUN @e_a2fp)
+     @(a_a2fs -> b_a2fq)
+     @(a_a2fs -> c_a2fr)
+     (\ (x_aM8 :: e_a2fp) -> . @b_a2fq @c_a2fr @a_a2fs (h_aM4 x_aM8))
+     g_aM5)
+  u_aM6
+expr:
+App :: pure
+  @((->) e_a2fp)
+  ($fApplicativeFUN @e_a2fp)
+  @((b_a2fq -> c_a2fr) -> (a_a2fs -> b_a2fq) -> a_a2fs -> c_a2fr)
+  (. @b_a2fq @c_a2fr @a_a2fs)
+  x_aM7
+  (h_aM4 x_aM7)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a39B
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app4LawArrow` conversion=3
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Lam :: \ (y_aM9 :: e_a2fp) ->
+  . @b_a2fq @c_a2fr @a_a2fs (h_aM4 y_aM9) (g_aM5 y_aM9)
+       expr: App :: <*>
+  @((->) e_a2fp)
+  ($fApplicativeFUN @e_a2fp)
+  @(a_a2fs -> b_a2fq)
+  @(a_a2fs -> c_a2fr)
+  (\ (x_aM8 :: e_a2fp) -> . @b_a2fq @c_a2fr @a_a2fs (h_aM4 x_aM8))
+  g_aM5
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @((->) e_a2fp)
+  ($fApplicativeFUN @e_a2fp)
+  @a_a2fs
+  @c_a2fr
+  (\ (y_aM9 :: e_a2fp) ->
+     . @b_a2fq @c_a2fr @a_a2fs (h_aM4 y_aM9) (g_aM5 y_aM9))
+  u_aM6
+expr:
+App :: <*>
+  @((->) e_a2fp)
+  ($fApplicativeFUN @e_a2fp)
+  @(a_a2fs -> b_a2fq)
+  @(a_a2fs -> c_a2fr)
+  (\ (x_aM8 :: e_a2fp) -> . @b_a2fq @c_a2fr @a_a2fs (h_aM4 x_aM8))
+  g_aM5
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a39J
+
+Try simplifyOptFunc n=0
+
+Try simplifyOptFunc n=1
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app4LawArrow` conversion=4
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app4LawArrow` conversion=5
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Lam :: \ (z_aMc :: e_a2fp) ->
+  . @b_a2fq @c_a2fr @a_a2fs (h_aM4 z_aMc) (g_aM5 z_aMc) (u_aM6 z_aMc)
+       expr: App :: <*>
+  @((->) e_a2fp)
+  ($fApplicativeFUN @e_a2fp)
+  @a_a2fs
+  @c_a2fr
+  (\ (y_aMb :: e_a2fp) ->
+     . @b_a2fq @c_a2fr @a_a2fs (h_aM4 y_aMb) (g_aM5 y_aMb))
+  u_aM6
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ (z_aMc :: e_a2fp) ->
+  . @b_a2fq @c_a2fr @a_a2fs (h_aM4 z_aMc) (g_aM5 z_aMc) (u_aM6 z_aMc)
+expr:
+App :: <*>
+  @((->) e_a2fp)
+  ($fApplicativeFUN @e_a2fp)
+  @a_a2fs
+  @c_a2fr
+  (\ (y_aMb :: e_a2fp) ->
+     . @b_a2fq @c_a2fr @a_a2fs (h_aM4 y_aMb) (g_aM5 y_aMb))
+  u_aM6
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a39J
+
+Try simplifyOptFunc n=0
+
+Try simplifyOptFunc n=1
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app4LawArrow` conversion=6
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app4LawArrow` conversion=7
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: Var :: h_aM4
+       expr: App :: . @b_a2fq @c_a2fr @a_a2fs (h_aM4 z_aMe)
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ (z_aMf :: e_a2fp) -> h_aM4 z_aMf (g_aM5 z_aMf (u_aM6 z_aMf))
+expr:
+App :: . @b_a2fq @c_a2fr @a_a2fs (h_aM4 z_aMe) (g_aM5 z_aMe) (u_aM6 z_aMe)
+
+Substitute def for function: ID: ._r3
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app4LawArrow` conversion=8
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Var :: g_aM5
+       expr: App :: <*> @((->) e_a2fp) ($fApplicativeFUN @e_a2fp) @a_a2fs @b_a2fq g_aM5
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ (z_aMf :: e_a2fp) -> h_aM4 z_aMf (g_aM5 z_aMf (u_aM6 z_aMf))
+expr:
+App :: <*>
+  @((->) e_a2fp)
+  ($fApplicativeFUN @e_a2fp)
+  @a_a2fs
+  @b_a2fq
+  g_aM5
+  u_aM6
+  z_aMg
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a39J
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app4LawArrow` conversion=9
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Lam :: \ (z_aMg :: e_a2fp) ->
+  h_aM4
+    z_aMg
+    (<*>
+       @((->) e_a2fp)
+       ($fApplicativeFUN @e_a2fp)
+       @a_a2fs
+       @b_a2fq
+       g_aM5
+       u_aM6
+       z_aMg)
+       expr: App :: <*>
+  @((->) e_a2fp)
+  ($fApplicativeFUN @e_a2fp)
+  @b_a2fq
+  @c_a2fr
+  h_aM4
+  (<*>
+     @((->) e_a2fp)
+     ($fApplicativeFUN @e_a2fp)
+     @a_a2fs
+     @b_a2fq
+     g_aM5
+     u_aM6)
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ (z_aMg :: e_a2fp) ->
+  h_aM4
+    z_aMg
+    (<*>
+       @((->) e_a2fp)
+       ($fApplicativeFUN @e_a2fp)
+       @a_a2fs
+       @b_a2fq
+       g_aM5
+       u_aM6
+       z_aMg)
+expr:
+App :: <*>
+  @((->) e_a2fp)
+  ($fApplicativeFUN @e_a2fp)
+  @b_a2fq
+  @c_a2fr
+  h_aM4
+  (<*>
+     @((->) e_a2fp)
+     ($fApplicativeFUN @e_a2fp)
+     @a_a2fs
+     @b_a2fq
+     g_aM5
+     u_aM6)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a39J
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: app4LawArrow
+
+
+-----------------------------
+Start analyze declConversion: ID: app3LawArrow
+
+
+----------------
+Start analyzing: decl=`JustID: app3LawArrow` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Lam :: \ (x_aM1 :: e_a2kh) ->
+  pure
+    @((->) e_a2kh)
+    ($fApplicativeFUN @e_a2kh)
+    @(a_a2kf -> b_a2kg)
+    g_aLZ
+    x_aM1
+    (pure
+       @((->) e_a2kh) ($fApplicativeFUN @e_a2kh) @a_a2kf a_aM0 x_aM1)
+       expr: App :: <*>
+  @((->) e_a2kh)
+  ($fApplicativeFUN @e_a2kh)
+  @a_a2kf
+  @b_a2kg
+  (pure
+     @((->) e_a2kh)
+     ($fApplicativeFUN @e_a2kh)
+     @(a_a2kf -> b_a2kg)
+     g_aLZ)
+  (pure @((->) e_a2kh) ($fApplicativeFUN @e_a2kh) @a_a2kf a_aM0)
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ (x_aM1 :: e_a2kh) ->
+  pure
+    @((->) e_a2kh)
+    ($fApplicativeFUN @e_a2kh)
+    @(a_a2kf -> b_a2kg)
+    g_aLZ
+    x_aM1
+    (pure
+       @((->) e_a2kh) ($fApplicativeFUN @e_a2kh) @a_a2kf a_aM0 x_aM1)
+expr:
+App :: <*>
+  @((->) e_a2kh)
+  ($fApplicativeFUN @e_a2kh)
+  @a_a2kf
+  @b_a2kg
+  (pure
+     @((->) e_a2kh)
+     ($fApplicativeFUN @e_a2kh)
+     @(a_a2kf -> b_a2kg)
+     g_aLZ)
+  (pure @((->) e_a2kh) ($fApplicativeFUN @e_a2kh) @a_a2kf a_aM0)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a39J
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app3LawArrow` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Var :: g_aLZ
+       expr: App :: pure
+  @((->) e_a2kh)
+  ($fApplicativeFUN @e_a2kh)
+  @(a_a2kf -> b_a2kg)
+  g_aLZ
+  x_aM1
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ (x_aM2 :: e_a2kh) ->
+  g_aLZ
+    (pure
+       @((->) e_a2kh) ($fApplicativeFUN @e_a2kh) @a_a2kf a_aM0 x_aM2)
+expr:
+App :: pure
+  @((->) e_a2kh)
+  ($fApplicativeFUN @e_a2kh)
+  @(a_a2kf -> b_a2kg)
+  g_aLZ
+  x_aM1
+  (pure
+     @((->) e_a2kh) ($fApplicativeFUN @e_a2kh) @a_a2kf a_aM0 x_aM1)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a39B
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app3LawArrow` conversion=3
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Var :: a_aM0
+       expr: App :: pure @((->) e_a2kh) ($fApplicativeFUN @e_a2kh) @a_a2kf a_aM0 x_aM2
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ _ [Occ=Dead] -> g_aLZ a_aM0
+expr:
+App :: pure @((->) e_a2kh) ($fApplicativeFUN @e_a2kh) @a_a2kf a_aM0 x_aM2
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a39B
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app3LawArrow` conversion=4
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Lam :: \ _ [Occ=Dead] -> g_aLZ a_aM0
+       expr: App :: pure
+  @((->) e_a2kh) ($fApplicativeFUN @e_a2kh) @b_a2kg (g_aLZ a_aM0)
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ _ [Occ=Dead] -> g_aLZ a_aM0
+expr:
+App :: pure
+  @((->) e_a2kh) ($fApplicativeFUN @e_a2kh) @b_a2kg (g_aLZ a_aM0)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a39B
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: app3LawArrow
+
+
+-----------------------------
+Start analyze declConversion: ID: app2LawArrow
+
+
+----------------
+Start analyzing: decl=`JustID: app2LawArrow` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Lam :: \ (x_aLU :: e_a2m0) ->
+  g_aLS
+    x_aLU
+    (pure
+       @((->) e_a2m0) ($fApplicativeFUN @e_a2m0) @a_a2m1 a_aLT x_aLU)
+       expr: App :: <*>
+  @((->) e_a2m0)
+  ($fApplicativeFUN @e_a2m0)
+  @a_a2m1
+  @b_a2m2
+  g_aLS
+  (pure @((->) e_a2m0) ($fApplicativeFUN @e_a2m0) @a_a2m1 a_aLT)
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ (x_aLU :: e_a2m0) ->
+  g_aLS
+    x_aLU
+    (pure
+       @((->) e_a2m0) ($fApplicativeFUN @e_a2m0) @a_a2m1 a_aLT x_aLU)
+expr:
+App :: <*>
+  @((->) e_a2m0)
+  ($fApplicativeFUN @e_a2m0)
+  @a_a2m1
+  @b_a2m2
+  g_aLS
+  (pure @((->) e_a2m0) ($fApplicativeFUN @e_a2m0) @a_a2m1 a_aLT)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a39J
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app2LawArrow` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Var :: a_aLT
+       expr: App :: pure @((->) e_a2m0) ($fApplicativeFUN @e_a2m0) @a_a2m1 a_aLT x_aLU
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ (x_aLV :: e_a2m0) -> g_aLS x_aLV a_aLT
+expr:
+App :: pure @((->) e_a2m0) ($fApplicativeFUN @e_a2m0) @a_a2m1 a_aLT x_aLU
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a39B
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app2LawArrow` conversion=3
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: Var :: g_aLS
+       expr: App :: $ @a_a2m1 @b_a2m2
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ (x_aLV :: e_a2m0) -> g_aLS x_aLV a_aLT
+expr:
+App :: $ @a_a2m1 @b_a2m2 (g_aLS x_aLW) a_aLT
+
+Substitute def for function: ID: $_r1
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app2LawArrow` conversion=4
+
+
+----------------
+Start analyzing: decl=`JustID: app2LawArrow` conversion=5
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: $ @a_a2m1
+       expr: App :: pure
+  @((->) e_a2m0)
+  ($fApplicativeFUN @e_a2m0)
+  @((a_a2m1 -> b_a2m2) -> b_a2m2)
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ (x_aLX :: e_a2m0) -> $ @a_a2m1 @b_a2m2 (g_aLS x_aLX) a_aLT
+expr:
+App :: pure
+  @((->) e_a2m0)
+  ($fApplicativeFUN @e_a2m0)
+  @((a_a2m1 -> b_a2m2) -> b_a2m2)
+  (\ (v_B2 :: a_a2m1 -> b_a2m2) -> $ @a_a2m1 @b_a2m2 v_B2 a_aLT)
+  x_aLY
+  (g_aLS x_aLY)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a39B
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app2LawArrow` conversion=6
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Lam :: \ (x_aLY :: e_a2m0) ->
+  pure
+    @((->) e_a2m0)
+    ($fApplicativeFUN @e_a2m0)
+    @((a_a2m1 -> b_a2m2) -> b_a2m2)
+    (\ (v_B2 :: a_a2m1 -> b_a2m2) -> $ @a_a2m1 @b_a2m2 v_B2 a_aLT)
+    x_aLY
+    (g_aLS x_aLY)
+       expr: App :: <*>
+  @((->) e_a2m0)
+  ($fApplicativeFUN @e_a2m0)
+  @(a_a2m1 -> b_a2m2)
+  @b_a2m2
+  (pure
+     @((->) e_a2m0)
+     ($fApplicativeFUN @e_a2m0)
+     @((a_a2m1 -> b_a2m2) -> b_a2m2)
+     (\ (v_B2 :: a_a2m1 -> b_a2m2) -> $ @a_a2m1 @b_a2m2 v_B2 a_aLT))
+  g_aLS
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ (x_aLY :: e_a2m0) ->
+  pure
+    @((->) e_a2m0)
+    ($fApplicativeFUN @e_a2m0)
+    @((a_a2m1 -> b_a2m2) -> b_a2m2)
+    (\ (v_B2 :: a_a2m1 -> b_a2m2) -> $ @a_a2m1 @b_a2m2 v_B2 a_aLT)
+    x_aLY
+    (g_aLS x_aLY)
+expr:
+App :: <*>
+  @((->) e_a2m0)
+  ($fApplicativeFUN @e_a2m0)
+  @(a_a2m1 -> b_a2m2)
+  @b_a2m2
+  (pure
+     @((->) e_a2m0)
+     ($fApplicativeFUN @e_a2m0)
+     @((a_a2m1 -> b_a2m2) -> b_a2m2)
+     (\ (v_B2 :: a_a2m1 -> b_a2m2) -> $ @a_a2m1 @b_a2m2 v_B2 a_aLT))
+  g_aLS
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a39J
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: app2LawArrow
+
+
+-----------------------------
+Start analyze declConversion: ID: app0LawArrow
+
+
+----------------
+Start analyzing: decl=`JustID: app0LawArrow` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Lam :: \ (x_aLQ :: e_a2oB) ->
+  pure
+    @((->) e_a2oB)
+    ($fApplicativeFUN @e_a2oB)
+    @(a_a2oz -> b_a2oA)
+    g_aLO
+    x_aLQ
+    (h_aLP x_aLQ)
+       expr: App :: <*>
+  @((->) e_a2oB)
+  ($fApplicativeFUN @e_a2oB)
+  @a_a2oz
+  @b_a2oA
+  (pure
+     @((->) e_a2oB)
+     ($fApplicativeFUN @e_a2oB)
+     @(a_a2oz -> b_a2oA)
+     g_aLO)
+  h_aLP
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ (x_aLQ :: e_a2oB) ->
+  pure
+    @((->) e_a2oB)
+    ($fApplicativeFUN @e_a2oB)
+    @(a_a2oz -> b_a2oA)
+    g_aLO
+    x_aLQ
+    (h_aLP x_aLQ)
+expr:
+App :: <*>
+  @((->) e_a2oB)
+  ($fApplicativeFUN @e_a2oB)
+  @a_a2oz
+  @b_a2oA
+  (pure
+     @((->) e_a2oB)
+     ($fApplicativeFUN @e_a2oB)
+     @(a_a2oz -> b_a2oA)
+     g_aLO)
+  h_aLP
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a39J
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app0LawArrow` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Var :: g_aLO
+       expr: App :: pure
+  @((->) e_a2oB)
+  ($fApplicativeFUN @e_a2oB)
+  @(a_a2oz -> b_a2oA)
+  g_aLO
+  x_aLQ
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ (x_aLR :: e_a2oB) -> g_aLO (h_aLP x_aLR)
+expr:
+App :: pure
+  @((->) e_a2oB)
+  ($fApplicativeFUN @e_a2oB)
+  @(a_a2oz -> b_a2oA)
+  g_aLO
+  x_aLQ
+  (h_aLP x_aLQ)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a39B
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app0LawArrow` conversion=3
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: Lam :: \ (x_aLR :: e_a2oB) -> g_aLO (h_aLP x_aLR)
+       expr: App :: . @a_a2oz @b_a2oA @e_a2oB g_aLO h_aLP
+
+getFirstDiff result:
+cntr_expr:
+Lam :: \ (x_aLR :: e_a2oB) -> g_aLO (h_aLP x_aLR)
+expr:
+App :: . @a_a2oz @b_a2oA @e_a2oB g_aLO h_aLP
+
+Substitute def for function: ID: ._r3
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app0LawArrow` conversion=4
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: . @a_a2oz @b_a2oA @e_a2oB
+       expr: App :: fmap @((->) e_a2oB) ($fFunctorFUN @e_a2oB) @a_a2oz @b_a2oA
+
+getFirstDiff result:
+cntr_expr:
+App :: . @a_a2oz @b_a2oA @e_a2oB g_aLO h_aLP
+expr:
+App :: fmap
+  @((->) e_a2oB) ($fFunctorFUN @e_a2oB) @a_a2oz @b_a2oA g_aLO h_aLP
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: fmap
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fFunctorFUN
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: ._r3
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: app0LawArrow
+
+
+-----------------------------
+Start analyze declConversion: ID: ap4LawMaybe
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawMaybe` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Just
+  @((b_a2Gs -> c_a2Gt) -> (a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+       expr: App :: pure
+  @Maybe
+  $fApplicativeMaybe
+  @((b_a2Gs -> c_a2Gt) -> (a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2Gu
+  @c_a2Gt
+  (<*>
+     @Maybe
+     $fApplicativeMaybe
+     @(a_a2Gu -> b_a2Gs)
+     @(a_a2Gu -> c_a2Gt)
+     (<*>
+        @Maybe
+        $fApplicativeMaybe
+        @(b_a2Gs -> c_a2Gt)
+        @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+        (Just
+           @((b_a2Gs -> c_a2Gt) -> (a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+           (. @b_a2Gs @c_a2Gt @a_a2Gu))
+        (Nothing @(b_a2Gs -> c_a2Gt)))
+     gs_aLs)
+  zs_aLt
+expr:
+App :: pure
+  @Maybe
+  $fApplicativeMaybe
+  @((b_a2Gs -> c_a2Gt) -> (a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+  (. @b_a2Gs @c_a2Gt @a_a2Gu)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3bf
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawMaybe` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: fmap
+  @Maybe
+  $fFunctorMaybe
+  @(b_a2Gs -> c_a2Gt)
+  @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+       expr: App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @(b_a2Gs -> c_a2Gt)
+  @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2Gu
+  @c_a2Gt
+  (<*>
+     @Maybe
+     $fApplicativeMaybe
+     @(a_a2Gu -> b_a2Gs)
+     @(a_a2Gu -> c_a2Gt)
+     (fmap
+        @Maybe
+        $fFunctorMaybe
+        @(b_a2Gs -> c_a2Gt)
+        @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+        (. @b_a2Gs @c_a2Gt @a_a2Gu)
+        (Nothing @(b_a2Gs -> c_a2Gt)))
+     gs_aLs)
+  zs_aLt
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @(b_a2Gs -> c_a2Gt)
+  @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+  (Just
+     @((b_a2Gs -> c_a2Gt) -> (a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+     (. @b_a2Gs @c_a2Gt @a_a2Gu))
+  (Nothing @(b_a2Gs -> c_a2Gt))
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3bp
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawMaybe` conversion=3
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Var :: Nothing
+       expr: App :: fmap
+  @Maybe
+  $fFunctorMaybe
+  @(b_a2Gs -> c_a2Gt)
+  @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+  (. @b_a2Gs @c_a2Gt @a_a2Gu)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2Gu
+  @c_a2Gt
+  (<*>
+     @Maybe
+     $fApplicativeMaybe
+     @(a_a2Gu -> b_a2Gs)
+     @(a_a2Gu -> c_a2Gt)
+     (Nothing @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt))
+     gs_aLs)
+  zs_aLt
+expr:
+App :: fmap
+  @Maybe
+  $fFunctorMaybe
+  @(b_a2Gs -> c_a2Gt)
+  @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+  (. @b_a2Gs @c_a2Gt @a_a2Gu)
+  (Nothing @(b_a2Gs -> c_a2Gt))
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: fmap
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fFunctorMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cfmap_a3cK
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawMaybe` conversion=4
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Var :: Nothing
+       expr: App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @(a_a2Gu -> b_a2Gs)
+  @(a_a2Gu -> c_a2Gt)
+  (Nothing @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt))
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2Gu
+  @c_a2Gt
+  (Nothing @(a_a2Gu -> c_a2Gt))
+  zs_aLt
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @(a_a2Gu -> b_a2Gs)
+  @(a_a2Gu -> c_a2Gt)
+  (Nothing @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt))
+  gs_aLs
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3bp
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawMaybe` conversion=5
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Var :: Nothing
+       expr: App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2Gu
+  @c_a2Gt
+  (Nothing @(a_a2Gu -> c_a2Gt))
+
+getFirstDiff result:
+cntr_expr:
+App :: Nothing @c_a2Gt
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2Gu
+  @c_a2Gt
+  (Nothing @(a_a2Gu -> c_a2Gt))
+  zs_aLt
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3bp
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawMaybe` conversion=6
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Var :: Nothing
+       expr: App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @b_a2Gs
+  @c_a2Gt
+  (Nothing @(b_a2Gs -> c_a2Gt))
+
+getFirstDiff result:
+cntr_expr:
+App :: Nothing @c_a2Gt
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @b_a2Gs
+  @c_a2Gt
+  (Nothing @(b_a2Gs -> c_a2Gt))
+  (<*> @Maybe $fApplicativeMaybe @a_a2Gu @b_a2Gs gs_aLs zs_aLt)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3bp
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawMaybe` conversion=7
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Just
+  @((b_a2Gs -> c_a2Gt) -> (a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+       expr: App :: pure
+  @Maybe
+  $fApplicativeMaybe
+  @((b_a2Gs -> c_a2Gt) -> (a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2Gu
+  @c_a2Gt
+  (<*>
+     @Maybe
+     $fApplicativeMaybe
+     @(a_a2Gu -> b_a2Gs)
+     @(a_a2Gu -> c_a2Gt)
+     (<*>
+        @Maybe
+        $fApplicativeMaybe
+        @(b_a2Gs -> c_a2Gt)
+        @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+        (Just
+           @((b_a2Gs -> c_a2Gt) -> (a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+           (. @b_a2Gs @c_a2Gt @a_a2Gu))
+        (Just @(b_a2Gs -> c_a2Gt) f_aLu))
+     (Just @(a_a2Gu -> b_a2Gs) g_aLv))
+  (Just @a_a2Gu z_aLw)
+expr:
+App :: pure
+  @Maybe
+  $fApplicativeMaybe
+  @((b_a2Gs -> c_a2Gt) -> (a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+  (. @b_a2Gs @c_a2Gt @a_a2Gu)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3bf
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawMaybe` conversion=8
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: Var :: Just
+       expr: App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @(b_a2Gs -> c_a2Gt)
+  @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2Gu
+  @c_a2Gt
+  (<*>
+     @Maybe
+     $fApplicativeMaybe
+     @(a_a2Gu -> b_a2Gs)
+     @(a_a2Gu -> c_a2Gt)
+     (Just
+        @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+        (. @b_a2Gs @c_a2Gt @a_a2Gu f_aLu))
+     (Just @(a_a2Gu -> b_a2Gs) g_aLv))
+  (Just @a_a2Gu z_aLw)
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @(b_a2Gs -> c_a2Gt)
+  @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+  (Just
+     @((b_a2Gs -> c_a2Gt) -> (a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+     (. @b_a2Gs @c_a2Gt @a_a2Gu))
+  (Just @(b_a2Gs -> c_a2Gt) f_aLu)
+
+Rule fired:["ID: lemma_JJ2J"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawMaybe` conversion=9
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: Var :: Just
+       expr: App :: <*>
+  @Maybe $fApplicativeMaybe @(a_a2Gu -> b_a2Gs) @(a_a2Gu -> c_a2Gt)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2Gu
+  @c_a2Gt
+  (Just @(a_a2Gu -> c_a2Gt) (. @b_a2Gs @c_a2Gt @a_a2Gu f_aLu g_aLv))
+  (Just @a_a2Gu z_aLw)
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @(a_a2Gu -> b_a2Gs)
+  @(a_a2Gu -> c_a2Gt)
+  (Just
+     @((a_a2Gu -> b_a2Gs) -> a_a2Gu -> c_a2Gt)
+     (. @b_a2Gs @c_a2Gt @a_a2Gu f_aLu))
+  (Just @(a_a2Gu -> b_a2Gs) g_aLv)
+
+Rule fired:["ID: lemma_JJ2J"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawMaybe` conversion=10
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: Var :: Just
+       expr: App :: <*> @Maybe $fApplicativeMaybe @a_a2Gu @c_a2Gt
+
+getFirstDiff result:
+cntr_expr:
+App :: Just @c_a2Gt (. @b_a2Gs @c_a2Gt @a_a2Gu f_aLu g_aLv z_aLw)
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2Gu
+  @c_a2Gt
+  (Just @(a_a2Gu -> c_a2Gt) (. @b_a2Gs @c_a2Gt @a_a2Gu f_aLu g_aLv))
+  (Just @a_a2Gu z_aLw)
+
+Rule fired:["ID: lemma_JJ2J"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawMaybe` conversion=11
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: Var :: f_aLu
+       expr: App :: . @b_a2Gs @c_a2Gt @a_a2Gu f_aLu g_aLv
+
+getFirstDiff result:
+cntr_expr:
+App :: Just @c_a2Gt (f_aLu (g_aLv z_aLw))
+expr:
+App :: . @b_a2Gs @c_a2Gt @a_a2Gu f_aLu g_aLv z_aLw
+
+Substitute def for function: ID: ._r3
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawMaybe` conversion=12
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: Var :: Just
+       expr: App :: <*> @Maybe $fApplicativeMaybe @b_a2Gs @c_a2Gt
+
+getFirstDiff result:
+cntr_expr:
+App :: Just @c_a2Gt (f_aLu (g_aLv z_aLw))
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @b_a2Gs
+  @c_a2Gt
+  (Just @(b_a2Gs -> c_a2Gt) f_aLu)
+  (Just @b_a2Gs (g_aLv z_aLw))
+
+Rule fired:["ID: lemma_JJ2J"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawMaybe` conversion=13
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: Var :: Just
+       expr: App :: <*> @Maybe $fApplicativeMaybe @a_a2Gu @b_a2Gs
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @b_a2Gs
+  @c_a2Gt
+  (Just @(b_a2Gs -> c_a2Gt) f_aLu)
+  (Just @b_a2Gs (g_aLv z_aLw))
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2Gu
+  @b_a2Gs
+  (Just @(a_a2Gu -> b_a2Gs) g_aLv)
+  (Just @a_a2Gu z_aLw)
+
+Rule fired:["ID: lemma_JJ2J"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: ap4LawMaybe
+
+
+-----------------------------
+Start analyze declConversion: ID: ap4LawEither
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawEither` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Right
+  @e_a2q3
+  @((b_a2q4 -> c_a2q5) -> (a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+       expr: App :: pure
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @((b_a2q4 -> c_a2q5) -> (a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @a_a2q6
+  @c_a2q5
+  (<*>
+     @(Either e_a2q3)
+     ($fApplicativeEither @e_a2q3)
+     @(a_a2q6 -> b_a2q4)
+     @(a_a2q6 -> c_a2q5)
+     (<*>
+        @(Either e_a2q3)
+        ($fApplicativeEither @e_a2q3)
+        @(b_a2q4 -> c_a2q5)
+        @((a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+        (Right
+           @e_a2q3
+           @((b_a2q4 -> c_a2q5) -> (a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+           (. @b_a2q4 @c_a2q5 @a_a2q6))
+        (Left @e_a2q3 @(b_a2q4 -> c_a2q5) e_aLI))
+     gs_aLJ)
+  zs_aLK
+expr:
+App :: pure
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @((b_a2q4 -> c_a2q5) -> (a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+  (. @b_a2q4 @c_a2q5 @a_a2q6)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3ah
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawEither` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: fmap
+  @(Either e_a2q3)
+  ($fFunctorEither @e_a2q3)
+  @(b_a2q4 -> c_a2q5)
+  @((a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+       expr: App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @(b_a2q4 -> c_a2q5)
+  @((a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @a_a2q6
+  @c_a2q5
+  (<*>
+     @(Either e_a2q3)
+     ($fApplicativeEither @e_a2q3)
+     @(a_a2q6 -> b_a2q4)
+     @(a_a2q6 -> c_a2q5)
+     (fmap
+        @(Either e_a2q3)
+        ($fFunctorEither @e_a2q3)
+        @(b_a2q4 -> c_a2q5)
+        @((a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+        (. @b_a2q4 @c_a2q5 @a_a2q6)
+        (Left @e_a2q3 @(b_a2q4 -> c_a2q5) e_aLI))
+     gs_aLJ)
+  zs_aLK
+expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @(b_a2q4 -> c_a2q5)
+  @((a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+  (Right
+     @e_a2q3
+     @((b_a2q4 -> c_a2q5) -> (a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+     (. @b_a2q4 @c_a2q5 @a_a2q6))
+  (Left @e_a2q3 @(b_a2q4 -> c_a2q5) e_aLI)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3as
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawEither` conversion=3
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Left @e_a2q3
+       expr: App :: fmap
+  @(Either e_a2q3)
+  ($fFunctorEither @e_a2q3)
+  @(b_a2q4 -> c_a2q5)
+  @((a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @a_a2q6
+  @c_a2q5
+  (<*>
+     @(Either e_a2q3)
+     ($fApplicativeEither @e_a2q3)
+     @(a_a2q6 -> b_a2q4)
+     @(a_a2q6 -> c_a2q5)
+     (Left @e_a2q3 @((a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5) e_aLI)
+     gs_aLJ)
+  zs_aLK
+expr:
+App :: fmap
+  @(Either e_a2q3)
+  ($fFunctorEither @e_a2q3)
+  @(b_a2q4 -> c_a2q5)
+  @((a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+  (. @b_a2q4 @c_a2q5 @a_a2q6)
+  (Left @e_a2q3 @(b_a2q4 -> c_a2q5) e_aLI)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: fmap
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fFunctorEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cfmap_a3cm
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawEither` conversion=4
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Left @e_a2q3
+       expr: App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @(a_a2q6 -> b_a2q4)
+  @(a_a2q6 -> c_a2q5)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @a_a2q6
+  @c_a2q5
+  (Left @e_a2q3 @(a_a2q6 -> c_a2q5) e_aLI)
+  zs_aLK
+expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @(a_a2q6 -> b_a2q4)
+  @(a_a2q6 -> c_a2q5)
+  (Left @e_a2q3 @((a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5) e_aLI)
+  gs_aLJ
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3as
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawEither` conversion=5
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Left @e_a2q3
+       expr: App :: <*> @(Either e_a2q3) ($fApplicativeEither @e_a2q3) @a_a2q6 @c_a2q5
+
+getFirstDiff result:
+cntr_expr:
+App :: Left @e_a2q3 @c_a2q5 e_aLI
+expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @a_a2q6
+  @c_a2q5
+  (Left @e_a2q3 @(a_a2q6 -> c_a2q5) e_aLI)
+  zs_aLK
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3as
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawEither` conversion=6
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Left @e_a2q3
+       expr: App :: <*> @(Either e_a2q3) ($fApplicativeEither @e_a2q3) @b_a2q4 @c_a2q5
+
+getFirstDiff result:
+cntr_expr:
+App :: Left @e_a2q3 @c_a2q5 e_aLI
+expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @b_a2q4
+  @c_a2q5
+  (Left @e_a2q3 @(b_a2q4 -> c_a2q5) e_aLI)
+  (<*>
+     @(Either e_a2q3)
+     ($fApplicativeEither @e_a2q3)
+     @a_a2q6
+     @b_a2q4
+     gs_aLJ
+     zs_aLK)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3as
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawEither` conversion=7
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Right
+  @e_a2q3
+  @((b_a2q4 -> c_a2q5) -> (a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+       expr: App :: pure
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @((b_a2q4 -> c_a2q5) -> (a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @a_a2q6
+  @c_a2q5
+  (<*>
+     @(Either e_a2q3)
+     ($fApplicativeEither @e_a2q3)
+     @(a_a2q6 -> b_a2q4)
+     @(a_a2q6 -> c_a2q5)
+     (<*>
+        @(Either e_a2q3)
+        ($fApplicativeEither @e_a2q3)
+        @(b_a2q4 -> c_a2q5)
+        @((a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+        (Right
+           @e_a2q3
+           @((b_a2q4 -> c_a2q5) -> (a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+           (. @b_a2q4 @c_a2q5 @a_a2q6))
+        (Right @e_a2q3 @(b_a2q4 -> c_a2q5) f_aLL))
+     (Right @e_a2q3 @(a_a2q6 -> b_a2q4) g_aLM))
+  (Right @e_a2q3 @a_a2q6 z_aLN)
+expr:
+App :: pure
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @((b_a2q4 -> c_a2q5) -> (a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+  (. @b_a2q4 @c_a2q5 @a_a2q6)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3ah
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawEither` conversion=8
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2q3
+       expr: App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @(b_a2q4 -> c_a2q5)
+  @((a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @a_a2q6
+  @c_a2q5
+  (<*>
+     @(Either e_a2q3)
+     ($fApplicativeEither @e_a2q3)
+     @(a_a2q6 -> b_a2q4)
+     @(a_a2q6 -> c_a2q5)
+     (Right
+        @e_a2q3
+        @((a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+        (. @b_a2q4 @c_a2q5 @a_a2q6 f_aLL))
+     (Right @e_a2q3 @(a_a2q6 -> b_a2q4) g_aLM))
+  (Right @e_a2q3 @a_a2q6 z_aLN)
+expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @(b_a2q4 -> c_a2q5)
+  @((a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+  (Right
+     @e_a2q3
+     @((b_a2q4 -> c_a2q5) -> (a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+     (. @b_a2q4 @c_a2q5 @a_a2q6))
+  (Right @e_a2q3 @(b_a2q4 -> c_a2q5) f_aLL)
+
+Rule fired:["ID: lemma_JJ2J_eth"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawEither` conversion=9
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2q3
+       expr: App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @(a_a2q6 -> b_a2q4)
+  @(a_a2q6 -> c_a2q5)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @a_a2q6
+  @c_a2q5
+  (Right
+     @e_a2q3
+     @(a_a2q6 -> c_a2q5)
+     (. @b_a2q4 @c_a2q5 @a_a2q6 f_aLL g_aLM))
+  (Right @e_a2q3 @a_a2q6 z_aLN)
+expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @(a_a2q6 -> b_a2q4)
+  @(a_a2q6 -> c_a2q5)
+  (Right
+     @e_a2q3
+     @((a_a2q6 -> b_a2q4) -> a_a2q6 -> c_a2q5)
+     (. @b_a2q4 @c_a2q5 @a_a2q6 f_aLL))
+  (Right @e_a2q3 @(a_a2q6 -> b_a2q4) g_aLM)
+
+Rule fired:["ID: lemma_JJ2J_eth"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawEither` conversion=10
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2q3
+       expr: App :: <*> @(Either e_a2q3) ($fApplicativeEither @e_a2q3) @a_a2q6 @c_a2q5
+
+getFirstDiff result:
+cntr_expr:
+App :: Right @e_a2q3 @c_a2q5 (. @b_a2q4 @c_a2q5 @a_a2q6 f_aLL g_aLM z_aLN)
+expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @a_a2q6
+  @c_a2q5
+  (Right
+     @e_a2q3
+     @(a_a2q6 -> c_a2q5)
+     (. @b_a2q4 @c_a2q5 @a_a2q6 f_aLL g_aLM))
+  (Right @e_a2q3 @a_a2q6 z_aLN)
+
+Rule fired:["ID: lemma_JJ2J_eth"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawEither` conversion=11
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: Var :: f_aLL
+       expr: App :: . @b_a2q4 @c_a2q5 @a_a2q6 f_aLL g_aLM
+
+getFirstDiff result:
+cntr_expr:
+App :: Right @e_a2q3 @c_a2q5 (f_aLL (g_aLM z_aLN))
+expr:
+App :: . @b_a2q4 @c_a2q5 @a_a2q6 f_aLL g_aLM z_aLN
+
+Substitute def for function: ID: ._r3
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawEither` conversion=12
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2q3
+       expr: App :: <*> @(Either e_a2q3) ($fApplicativeEither @e_a2q3) @b_a2q4 @c_a2q5
+
+getFirstDiff result:
+cntr_expr:
+App :: Right @e_a2q3 @c_a2q5 (f_aLL (g_aLM z_aLN))
+expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @b_a2q4
+  @c_a2q5
+  (Right @e_a2q3 @(b_a2q4 -> c_a2q5) f_aLL)
+  (Right @e_a2q3 @b_a2q4 (g_aLM z_aLN))
+
+Rule fired:["ID: lemma_JJ2J_eth"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap4LawEither` conversion=13
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2q3
+       expr: App :: <*> @(Either e_a2q3) ($fApplicativeEither @e_a2q3) @a_a2q6 @b_a2q4
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @b_a2q4
+  @c_a2q5
+  (Right @e_a2q3 @(b_a2q4 -> c_a2q5) f_aLL)
+  (Right @e_a2q3 @b_a2q4 (g_aLM z_aLN))
+expr:
+App :: <*>
+  @(Either e_a2q3)
+  ($fApplicativeEither @e_a2q3)
+  @a_a2q6
+  @b_a2q4
+  (Right @e_a2q3 @(a_a2q6 -> b_a2q4) g_aLM)
+  (Right @e_a2q3 @a_a2q6 z_aLN)
+
+Rule fired:["ID: lemma_JJ2J_eth"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: ap4LawEither
+
+
+-----------------------------
+Start analyze declConversion: ID: ap3LawMaybe
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawMaybe` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Just @((a_a2MU -> b_a2MV) -> b_a2MV)
+       expr: App :: pure @Maybe $fApplicativeMaybe @((a_a2MU -> b_a2MV) -> b_a2MV)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @(a_a2MU -> b_a2MV)
+  @b_a2MV
+  (Just
+     @((a_a2MU -> b_a2MV) -> b_a2MV)
+     (\ (v_B2 :: a_a2MU -> b_a2MV) -> $ @a_a2MU @b_a2MV v_B2 x_aLp))
+  (Nothing @(a_a2MU -> b_a2MV))
+expr:
+App :: pure
+  @Maybe
+  $fApplicativeMaybe
+  @((a_a2MU -> b_a2MV) -> b_a2MV)
+  (\ (v_B2 :: a_a2MU -> b_a2MV) -> $ @a_a2MU @b_a2MV v_B2 x_aLp)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3bf
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawMaybe` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: fmap @Maybe $fFunctorMaybe @(a_a2MU -> b_a2MV) @b_a2MV
+       expr: App :: <*> @Maybe $fApplicativeMaybe @(a_a2MU -> b_a2MV) @b_a2MV
+
+getFirstDiff result:
+cntr_expr:
+App :: fmap
+  @Maybe
+  $fFunctorMaybe
+  @(a_a2MU -> b_a2MV)
+  @b_a2MV
+  (\ (v_B2 :: a_a2MU -> b_a2MV) -> $ @a_a2MU @b_a2MV v_B2 x_aLp)
+  (Nothing @(a_a2MU -> b_a2MV))
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @(a_a2MU -> b_a2MV)
+  @b_a2MV
+  (Just
+     @((a_a2MU -> b_a2MV) -> b_a2MV)
+     (\ (v_B2 :: a_a2MU -> b_a2MV) -> $ @a_a2MU @b_a2MV v_B2 x_aLp))
+  (Nothing @(a_a2MU -> b_a2MV))
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3bp
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawMaybe` conversion=3
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Var :: Nothing
+       expr: App :: fmap
+  @Maybe
+  $fFunctorMaybe
+  @(a_a2MU -> b_a2MV)
+  @b_a2MV
+  (\ (v_B2 :: a_a2MU -> b_a2MV) -> $ @a_a2MU @b_a2MV v_B2 x_aLp)
+
+getFirstDiff result:
+cntr_expr:
+App :: Nothing @b_a2MV
+expr:
+App :: fmap
+  @Maybe
+  $fFunctorMaybe
+  @(a_a2MU -> b_a2MV)
+  @b_a2MV
+  (\ (v_B2 :: a_a2MU -> b_a2MV) -> $ @a_a2MU @b_a2MV v_B2 x_aLp)
+  (Nothing @(a_a2MU -> b_a2MV))
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: fmap
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fFunctorMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cfmap_a3cK
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawMaybe` conversion=4
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: Var :: Nothing
+       expr: App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2MU
+  @b_a2MV
+  (Nothing @(a_a2MU -> b_a2MV))
+
+getFirstDiff result:
+cntr_expr:
+App :: Nothing @b_a2MV
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2MU
+  @b_a2MV
+  (Nothing @(a_a2MU -> b_a2MV))
+  (pure @Maybe $fApplicativeMaybe @a_a2MU x_aLp)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3bp
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawMaybe` conversion=5
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Just @((a_a2MU -> b_a2MV) -> b_a2MV)
+       expr: App :: pure @Maybe $fApplicativeMaybe @((a_a2MU -> b_a2MV) -> b_a2MV)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @(a_a2MU -> b_a2MV)
+  @b_a2MV
+  (Just
+     @((a_a2MU -> b_a2MV) -> b_a2MV)
+     (\ (v_B2 :: a_a2MU -> b_a2MV) -> $ @a_a2MU @b_a2MV v_B2 x_aLp))
+  (Just @(a_a2MU -> b_a2MV) f_aLq)
+expr:
+App :: pure
+  @Maybe
+  $fApplicativeMaybe
+  @((a_a2MU -> b_a2MV) -> b_a2MV)
+  (\ (v_B2 :: a_a2MU -> b_a2MV) -> $ @a_a2MU @b_a2MV v_B2 x_aLp)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3bf
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawMaybe` conversion=6
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: Var :: Just
+       expr: App :: <*> @Maybe $fApplicativeMaybe @(a_a2MU -> b_a2MV) @b_a2MV
+
+getFirstDiff result:
+cntr_expr:
+App :: Just @b_a2MV ($ @a_a2MU @b_a2MV f_aLq x_aLp)
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @(a_a2MU -> b_a2MV)
+  @b_a2MV
+  (Just
+     @((a_a2MU -> b_a2MV) -> b_a2MV)
+     (\ (v_B2 :: a_a2MU -> b_a2MV) -> $ @a_a2MU @b_a2MV v_B2 x_aLp))
+  (Just @(a_a2MU -> b_a2MV) f_aLq)
+
+Rule fired:["ID: lemma_JJ2J"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawMaybe` conversion=7
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: Var :: f_aLq
+       expr: App :: $ @a_a2MU @b_a2MV f_aLq
+
+getFirstDiff result:
+cntr_expr:
+App :: Just @b_a2MV (f_aLq x_aLp)
+expr:
+App :: $ @a_a2MU @b_a2MV f_aLq x_aLp
+
+Substitute def for function: ID: $_r1
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawMaybe` conversion=8
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: Var :: Just
+       expr: App :: <*> @Maybe $fApplicativeMaybe @a_a2MU @b_a2MV
+
+getFirstDiff result:
+cntr_expr:
+App :: Just @b_a2MV (f_aLq x_aLp)
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2MU
+  @b_a2MV
+  (Just @(a_a2MU -> b_a2MV) f_aLq)
+  (Just @a_a2MU x_aLp)
+
+Rule fired:["ID: lemma_JJ2J"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawMaybe` conversion=9
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Just @a_a2MU
+       expr: App :: pure @Maybe $fApplicativeMaybe @a_a2MU
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2MU
+  @b_a2MV
+  (Just @(a_a2MU -> b_a2MV) f_aLq)
+  (Just @a_a2MU x_aLp)
+expr:
+App :: pure @Maybe $fApplicativeMaybe @a_a2MU x_aLp
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3bf
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: ap3LawMaybe
+
+
+-----------------------------
+Start analyze declConversion: ID: ap3LawEither
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawEither` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2xb @((a_a2xc -> b_a2xd) -> b_a2xd)
+       expr: App :: pure
+  @(Either e_a2xb)
+  ($fApplicativeEither @e_a2xb)
+  @((a_a2xc -> b_a2xd) -> b_a2xd)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2xb)
+  ($fApplicativeEither @e_a2xb)
+  @(a_a2xc -> b_a2xd)
+  @b_a2xd
+  (Right
+     @e_a2xb
+     @((a_a2xc -> b_a2xd) -> b_a2xd)
+     (\ (v_B2 :: a_a2xc -> b_a2xd) -> $ @a_a2xc @b_a2xd v_B2 x_aLF))
+  (Left @e_a2xb @(a_a2xc -> b_a2xd) e_aLE)
+expr:
+App :: pure
+  @(Either e_a2xb)
+  ($fApplicativeEither @e_a2xb)
+  @((a_a2xc -> b_a2xd) -> b_a2xd)
+  (\ (v_B2 :: a_a2xc -> b_a2xd) -> $ @a_a2xc @b_a2xd v_B2 x_aLF)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3ah
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawEither` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: fmap
+  @(Either e_a2xb)
+  ($fFunctorEither @e_a2xb)
+  @(a_a2xc -> b_a2xd)
+  @b_a2xd
+       expr: App :: <*>
+  @(Either e_a2xb)
+  ($fApplicativeEither @e_a2xb)
+  @(a_a2xc -> b_a2xd)
+  @b_a2xd
+
+getFirstDiff result:
+cntr_expr:
+App :: fmap
+  @(Either e_a2xb)
+  ($fFunctorEither @e_a2xb)
+  @(a_a2xc -> b_a2xd)
+  @b_a2xd
+  (\ (v_B2 :: a_a2xc -> b_a2xd) -> $ @a_a2xc @b_a2xd v_B2 x_aLF)
+  (Left @e_a2xb @(a_a2xc -> b_a2xd) e_aLE)
+expr:
+App :: <*>
+  @(Either e_a2xb)
+  ($fApplicativeEither @e_a2xb)
+  @(a_a2xc -> b_a2xd)
+  @b_a2xd
+  (Right
+     @e_a2xb
+     @((a_a2xc -> b_a2xd) -> b_a2xd)
+     (\ (v_B2 :: a_a2xc -> b_a2xd) -> $ @a_a2xc @b_a2xd v_B2 x_aLF))
+  (Left @e_a2xb @(a_a2xc -> b_a2xd) e_aLE)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3as
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawEither` conversion=3
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Left @e_a2xb
+       expr: App :: fmap
+  @(Either e_a2xb)
+  ($fFunctorEither @e_a2xb)
+  @(a_a2xc -> b_a2xd)
+  @b_a2xd
+
+getFirstDiff result:
+cntr_expr:
+App :: Left @e_a2xb @b_a2xd e_aLE
+expr:
+App :: fmap
+  @(Either e_a2xb)
+  ($fFunctorEither @e_a2xb)
+  @(a_a2xc -> b_a2xd)
+  @b_a2xd
+  (\ (v_B2 :: a_a2xc -> b_a2xd) -> $ @a_a2xc @b_a2xd v_B2 x_aLF)
+  (Left @e_a2xb @(a_a2xc -> b_a2xd) e_aLE)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: fmap
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fFunctorEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cfmap_a3cm
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawEither` conversion=4
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Left @e_a2xb
+       expr: App :: <*> @(Either e_a2xb) ($fApplicativeEither @e_a2xb) @a_a2xc @b_a2xd
+
+getFirstDiff result:
+cntr_expr:
+App :: Left @e_a2xb @b_a2xd e_aLE
+expr:
+App :: <*>
+  @(Either e_a2xb)
+  ($fApplicativeEither @e_a2xb)
+  @a_a2xc
+  @b_a2xd
+  (Left @e_a2xb @(a_a2xc -> b_a2xd) e_aLE)
+  (pure @(Either e_a2xb) ($fApplicativeEither @e_a2xb) @a_a2xc x_aLF)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3as
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawEither` conversion=5
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2xb @((a_a2xc -> b_a2xd) -> b_a2xd)
+       expr: App :: pure
+  @(Either e_a2xb)
+  ($fApplicativeEither @e_a2xb)
+  @((a_a2xc -> b_a2xd) -> b_a2xd)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2xb)
+  ($fApplicativeEither @e_a2xb)
+  @(a_a2xc -> b_a2xd)
+  @b_a2xd
+  (Right
+     @e_a2xb
+     @((a_a2xc -> b_a2xd) -> b_a2xd)
+     (\ (v_B2 :: a_a2xc -> b_a2xd) -> $ @a_a2xc @b_a2xd v_B2 x_aLF))
+  (Right @e_a2xb @(a_a2xc -> b_a2xd) f_aLG)
+expr:
+App :: pure
+  @(Either e_a2xb)
+  ($fApplicativeEither @e_a2xb)
+  @((a_a2xc -> b_a2xd) -> b_a2xd)
+  (\ (v_B2 :: a_a2xc -> b_a2xd) -> $ @a_a2xc @b_a2xd v_B2 x_aLF)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3ah
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawEither` conversion=6
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2xb
+       expr: App :: <*>
+  @(Either e_a2xb)
+  ($fApplicativeEither @e_a2xb)
+  @(a_a2xc -> b_a2xd)
+  @b_a2xd
+
+getFirstDiff result:
+cntr_expr:
+App :: Right @e_a2xb @b_a2xd ($ @a_a2xc @b_a2xd f_aLG x_aLF)
+expr:
+App :: <*>
+  @(Either e_a2xb)
+  ($fApplicativeEither @e_a2xb)
+  @(a_a2xc -> b_a2xd)
+  @b_a2xd
+  (Right
+     @e_a2xb
+     @((a_a2xc -> b_a2xd) -> b_a2xd)
+     (\ (v_B2 :: a_a2xc -> b_a2xd) -> $ @a_a2xc @b_a2xd v_B2 x_aLF))
+  (Right @e_a2xb @(a_a2xc -> b_a2xd) f_aLG)
+
+Rule fired:["ID: lemma_JJ2J_eth"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawEither` conversion=7
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: Var :: f_aLG
+       expr: App :: $ @a_a2xc @b_a2xd f_aLG
+
+getFirstDiff result:
+cntr_expr:
+App :: Right @e_a2xb @b_a2xd (f_aLG x_aLF)
+expr:
+App :: $ @a_a2xc @b_a2xd f_aLG x_aLF
+
+Substitute def for function: ID: $_r1
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawEither` conversion=8
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2xb
+       expr: App :: <*> @(Either e_a2xb) ($fApplicativeEither @e_a2xb) @a_a2xc @b_a2xd
+
+getFirstDiff result:
+cntr_expr:
+App :: Right @e_a2xb @b_a2xd (f_aLG x_aLF)
+expr:
+App :: <*>
+  @(Either e_a2xb)
+  ($fApplicativeEither @e_a2xb)
+  @a_a2xc
+  @b_a2xd
+  (Right @e_a2xb @(a_a2xc -> b_a2xd) f_aLG)
+  (Right @e_a2xb @a_a2xc x_aLF)
+
+Rule fired:["ID: lemma_JJ2J_eth"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap3LawEither` conversion=9
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2xb @a_a2xc
+       expr: App :: pure @(Either e_a2xb) ($fApplicativeEither @e_a2xb) @a_a2xc
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2xb)
+  ($fApplicativeEither @e_a2xb)
+  @a_a2xc
+  @b_a2xd
+  (Right @e_a2xb @(a_a2xc -> b_a2xd) f_aLG)
+  (Right @e_a2xb @a_a2xc x_aLF)
+expr:
+App :: pure @(Either e_a2xb) ($fApplicativeEither @e_a2xb) @a_a2xc x_aLF
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3ah
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: ap3LawEither
+
+
+-----------------------------
+Start analyze declConversion: ID: ap2LawMaybe
+
+
+----------------
+Start analyzing: decl=`JustID: ap2LawMaybe` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Just @(a_a2R7 -> b_a2R8)
+       expr: App :: pure @Maybe $fApplicativeMaybe @(a_a2R7 -> b_a2R8)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2R7
+  @b_a2R8
+  (Just @(a_a2R7 -> b_a2R8) g_aLn)
+  (pure @Maybe $fApplicativeMaybe @a_a2R7 x_aLo)
+expr:
+App :: pure @Maybe $fApplicativeMaybe @(a_a2R7 -> b_a2R8) g_aLn
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3bf
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap2LawMaybe` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Just @a_a2R7
+       expr: App :: pure @Maybe $fApplicativeMaybe @a_a2R7
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2R7
+  @b_a2R8
+  (Just @(a_a2R7 -> b_a2R8) g_aLn)
+  (Just @a_a2R7 x_aLo)
+expr:
+App :: pure @Maybe $fApplicativeMaybe @a_a2R7 x_aLo
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3bf
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap2LawMaybe` conversion=3
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: Var :: Just
+       expr: App :: <*> @Maybe $fApplicativeMaybe @a_a2R7 @b_a2R8
+
+getFirstDiff result:
+cntr_expr:
+App :: Just @b_a2R8 (g_aLn x_aLo)
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2R7
+  @b_a2R8
+  (Just @(a_a2R7 -> b_a2R8) g_aLn)
+  (Just @a_a2R7 x_aLo)
+
+Rule fired:["ID: lemma_JJ2J"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap2LawMaybe` conversion=4
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Just @b_a2R8
+       expr: App :: pure @Maybe $fApplicativeMaybe @b_a2R8
+
+getFirstDiff result:
+cntr_expr:
+App :: Just @b_a2R8 (g_aLn x_aLo)
+expr:
+App :: pure @Maybe $fApplicativeMaybe @b_a2R8 (g_aLn x_aLo)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3bf
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: ap2LawMaybe
+
+
+-----------------------------
+Start analyze declConversion: ID: ap2LawEither
+
+
+----------------
+Start analyzing: decl=`JustID: ap2LawEither` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2BP @(a_a2BN -> b_a2BO)
+       expr: App :: pure
+  @(Either e_a2BP) ($fApplicativeEither @e_a2BP) @(a_a2BN -> b_a2BO)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2BP)
+  ($fApplicativeEither @e_a2BP)
+  @a_a2BN
+  @b_a2BO
+  (Right @e_a2BP @(a_a2BN -> b_a2BO) g_aLC)
+  (pure @(Either e_a2BP) ($fApplicativeEither @e_a2BP) @a_a2BN x_aLD)
+expr:
+App :: pure
+  @(Either e_a2BP)
+  ($fApplicativeEither @e_a2BP)
+  @(a_a2BN -> b_a2BO)
+  g_aLC
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3ah
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap2LawEither` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2BP @a_a2BN
+       expr: App :: pure @(Either e_a2BP) ($fApplicativeEither @e_a2BP) @a_a2BN
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2BP)
+  ($fApplicativeEither @e_a2BP)
+  @a_a2BN
+  @b_a2BO
+  (Right @e_a2BP @(a_a2BN -> b_a2BO) g_aLC)
+  (Right @e_a2BP @a_a2BN x_aLD)
+expr:
+App :: pure @(Either e_a2BP) ($fApplicativeEither @e_a2BP) @a_a2BN x_aLD
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3ah
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap2LawEither` conversion=3
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2BP
+       expr: App :: <*> @(Either e_a2BP) ($fApplicativeEither @e_a2BP) @a_a2BN @b_a2BO
+
+getFirstDiff result:
+cntr_expr:
+App :: Right @e_a2BP @b_a2BO (g_aLC x_aLD)
+expr:
+App :: <*>
+  @(Either e_a2BP)
+  ($fApplicativeEither @e_a2BP)
+  @a_a2BN
+  @b_a2BO
+  (Right @e_a2BP @(a_a2BN -> b_a2BO) g_aLC)
+  (Right @e_a2BP @a_a2BN x_aLD)
+
+Rule fired:["ID: lemma_JJ2J_eth"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap2LawEither` conversion=4
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2BP @b_a2BO
+       expr: App :: pure @(Either e_a2BP) ($fApplicativeEither @e_a2BP) @b_a2BO
+
+getFirstDiff result:
+cntr_expr:
+App :: Right @e_a2BP @b_a2BO (g_aLC x_aLD)
+expr:
+App :: pure
+  @(Either e_a2BP)
+  ($fApplicativeEither @e_a2BP)
+  @b_a2BO
+  (g_aLC x_aLD)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3ah
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: ap2LawEither
+
+
+-----------------------------
+Start analyze declConversion: ID: ap1LawMaybe
+
+
+----------------
+Start analyzing: decl=`JustID: ap1LawMaybe` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Just @(a_a2Tu -> a_a2Tu)
+       expr: App :: pure @Maybe $fApplicativeMaybe @(a_a2Tu -> a_a2Tu)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2Tu
+  @a_a2Tu
+  (Just @(a_a2Tu -> a_a2Tu) (id @a_a2Tu))
+  v_aLk
+expr:
+App :: pure @Maybe $fApplicativeMaybe @(a_a2Tu -> a_a2Tu) (id @a_a2Tu)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3bf
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap1LawMaybe` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: fmap @Maybe $fFunctorMaybe @a_a2Tu @a_a2Tu
+       expr: App :: <*> @Maybe $fApplicativeMaybe @a_a2Tu @a_a2Tu
+
+getFirstDiff result:
+cntr_expr:
+App :: fmap @Maybe $fFunctorMaybe @a_a2Tu @a_a2Tu (id @a_a2Tu) v_aLk
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2Tu
+  @a_a2Tu
+  (Just @(a_a2Tu -> a_a2Tu) (id @a_a2Tu))
+  v_aLk
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3bp
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap1LawMaybe` conversion=3
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: Var :: id
+       expr: App :: fmap @Maybe $fFunctorMaybe @a_a2Tu @a_a2Tu
+
+getFirstDiff result:
+cntr_expr:
+App :: id @(Maybe a_a2Tu) v_aLk
+expr:
+App :: fmap @Maybe $fFunctorMaybe @a_a2Tu @a_a2Tu (id @a_a2Tu) v_aLk
+
+Rule fired:["ID: f1"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap1LawMaybe` conversion=4
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: Var :: v_aLk
+       expr: App :: id @(Maybe a_a2Tu) v_aLk
+
+getFirstDiff result:
+cntr_expr:
+Var :: v_aLk
+expr:
+App :: id @(Maybe a_a2Tu) v_aLk
+
+Substitute def for function: ID: id_r7
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: ap1LawMaybe
+
+
+-----------------------------
+Start analyze declConversion: ID: ap1LawEither
+
+
+----------------
+Start analyzing: decl=`JustID: ap1LawEither` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2Ek @(a_a2El -> a_a2El)
+       expr: App :: pure
+  @(Either e_a2Ek) ($fApplicativeEither @e_a2Ek) @(a_a2El -> a_a2El)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2Ek)
+  ($fApplicativeEither @e_a2Ek)
+  @a_a2El
+  @a_a2El
+  (Right @e_a2Ek @(a_a2El -> a_a2El) (id @a_a2El))
+  v_aLz
+expr:
+App :: pure
+  @(Either e_a2Ek)
+  ($fApplicativeEither @e_a2Ek)
+  @(a_a2El -> a_a2El)
+  (id @a_a2El)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3ah
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap1LawEither` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: fmap @(Either e_a2Ek) ($fFunctorEither @e_a2Ek) @a_a2El @a_a2El
+       expr: App :: <*> @(Either e_a2Ek) ($fApplicativeEither @e_a2Ek) @a_a2El @a_a2El
+
+getFirstDiff result:
+cntr_expr:
+App :: fmap
+  @(Either e_a2Ek)
+  ($fFunctorEither @e_a2Ek)
+  @a_a2El
+  @a_a2El
+  (id @a_a2El)
+  v_aLz
+expr:
+App :: <*>
+  @(Either e_a2Ek)
+  ($fApplicativeEither @e_a2Ek)
+  @a_a2El
+  @a_a2El
+  (Right @e_a2Ek @(a_a2El -> a_a2El) (id @a_a2El))
+  v_aLz
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3as
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap1LawEither` conversion=3
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: Var :: id
+       expr: App :: fmap @(Either e_a2Ek) ($fFunctorEither @e_a2Ek) @a_a2El @a_a2El
+
+getFirstDiff result:
+cntr_expr:
+App :: id @(Either e_a2Ek a_a2El) v_aLz
+expr:
+App :: fmap
+  @(Either e_a2Ek)
+  ($fFunctorEither @e_a2Ek)
+  @a_a2El
+  @a_a2El
+  (id @a_a2El)
+  v_aLz
+
+Rule fired:["ID: f1"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap1LawEither` conversion=4
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: Var :: v_aLz
+       expr: App :: id @(Either e_a2Ek a_a2El) v_aLz
+
+getFirstDiff result:
+cntr_expr:
+Var :: v_aLz
+expr:
+App :: id @(Either e_a2Ek a_a2El) v_aLz
+
+Substitute def for function: ID: id_r7
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: ap1LawEither
+
+
+-----------------------------
+Start analyze declConversion: ID: ap0LawMaybe
+
+
+----------------
+Start analyzing: decl=`JustID: ap0LawMaybe` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Just @(a_a2UH -> b_a2UI)
+       expr: App :: pure @Maybe $fApplicativeMaybe @(a_a2UH -> b_a2UI)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2UH
+  @b_a2UI
+  (Just @(a_a2UH -> b_a2UI) g_aLi)
+  v_aLj
+expr:
+App :: pure @Maybe $fApplicativeMaybe @(a_a2UH -> b_a2UI) g_aLi
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3bf
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap0LawMaybe` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: fmap @Maybe $fFunctorMaybe @a_a2UH @b_a2UI
+       expr: App :: <*> @Maybe $fApplicativeMaybe @a_a2UH @b_a2UI
+
+getFirstDiff result:
+cntr_expr:
+App :: fmap @Maybe $fFunctorMaybe @a_a2UH @b_a2UI g_aLi v_aLj
+expr:
+App :: <*>
+  @Maybe
+  $fApplicativeMaybe
+  @a_a2UH
+  @b_a2UI
+  (Just @(a_a2UH -> b_a2UI) g_aLi)
+  v_aLj
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeMaybe
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3bp
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: ap0LawMaybe
+
+
+-----------------------------
+Start analyze declConversion: ID: ap0LawEither
+
+
+----------------
+Start analyzing: decl=`JustID: ap0LawEither` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: Right @e_a2FB @(a_a2Fz -> b_a2FA)
+       expr: App :: pure
+  @(Either e_a2FB) ($fApplicativeEither @e_a2FB) @(a_a2Fz -> b_a2FA)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Either e_a2FB)
+  ($fApplicativeEither @e_a2FB)
+  @a_a2Fz
+  @b_a2FA
+  (Right @e_a2FB @(a_a2Fz -> b_a2FA) g_aLx)
+  v_aLy
+expr:
+App :: pure
+  @(Either e_a2FB)
+  ($fApplicativeEither @e_a2FB)
+  @(a_a2Fz -> b_a2FA)
+  g_aLx
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a3ah
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: ap0LawEither` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: fmap @(Either e_a2FB) ($fFunctorEither @e_a2FB) @a_a2Fz @b_a2FA
+       expr: App :: <*> @(Either e_a2FB) ($fApplicativeEither @e_a2FB) @a_a2Fz @b_a2FA
+
+getFirstDiff result:
+cntr_expr:
+App :: fmap
+  @(Either e_a2FB)
+  ($fFunctorEither @e_a2FB)
+  @a_a2Fz
+  @b_a2FA
+  g_aLx
+  v_aLy
+expr:
+App :: <*>
+  @(Either e_a2FB)
+  ($fApplicativeEither @e_a2FB)
+  @a_a2Fz
+  @b_a2FA
+  (Right @e_a2FB @(a_a2Fz -> b_a2FA) g_aLx)
+  v_aLy
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeEither
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a3as
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: ap0LawEither
+
+
+-----------------------------
+Start analyze declConversion: ID: a4
+
+
+----------------
+Start analyzing: decl=`JustID: a4` conversion=1
+
+Made new postulate from: ID: a4
+
+
+-----------------------------
+Start analyze declConversion: ID: lemma0
+
+
+----------------
+Start analyzing: decl=`JustID: lemma0` conversion=1
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: App :: . @(f_a15p (a_a15s -> c_a15r)) @(f_a15p a_a15s -> f_a15p c_a15r)
+       expr: App :: . @(f_a15p (a_a15s -> b_a15q) -> f_a15p (a_a15s -> c_a15r))
+  @(f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (b_a15q -> c_a15r))
+
+getFirstDiff result:
+cntr_expr:
+App :: . @(f_a15p (a_a15s -> c_a15r))
+  @(f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (a_a15s -> b_a15q))
+  (<*> @f_a15p $dApplicative_a15t @a_a15s @c_a15r)
+  (. @(f_a15p ((a_a15s -> b_a15q) -> a_a15s -> c_a15r))
+     @(f_a15p (a_a15s -> b_a15q) -> f_a15p (a_a15s -> c_a15r))
+     @(f_a15p (b_a15q -> c_a15r))
+     (<*>
+        @f_a15p $dApplicative_a15t @(a_a15s -> b_a15q) @(a_a15s -> c_a15r))
+     (<*>
+        @f_a15p
+        $dApplicative_a15t
+        @(b_a15q -> c_a15r)
+        @((a_a15s -> b_a15q) -> a_a15s -> c_a15r)
+        (pure
+           @f_a15p
+           $dApplicative_a15t
+           @((b_a15q -> c_a15r) -> (a_a15s -> b_a15q) -> a_a15s -> c_a15r)
+           (. @b_a15q @c_a15r @a_a15s)))
+     hs_aMw)
+  gs_aMx
+  as_aMy
+expr:
+App :: . @(f_a15p (a_a15s -> b_a15q) -> f_a15p (a_a15s -> c_a15r))
+  @(f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (b_a15q -> c_a15r))
+  (. @(f_a15p (a_a15s -> c_a15r))
+     @(f_a15p a_a15s -> f_a15p c_a15r)
+     @(f_a15p (a_a15s -> b_a15q))
+     (<*> @f_a15p $dApplicative_a15t @a_a15s @c_a15r))
+  (. @(f_a15p ((a_a15s -> b_a15q) -> a_a15s -> c_a15r))
+     @(f_a15p (a_a15s -> b_a15q) -> f_a15p (a_a15s -> c_a15r))
+     @(f_a15p (b_a15q -> c_a15r))
+     (<*>
+        @f_a15p $dApplicative_a15t @(a_a15s -> b_a15q) @(a_a15s -> c_a15r))
+     (<*>
+        @f_a15p
+        $dApplicative_a15t
+        @(b_a15q -> c_a15r)
+        @((a_a15s -> b_a15q) -> a_a15s -> c_a15r)
+        (pure
+           @f_a15p
+           $dApplicative_a15t
+           @((b_a15q -> c_a15r) -> (a_a15s -> b_a15q) -> a_a15s -> c_a15r)
+           (. @b_a15q @c_a15r @a_a15s))))
+  hs_aMw
+  gs_aMx
+  as_aMy
+
+Substitute def for function: ID: ._r3
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: lemma0` conversion=2
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: App :: <*> @f_a15p
+       expr: App :: . @(f_a15p (a_a15s -> c_a15r)) @(f_a15p a_a15s -> f_a15p c_a15r)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a15p
+  $dApplicative_a15t
+  @a_a15s
+  @c_a15r
+  (. @(f_a15p ((a_a15s -> b_a15q) -> a_a15s -> c_a15r))
+     @(f_a15p (a_a15s -> b_a15q) -> f_a15p (a_a15s -> c_a15r))
+     @(f_a15p (b_a15q -> c_a15r))
+     (<*>
+        @f_a15p $dApplicative_a15t @(a_a15s -> b_a15q) @(a_a15s -> c_a15r))
+     (<*>
+        @f_a15p
+        $dApplicative_a15t
+        @(b_a15q -> c_a15r)
+        @((a_a15s -> b_a15q) -> a_a15s -> c_a15r)
+        (pure
+           @f_a15p
+           $dApplicative_a15t
+           @((b_a15q -> c_a15r) -> (a_a15s -> b_a15q) -> a_a15s -> c_a15r)
+           (. @b_a15q @c_a15r @a_a15s)))
+     hs_aMw
+     gs_aMx)
+  as_aMy
+expr:
+App :: . @(f_a15p (a_a15s -> c_a15r))
+  @(f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (a_a15s -> b_a15q))
+  (<*> @f_a15p $dApplicative_a15t @a_a15s @c_a15r)
+  (. @(f_a15p ((a_a15s -> b_a15q) -> a_a15s -> c_a15r))
+     @(f_a15p (a_a15s -> b_a15q) -> f_a15p (a_a15s -> c_a15r))
+     @(f_a15p (b_a15q -> c_a15r))
+     (<*>
+        @f_a15p $dApplicative_a15t @(a_a15s -> b_a15q) @(a_a15s -> c_a15r))
+     (<*>
+        @f_a15p
+        $dApplicative_a15t
+        @(b_a15q -> c_a15r)
+        @((a_a15s -> b_a15q) -> a_a15s -> c_a15r)
+        (pure
+           @f_a15p
+           $dApplicative_a15t
+           @((b_a15q -> c_a15r) -> (a_a15s -> b_a15q) -> a_a15s -> c_a15r)
+           (. @b_a15q @c_a15r @a_a15s)))
+     hs_aMw)
+  gs_aMx
+  as_aMy
+
+Substitute def for function: ID: ._r3
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: lemma0` conversion=3
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: App :: <*> @f_a15p
+       expr: App :: . @(f_a15p ((a_a15s -> b_a15q) -> a_a15s -> c_a15r))
+  @(f_a15p (a_a15s -> b_a15q) -> f_a15p (a_a15s -> c_a15r))
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a15p
+  $dApplicative_a15t
+  @a_a15s
+  @c_a15r
+  (<*>
+     @f_a15p
+     $dApplicative_a15t
+     @(a_a15s -> b_a15q)
+     @(a_a15s -> c_a15r)
+     (<*>
+        @f_a15p
+        $dApplicative_a15t
+        @(b_a15q -> c_a15r)
+        @((a_a15s -> b_a15q) -> a_a15s -> c_a15r)
+        (pure
+           @f_a15p
+           $dApplicative_a15t
+           @((b_a15q -> c_a15r) -> (a_a15s -> b_a15q) -> a_a15s -> c_a15r)
+           (. @b_a15q @c_a15r @a_a15s))
+        hs_aMw)
+     gs_aMx)
+  as_aMy
+expr:
+App :: . @(f_a15p ((a_a15s -> b_a15q) -> a_a15s -> c_a15r))
+  @(f_a15p (a_a15s -> b_a15q) -> f_a15p (a_a15s -> c_a15r))
+  @(f_a15p (b_a15q -> c_a15r))
+  (<*>
+     @f_a15p $dApplicative_a15t @(a_a15s -> b_a15q) @(a_a15s -> c_a15r))
+  (<*>
+     @f_a15p
+     $dApplicative_a15t
+     @(b_a15q -> c_a15r)
+     @((a_a15s -> b_a15q) -> a_a15s -> c_a15r)
+     (pure
+        @f_a15p
+        $dApplicative_a15t
+        @((b_a15q -> c_a15r) -> (a_a15s -> b_a15q) -> a_a15s -> c_a15r)
+        (. @b_a15q @c_a15r @a_a15s)))
+  hs_aMw
+  gs_aMx
+
+Substitute def for function: ID: ._r3
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: lemma0` conversion=4
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: <*> @f_a15p $dApplicative_a15t @b_a15q @c_a15r
+       expr: App :: <*> @f_a15p $dApplicative_a15t @a_a15s @c_a15r
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a15p
+  $dApplicative_a15t
+  @b_a15q
+  @c_a15r
+  hs_aMw
+  (<*> @f_a15p $dApplicative_a15t @a_a15s @b_a15q gs_aMx as_aMy)
+expr:
+App :: <*>
+  @f_a15p
+  $dApplicative_a15t
+  @a_a15s
+  @c_a15r
+  (<*>
+     @f_a15p
+     $dApplicative_a15t
+     @(a_a15s -> b_a15q)
+     @(a_a15s -> c_a15r)
+     (<*>
+        @f_a15p
+        $dApplicative_a15t
+        @(b_a15q -> c_a15r)
+        @((a_a15s -> b_a15q) -> a_a15s -> c_a15r)
+        (pure
+           @f_a15p
+           $dApplicative_a15t
+           @((b_a15q -> c_a15r) -> (a_a15s -> b_a15q) -> a_a15s -> c_a15r)
+           (. @b_a15q @c_a15r @a_a15s))
+        hs_aMw)
+     gs_aMx)
+  as_aMy
+
+Rule fired:["ID: a4"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: lemma0` conversion=5
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: App :: <*> @f_a15p $dApplicative_a15t @b_a15q
+       expr: App :: . @(f_a15p b_a15q) @(f_a15p c_a15r) @(f_a15p a_a15s)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a15p
+  $dApplicative_a15t
+  @b_a15q
+  @c_a15r
+  hs_aMw
+  (<*> @f_a15p $dApplicative_a15t @a_a15s @b_a15q gs_aMx as_aMy)
+expr:
+App :: . @(f_a15p b_a15q)
+  @(f_a15p c_a15r)
+  @(f_a15p a_a15s)
+  (<*> @f_a15p $dApplicative_a15t @b_a15q @c_a15r hs_aMw)
+  (<*> @f_a15p $dApplicative_a15t @a_a15s @b_a15q gs_aMx)
+  as_aMy
+
+Substitute def for function: ID: ._r3
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: lemma0` conversion=6
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: App :: . @(f_a15p b_a15q) @(f_a15p c_a15r)
+       expr: App :: . @(f_a15p a_a15s -> f_a15p b_a15q)
+  @(f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (a_a15s -> b_a15q))
+
+getFirstDiff result:
+cntr_expr:
+App :: . @(f_a15p b_a15q)
+  @(f_a15p c_a15r)
+  @(f_a15p a_a15s)
+  (<*> @f_a15p $dApplicative_a15t @b_a15q @c_a15r hs_aMw)
+  (<*> @f_a15p $dApplicative_a15t @a_a15s @b_a15q gs_aMx)
+  as_aMy
+expr:
+App :: . @(f_a15p a_a15s -> f_a15p b_a15q)
+  @(f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (a_a15s -> b_a15q))
+  (. @(f_a15p b_a15q)
+     @(f_a15p c_a15r)
+     @(f_a15p a_a15s)
+     (<*> @f_a15p $dApplicative_a15t @b_a15q @c_a15r hs_aMw))
+  (<*> @f_a15p $dApplicative_a15t @a_a15s @b_a15q)
+  gs_aMx
+  as_aMy
+
+Substitute def for function: ID: ._r3
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: lemma0` conversion=7
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: App :: . @(f_a15p b_a15q)
+       expr: App :: . @(f_a15p b_a15q -> f_a15p c_a15r)
+  @((f_a15p a_a15s -> f_a15p b_a15q)
+    -> f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (b_a15q -> c_a15r))
+
+getFirstDiff result:
+cntr_expr:
+App :: . @(f_a15p a_a15s -> f_a15p b_a15q)
+  @(f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (a_a15s -> b_a15q))
+  (. @(f_a15p b_a15q)
+     @(f_a15p c_a15r)
+     @(f_a15p a_a15s)
+     (<*> @f_a15p $dApplicative_a15t @b_a15q @c_a15r hs_aMw))
+  (<*> @f_a15p $dApplicative_a15t @a_a15s @b_a15q)
+  gs_aMx
+  as_aMy
+expr:
+App :: . @(f_a15p b_a15q -> f_a15p c_a15r)
+  @((f_a15p a_a15s -> f_a15p b_a15q)
+    -> f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (b_a15q -> c_a15r))
+  (. @(f_a15p b_a15q) @(f_a15p c_a15r) @(f_a15p a_a15s))
+  (<*> @f_a15p $dApplicative_a15t @b_a15q @c_a15r)
+  hs_aMw
+
+Substitute def for function: ID: ._r3
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: lemma0` conversion=8
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: App :: . @(f_a15p a_a15s -> f_a15p b_a15q)
+       expr: App :: . @((f_a15p a_a15s -> f_a15p b_a15q)
+    -> f_a15p a_a15s -> f_a15p c_a15r)
+  @((f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p b_a15q)
+    -> f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (b_a15q -> c_a15r))
+
+getFirstDiff result:
+cntr_expr:
+App :: . @(f_a15p a_a15s -> f_a15p b_a15q)
+  @(f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (a_a15s -> b_a15q))
+  (. @(f_a15p b_a15q -> f_a15p c_a15r)
+     @((f_a15p a_a15s -> f_a15p b_a15q)
+       -> f_a15p a_a15s -> f_a15p c_a15r)
+     @(f_a15p (b_a15q -> c_a15r))
+     (. @(f_a15p b_a15q) @(f_a15p c_a15r) @(f_a15p a_a15s))
+     (<*> @f_a15p $dApplicative_a15t @b_a15q @c_a15r)
+     hs_aMw)
+  (<*> @f_a15p $dApplicative_a15t @a_a15s @b_a15q)
+  gs_aMx
+  as_aMy
+expr:
+App :: . @((f_a15p a_a15s -> f_a15p b_a15q)
+    -> f_a15p a_a15s -> f_a15p c_a15r)
+  @((f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p b_a15q)
+    -> f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (b_a15q -> c_a15r))
+  (. @(f_a15p a_a15s -> f_a15p b_a15q)
+     @(f_a15p a_a15s -> f_a15p c_a15r)
+     @(f_a15p (a_a15s -> b_a15q)))
+  (. @(f_a15p b_a15q -> f_a15p c_a15r)
+     @((f_a15p a_a15s -> f_a15p b_a15q)
+       -> f_a15p a_a15s -> f_a15p c_a15r)
+     @(f_a15p (b_a15q -> c_a15r))
+     (. @(f_a15p b_a15q) @(f_a15p c_a15r) @(f_a15p a_a15s))
+     (<*> @f_a15p $dApplicative_a15t @b_a15q @c_a15r))
+  hs_aMw
+  (<*> @f_a15p $dApplicative_a15t @a_a15s @b_a15q)
+  gs_aMx
+  as_aMy
+
+Substitute def for function: ID: ._r3
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: lemma0` conversion=9
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: App :: . @((f_a15p a_a15s -> f_a15p b_a15q)
+    -> f_a15p a_a15s -> f_a15p c_a15r)
+  @((f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p b_a15q)
+    -> f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (b_a15q -> c_a15r))
+       expr: Var :: $
+
+getFirstDiff result:
+cntr_expr:
+App :: . @((f_a15p a_a15s -> f_a15p b_a15q)
+    -> f_a15p a_a15s -> f_a15p c_a15r)
+  @((f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p b_a15q)
+    -> f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (b_a15q -> c_a15r))
+  (. @(f_a15p a_a15s -> f_a15p b_a15q)
+     @(f_a15p a_a15s -> f_a15p c_a15r)
+     @(f_a15p (a_a15s -> b_a15q)))
+  (. @(f_a15p b_a15q -> f_a15p c_a15r)
+     @((f_a15p a_a15s -> f_a15p b_a15q)
+       -> f_a15p a_a15s -> f_a15p c_a15r)
+     @(f_a15p (b_a15q -> c_a15r))
+     (. @(f_a15p b_a15q) @(f_a15p c_a15r) @(f_a15p a_a15s))
+     (<*> @f_a15p $dApplicative_a15t @b_a15q @c_a15r))
+  hs_aMw
+  (<*> @f_a15p $dApplicative_a15t @a_a15s @b_a15q)
+  gs_aMx
+  as_aMy
+expr:
+Var :: $
+
+Substitute def for function: ID: $_r1
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: lemma0` conversion=10
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: App :: $ @(f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p b_a15q)
+       expr: App :: . @((f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p b_a15q)
+    -> f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (b_a15q -> c_a15r))
+
+getFirstDiff result:
+cntr_expr:
+App :: $ @(f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p b_a15q)
+  @(f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r)
+  (. @((f_a15p a_a15s -> f_a15p b_a15q)
+       -> f_a15p a_a15s -> f_a15p c_a15r)
+     @((f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p b_a15q)
+       -> f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r)
+     @(f_a15p (b_a15q -> c_a15r))
+     (. @(f_a15p a_a15s -> f_a15p b_a15q)
+        @(f_a15p a_a15s -> f_a15p c_a15r)
+        @(f_a15p (a_a15s -> b_a15q)))
+     (. @(f_a15p b_a15q -> f_a15p c_a15r)
+        @((f_a15p a_a15s -> f_a15p b_a15q)
+          -> f_a15p a_a15s -> f_a15p c_a15r)
+        @(f_a15p (b_a15q -> c_a15r))
+        (. @(f_a15p b_a15q) @(f_a15p c_a15r) @(f_a15p a_a15s))
+        (<*> @f_a15p $dApplicative_a15t @b_a15q @c_a15r))
+     hs_aMw)
+  (<*> @f_a15p $dApplicative_a15t @a_a15s @b_a15q)
+  gs_aMx
+  as_aMy
+expr:
+App :: . @((f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p b_a15q)
+    -> f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r)
+  @(f_a15p (b_a15q -> c_a15r))
+  (\ (v_B2
+        :: (f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p b_a15q)
+           -> f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r) ->
+     $ @(f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p b_a15q)
+       @(f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r)
+       v_B2
+       (<*> @f_a15p $dApplicative_a15t @a_a15s @b_a15q))
+  (. @((f_a15p a_a15s -> f_a15p b_a15q)
+       -> f_a15p a_a15s -> f_a15p c_a15r)
+     @((f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p b_a15q)
+       -> f_a15p (a_a15s -> b_a15q) -> f_a15p a_a15s -> f_a15p c_a15r)
+     @(f_a15p (b_a15q -> c_a15r))
+     (. @(f_a15p a_a15s -> f_a15p b_a15q)
+        @(f_a15p a_a15s -> f_a15p c_a15r)
+        @(f_a15p (a_a15s -> b_a15q)))
+     (. @(f_a15p b_a15q -> f_a15p c_a15r)
+        @((f_a15p a_a15s -> f_a15p b_a15q)
+          -> f_a15p a_a15s -> f_a15p c_a15r)
+        @(f_a15p (b_a15q -> c_a15r))
+        (. @(f_a15p b_a15q) @(f_a15p c_a15r) @(f_a15p a_a15s))
+        (<*> @f_a15p $dApplicative_a15t @b_a15q @c_a15r)))
+  hs_aMw
+  gs_aMx
+  as_aMy
+
+Substitute def for function: ID: ._r3
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: lemma0
+
+
+-----------------------------
+Start analyze declConversion: ID: a3
+
+
+----------------
+Start analyzing: decl=`JustID: a3` conversion=1
+
+Made new postulate from: ID: a3
+
+
+-----------------------------
+Start analyze declConversion: ID: liftA_f2
+
+
+----------------
+Start analyzing: decl=`JustID: liftA_f2` conversion=1
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: App :: liftA @f_a2WC @b_a2WD @c_a2WE
+       expr: App :: . @(f_a2WC b_a2WD) @(f_a2WC c_a2WE) @(f_a2WC a_a2WF)
+
+getFirstDiff result:
+cntr_expr:
+App :: liftA
+  @f_a2WC
+  @b_a2WD
+  @c_a2WE
+  $dApplicative_a2WG
+  g_aLf
+  (liftA @f_a2WC @a_a2WF @b_a2WD $dApplicative_a2WG h_aLg as_aLh)
+expr:
+App :: . @(f_a2WC b_a2WD)
+  @(f_a2WC c_a2WE)
+  @(f_a2WC a_a2WF)
+  (liftA @f_a2WC @b_a2WD @c_a2WE $dApplicative_a2WG g_aLf)
+  (liftA @f_a2WC @a_a2WF @b_a2WD $dApplicative_a2WG h_aLg)
+  as_aLh
+
+Substitute def for function: ID: ._r3
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: liftA_f2` conversion=2
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: App :: <*> @f_a2WC $dApplicative_a2WG @a_a2WF
+       expr: App :: liftA @f_a2WC @a_a2WF @b_a2WD
+
+getFirstDiff result:
+cntr_expr:
+App :: liftA
+  @f_a2WC
+  @b_a2WD
+  @c_a2WE
+  $dApplicative_a2WG
+  g_aLf
+  (<*>
+     @f_a2WC
+     $dApplicative_a2WG
+     @a_a2WF
+     @b_a2WD
+     (pure @f_a2WC $dApplicative_a2WG @(a_a2WF -> b_a2WD) h_aLg)
+     as_aLh)
+expr:
+App :: liftA @f_a2WC @a_a2WF @b_a2WD $dApplicative_a2WG h_aLg as_aLh
+
+Substitute def for function: ID: liftA
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: liftA_f2` conversion=3
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: App :: <*> @f_a2WC $dApplicative_a2WG @b_a2WD
+       expr: App :: liftA @f_a2WC @b_a2WD @c_a2WE
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a2WC
+  $dApplicative_a2WG
+  @b_a2WD
+  @c_a2WE
+  (pure @f_a2WC $dApplicative_a2WG @(b_a2WD -> c_a2WE) g_aLf)
+  (<*>
+     @f_a2WC
+     $dApplicative_a2WG
+     @a_a2WF
+     @b_a2WD
+     (pure @f_a2WC $dApplicative_a2WG @(a_a2WF -> b_a2WD) h_aLg)
+     as_aLh)
+expr:
+App :: liftA
+  @f_a2WC
+  @b_a2WD
+  @c_a2WE
+  $dApplicative_a2WG
+  g_aLf
+  (<*>
+     @f_a2WC
+     $dApplicative_a2WG
+     @a_a2WF
+     @b_a2WD
+     (pure @f_a2WC $dApplicative_a2WG @(a_a2WF -> b_a2WD) h_aLg)
+     as_aLh)
+
+Substitute def for function: ID: liftA
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: liftA_f2` conversion=4
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: <*> @f_a2WC $dApplicative_a2WG @b_a2WD @c_a2WE
+       expr: App :: <*> @f_a2WC $dApplicative_a2WG @a_a2WF @c_a2WE
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a2WC
+  $dApplicative_a2WG
+  @b_a2WD
+  @c_a2WE
+  (pure @f_a2WC $dApplicative_a2WG @(b_a2WD -> c_a2WE) g_aLf)
+  (<*>
+     @f_a2WC
+     $dApplicative_a2WG
+     @a_a2WF
+     @b_a2WD
+     (pure @f_a2WC $dApplicative_a2WG @(a_a2WF -> b_a2WD) h_aLg)
+     as_aLh)
+expr:
+App :: <*>
+  @f_a2WC
+  $dApplicative_a2WG
+  @a_a2WF
+  @c_a2WE
+  (<*>
+     @f_a2WC
+     $dApplicative_a2WG
+     @(a_a2WF -> b_a2WD)
+     @(a_a2WF -> c_a2WE)
+     (<*>
+        @f_a2WC
+        $dApplicative_a2WG
+        @(b_a2WD -> c_a2WE)
+        @((a_a2WF -> b_a2WD) -> a_a2WF -> c_a2WE)
+        (pure
+           @f_a2WC
+           $dApplicative_a2WG
+           @((b_a2WD -> c_a2WE) -> (a_a2WF -> b_a2WD) -> a_a2WF -> c_a2WE)
+           (. @b_a2WD @c_a2WE @a_a2WF))
+        (pure @f_a2WC $dApplicative_a2WG @(b_a2WD -> c_a2WE) g_aLf))
+     (pure @f_a2WC $dApplicative_a2WG @(a_a2WF -> b_a2WD) h_aLg))
+  as_aLh
+
+Rule fired:["ID: a4"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: liftA_f2` conversion=5
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: pure @f_a2WC
+       expr: App :: <*> @f_a2WC $dApplicative_a2WG @(b_a2WD -> c_a2WE)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a2WC
+  $dApplicative_a2WG
+  @a_a2WF
+  @c_a2WE
+  (<*>
+     @f_a2WC
+     $dApplicative_a2WG
+     @(a_a2WF -> b_a2WD)
+     @(a_a2WF -> c_a2WE)
+     (pure
+        @f_a2WC
+        $dApplicative_a2WG
+        @((a_a2WF -> b_a2WD) -> a_a2WF -> c_a2WE)
+        (. @b_a2WD @c_a2WE @a_a2WF g_aLf))
+     (pure @f_a2WC $dApplicative_a2WG @(a_a2WF -> b_a2WD) h_aLg))
+  as_aLh
+expr:
+App :: <*>
+  @f_a2WC
+  $dApplicative_a2WG
+  @(b_a2WD -> c_a2WE)
+  @((a_a2WF -> b_a2WD) -> a_a2WF -> c_a2WE)
+  (pure
+     @f_a2WC
+     $dApplicative_a2WG
+     @((b_a2WD -> c_a2WE) -> (a_a2WF -> b_a2WD) -> a_a2WF -> c_a2WE)
+     (. @b_a2WD @c_a2WE @a_a2WF))
+  (pure @f_a2WC $dApplicative_a2WG @(b_a2WD -> c_a2WE) g_aLf)
+
+Rule fired:["ID: a3"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: liftA_f2` conversion=6
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: pure @f_a2WC
+       expr: App :: <*> @f_a2WC $dApplicative_a2WG @(a_a2WF -> b_a2WD)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a2WC
+  $dApplicative_a2WG
+  @a_a2WF
+  @c_a2WE
+  (pure
+     @f_a2WC
+     $dApplicative_a2WG
+     @(a_a2WF -> c_a2WE)
+     (. @b_a2WD @c_a2WE @a_a2WF g_aLf h_aLg))
+  as_aLh
+expr:
+App :: <*>
+  @f_a2WC
+  $dApplicative_a2WG
+  @(a_a2WF -> b_a2WD)
+  @(a_a2WF -> c_a2WE)
+  (pure
+     @f_a2WC
+     $dApplicative_a2WG
+     @((a_a2WF -> b_a2WD) -> a_a2WF -> c_a2WE)
+     (. @b_a2WD @c_a2WE @a_a2WF g_aLf))
+  (pure @f_a2WC $dApplicative_a2WG @(a_a2WF -> b_a2WD) h_aLg)
+
+Rule fired:["ID: a3"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: liftA_f2` conversion=7
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: App :: <*> @f_a2WC $dApplicative_a2WG @a_a2WF
+       expr: App :: liftA @f_a2WC @a_a2WF @c_a2WE
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a2WC
+  $dApplicative_a2WG
+  @a_a2WF
+  @c_a2WE
+  (pure
+     @f_a2WC
+     $dApplicative_a2WG
+     @(a_a2WF -> c_a2WE)
+     (. @b_a2WD @c_a2WE @a_a2WF g_aLf h_aLg))
+  as_aLh
+expr:
+App :: liftA
+  @f_a2WC
+  @a_a2WF
+  @c_a2WE
+  $dApplicative_a2WG
+  (. @b_a2WD @c_a2WE @a_a2WF g_aLf h_aLg)
+  as_aLh
+
+Substitute def for function: ID: liftA
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: liftA_f2
+
+
+-----------------------------
+Start analyze declConversion: ID: a2
+
+
+----------------
+Start analyzing: decl=`JustID: a2` conversion=1
+
+Made new postulate from: ID: a2
+
+
+-----------------------------
+Start analyze declConversion: ID: a1
+
+
+----------------
+Start analyzing: decl=`JustID: a1` conversion=1
+
+Made new postulate from: ID: a1
+
+
+-----------------------------
+Start analyze declConversion: ID: liftA_f1
+
+
+----------------
+Start analyzing: decl=`JustID: liftA_f1` conversion=1
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: App :: <*> @f_a2VR $dApplicative_a2VT @a_a2VS
+       expr: App :: liftA @f_a2VR @a_a2VS @a_a2VS
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a2VR
+  $dApplicative_a2VT
+  @a_a2VS
+  @a_a2VS
+  (pure @f_a2VR $dApplicative_a2VT @(a_a2VS -> a_a2VS) (id @a_a2VS))
+  as_aLe
+expr:
+App :: liftA
+  @f_a2VR @a_a2VS @a_a2VS $dApplicative_a2VT (id @a_a2VS) as_aLe
+
+Substitute def for function: ID: liftA
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: liftA_f1` conversion=2
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: Var :: as_aLe
+       expr: App :: <*>
+  @f_a2VR
+  $dApplicative_a2VT
+  @a_a2VS
+  @a_a2VS
+  (pure @f_a2VR $dApplicative_a2VT @(a_a2VS -> a_a2VS) (id @a_a2VS))
+  as_aLe
+
+getFirstDiff result:
+cntr_expr:
+Var :: as_aLe
+expr:
+App :: <*>
+  @f_a2VR
+  $dApplicative_a2VT
+  @a_a2VS
+  @a_a2VS
+  (pure @f_a2VR $dApplicative_a2VT @(a_a2VS -> a_a2VS) (id @a_a2VS))
+  as_aLe
+
+Rule fired:["ID: a1"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: liftA_f1
+
+
+-----------------------------
+Start analyze declConversion: ID: a0
+
+
+----------------
+Start analyzing: decl=`JustID: a0` conversion=1
+
+Made new postulate from: ID: a0
+
+
+-----------------------------
+Start analyze declConversion: ID: app0LawCmps
+
+
+----------------
+Start analyzing: decl=`JustID: app0LawCmps` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: pure @f_a2a1 $dApplicative_a2a5 @(g_a2a2 (a_a2a3 -> b_a2a4))
+       expr: App :: pure
+  @(Cmps f_a2a1 g_a2a2)
+  ($fApplicativeCmps
+     @f_a2a1 @g_a2a2 $dApplicative_a2a5 $dApplicative_a2a6)
+  @(a_a2a3 -> b_a2a4)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Cmps f_a2a1 g_a2a2)
+  ($fApplicativeCmps
+     @f_a2a1 @g_a2a2 $dApplicative_a2a5 $dApplicative_a2a6)
+  @a_a2a3
+  @b_a2a4
+  (pure
+     @f_a2a1
+     $dApplicative_a2a5
+     @(g_a2a2 (a_a2a3 -> b_a2a4))
+     (pure @g_a2a2 $dApplicative_a2a6 @(a_a2a3 -> b_a2a4) g_aMh))
+  ds_d3jC
+expr:
+App :: pure
+  @(Cmps f_a2a1 g_a2a2)
+  ($fApplicativeCmps
+     @f_a2a1 @g_a2a2 $dApplicative_a2a5 $dApplicative_a2a6)
+  @(a_a2a3 -> b_a2a4)
+  g_aMh
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeCmps
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a363
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app0LawCmps` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: <*> @f_a2a1 $dApplicative_a2a5 @(g_a2a2 a_a2a3) @(g_a2a2 b_a2a4)
+       expr: App :: <*>
+  @(Cmps f_a2a1 g_a2a2)
+  ($fApplicativeCmps
+     @f_a2a1 @g_a2a2 $dApplicative_a2a5 $dApplicative_a2a6)
+  @a_a2a3
+  @b_a2a4
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a2a1
+  $dApplicative_a2a5
+  @(g_a2a2 a_a2a3)
+  @(g_a2a2 b_a2a4)
+  (fmap
+     @f_a2a1
+     ($p1Applicative @f_a2a1 $dApplicative_a2a5)
+     @(g_a2a2 (a_a2a3 -> b_a2a4))
+     @(g_a2a2 a_a2a3 -> g_a2a2 b_a2a4)
+     (<*> @g_a2a2 $dApplicative_a2a6 @a_a2a3 @b_a2a4)
+     (pure
+        @f_a2a1
+        $dApplicative_a2a5
+        @(g_a2a2 (a_a2a3 -> b_a2a4))
+        (pure @g_a2a2 $dApplicative_a2a6 @(a_a2a3 -> b_a2a4) g_aMh)))
+  ds_d3jC
+expr:
+App :: <*>
+  @(Cmps f_a2a1 g_a2a2)
+  ($fApplicativeCmps
+     @f_a2a1 @g_a2a2 $dApplicative_a2a5 $dApplicative_a2a6)
+  @a_a2a3
+  @b_a2a4
+  (pure
+     @f_a2a1
+     $dApplicative_a2a5
+     @(g_a2a2 (a_a2a3 -> b_a2a4))
+     (pure @g_a2a2 $dApplicative_a2a6 @(a_a2a3 -> b_a2a4) g_aMh))
+  ds_d3jC
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeCmps
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a36M
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app0LawCmps` conversion=3
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: fmap
+  @f_a2a1
+  ($p1Applicative @f_a2a1 $dApplicative_a2a5)
+  @(g_a2a2 (a_a2a3 -> b_a2a4))
+  @(g_a2a2 a_a2a3 -> g_a2a2 b_a2a4)
+       expr: App :: <*>
+  @f_a2a1
+  $dApplicative_a2a5
+  @(g_a2a2 (a_a2a3 -> b_a2a4))
+  @(g_a2a2 a_a2a3 -> g_a2a2 b_a2a4)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a2a1
+  $dApplicative_a2a5
+  @(g_a2a2 a_a2a3)
+  @(g_a2a2 b_a2a4)
+  (fmap
+     @f_a2a1
+     ($p1Applicative @f_a2a1 $dApplicative_a2a5)
+     @(g_a2a2 (a_a2a3 -> b_a2a4))
+     @(g_a2a2 a_a2a3 -> g_a2a2 b_a2a4)
+     (<*> @g_a2a2 $dApplicative_a2a6 @a_a2a3 @b_a2a4)
+     (pure
+        @f_a2a1
+        $dApplicative_a2a5
+        @(g_a2a2 (a_a2a3 -> b_a2a4))
+        (pure @g_a2a2 $dApplicative_a2a6 @(a_a2a3 -> b_a2a4) g_aMh)))
+  ds_d3jC
+expr:
+App :: <*>
+  @f_a2a1
+  $dApplicative_a2a5
+  @(g_a2a2 (a_a2a3 -> b_a2a4))
+  @(g_a2a2 a_a2a3 -> g_a2a2 b_a2a4)
+  (pure
+     @f_a2a1
+     $dApplicative_a2a5
+     @(g_a2a2 (a_a2a3 -> b_a2a4) -> g_a2a2 a_a2a3 -> g_a2a2 b_a2a4)
+     (<*> @g_a2a2 $dApplicative_a2a6 @a_a2a3 @b_a2a4))
+  (pure
+     @f_a2a1
+     $dApplicative_a2a5
+     @(g_a2a2 (a_a2a3 -> b_a2a4))
+     (pure @g_a2a2 $dApplicative_a2a6 @(a_a2a3 -> b_a2a4) g_aMh))
+
+Rule `["ID: a0"]`not fired.
+
+
+-----------------------------
+Start analyze declConversion: ID: app1Law
+
+
+----------------
+Start analyzing: decl=`JustID: app1Law` conversion=1
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: fmap
+  @f_a30d ($p1Applicative @f_a30d $dApplicative_a30f) @a_a30e @a_a30e
+       expr: App :: <*> @f_a30d $dApplicative_a30f @a_a30e @a_a30e
+
+getFirstDiff result:
+cntr_expr:
+App :: fmap
+  @f_a30d
+  ($p1Applicative @f_a30d $dApplicative_a30f)
+  @a_a30e
+  @a_a30e
+  (id @a_a30e)
+  as_aL5
+expr:
+App :: <*>
+  @f_a30d
+  $dApplicative_a30f
+  @a_a30e
+  @a_a30e
+  (pure @f_a30d $dApplicative_a30f @(a_a30e -> a_a30e) (id @a_a30e))
+  as_aL5
+
+Rule fired:["ID: a0"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app1Law` conversion=2
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: Var :: id
+       expr: App :: fmap
+  @f_a30d ($p1Applicative @f_a30d $dApplicative_a30f) @a_a30e @a_a30e
+
+getFirstDiff result:
+cntr_expr:
+App :: id @(f_a30d a_a30e) as_aL5
+expr:
+App :: fmap
+  @f_a30d
+  ($p1Applicative @f_a30d $dApplicative_a30f)
+  @a_a30e
+  @a_a30e
+  (id @a_a30e)
+  as_aL5
+
+Rule fired:["ID: f1"]
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app1Law` conversion=3
+
+Evaluate def-conversion
+Get diff:
+  cntr_expr: Var :: as_aL5
+       expr: App :: id @(f_a30d a_a30e) as_aL5
+
+getFirstDiff result:
+cntr_expr:
+Var :: as_aL5
+expr:
+App :: id @(f_a30d a_a30e) as_aL5
+
+Substitute def for function: ID: id_r7
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+Made new postulate from: ID: app1Law
+
+
+-----------------------------
+Start analyze declConversion: ID: app2LawCmps
+
+
+----------------
+Start analyzing: decl=`JustID: app2LawCmps` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: pure @f_a1Xk $dApplicative_a1Xo @(g_a1Xl a_a1Xm)
+       expr: App :: pure
+  @(Cmps f_a1Xk g_a1Xl)
+  ($fApplicativeCmps
+     @f_a1Xk @g_a1Xl $dApplicative_a1Xo $dApplicative_a1Xp)
+  @a_a1Xm
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Cmps f_a1Xk g_a1Xl)
+  ($fApplicativeCmps
+     @f_a1Xk @g_a1Xl $dApplicative_a1Xo $dApplicative_a1Xp)
+  @a_a1Xm
+  @b_a1Xn
+  ds_d3iK
+  (pure
+     @f_a1Xk
+     $dApplicative_a1Xo
+     @(g_a1Xl a_a1Xm)
+     (pure @g_a1Xl $dApplicative_a1Xp @a_a1Xm a_aMm))
+expr:
+App :: pure
+  @(Cmps f_a1Xk g_a1Xl)
+  ($fApplicativeCmps
+     @f_a1Xk @g_a1Xl $dApplicative_a1Xo $dApplicative_a1Xp)
+  @a_a1Xm
+  a_aMm
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeCmps
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a363
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app2LawCmps` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: <*> @f_a1Xk $dApplicative_a1Xo @(g_a1Xl a_a1Xm) @(g_a1Xl b_a1Xn)
+       expr: App :: <*>
+  @(Cmps f_a1Xk g_a1Xl)
+  ($fApplicativeCmps
+     @f_a1Xk @g_a1Xl $dApplicative_a1Xo $dApplicative_a1Xp)
+  @a_a1Xm
+  @b_a1Xn
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a1Xk
+  $dApplicative_a1Xo
+  @(g_a1Xl a_a1Xm)
+  @(g_a1Xl b_a1Xn)
+  (fmap
+     @f_a1Xk
+     ($p1Applicative @f_a1Xk $dApplicative_a1Xo)
+     @(g_a1Xl (a_a1Xm -> b_a1Xn))
+     @(g_a1Xl a_a1Xm -> g_a1Xl b_a1Xn)
+     (<*> @g_a1Xl $dApplicative_a1Xp @a_a1Xm @b_a1Xn)
+     ds_d3iK)
+  (pure
+     @f_a1Xk
+     $dApplicative_a1Xo
+     @(g_a1Xl a_a1Xm)
+     (pure @g_a1Xl $dApplicative_a1Xp @a_a1Xm a_aMm))
+expr:
+App :: <*>
+  @(Cmps f_a1Xk g_a1Xl)
+  ($fApplicativeCmps
+     @f_a1Xk @g_a1Xl $dApplicative_a1Xo $dApplicative_a1Xp)
+  @a_a1Xm
+  @b_a1Xn
+  ds_d3iK
+  (pure
+     @f_a1Xk
+     $dApplicative_a1Xo
+     @(g_a1Xl a_a1Xm)
+     (pure @g_a1Xl $dApplicative_a1Xp @a_a1Xm a_aMm))
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeCmps
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a36M
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app2LawCmps` conversion=3
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: fmap
+  @f_a1Xk
+  ($p1Applicative @f_a1Xk $dApplicative_a1Xo)
+  @(g_a1Xl (a_a1Xm -> b_a1Xn))
+  @(g_a1Xl a_a1Xm -> g_a1Xl b_a1Xn)
+       expr: App :: <*>
+  @f_a1Xk
+  $dApplicative_a1Xo
+  @(g_a1Xl (a_a1Xm -> b_a1Xn))
+  @(g_a1Xl a_a1Xm -> g_a1Xl b_a1Xn)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a1Xk
+  $dApplicative_a1Xo
+  @(g_a1Xl a_a1Xm)
+  @(g_a1Xl b_a1Xn)
+  (fmap
+     @f_a1Xk
+     ($p1Applicative @f_a1Xk $dApplicative_a1Xo)
+     @(g_a1Xl (a_a1Xm -> b_a1Xn))
+     @(g_a1Xl a_a1Xm -> g_a1Xl b_a1Xn)
+     (<*> @g_a1Xl $dApplicative_a1Xp @a_a1Xm @b_a1Xn)
+     ds_d3iK)
+  (pure
+     @f_a1Xk
+     $dApplicative_a1Xo
+     @(g_a1Xl a_a1Xm)
+     (pure @g_a1Xl $dApplicative_a1Xp @a_a1Xm a_aMm))
+expr:
+App :: <*>
+  @f_a1Xk
+  $dApplicative_a1Xo
+  @(g_a1Xl (a_a1Xm -> b_a1Xn))
+  @(g_a1Xl a_a1Xm -> g_a1Xl b_a1Xn)
+  (pure
+     @f_a1Xk
+     $dApplicative_a1Xo
+     @(g_a1Xl (a_a1Xm -> b_a1Xn) -> g_a1Xl a_a1Xm -> g_a1Xl b_a1Xn)
+     (<*> @g_a1Xl $dApplicative_a1Xp @a_a1Xm @b_a1Xn))
+  ds_d3iK
+
+Rule `["ID: a0"]`not fired.
+
+
+-----------------------------
+Start analyze declConversion: ID: app3LawCmps
+
+
+----------------
+Start analyzing: decl=`JustID: app3LawCmps` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: pure @f_a1S7 $dApplicative_a1Sb @(g_a1S8 (a_a1S9 -> b_a1Sa))
+       expr: App :: pure
+  @(Cmps f_a1S7 g_a1S8)
+  ($fApplicativeCmps
+     @f_a1S7 @g_a1S8 $dApplicative_a1Sb $dApplicative_a1Sc)
+  @(a_a1S9 -> b_a1Sa)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Cmps f_a1S7 g_a1S8)
+  ($fApplicativeCmps
+     @f_a1S7 @g_a1S8 $dApplicative_a1Sb $dApplicative_a1Sc)
+  @a_a1S9
+  @b_a1Sa
+  (pure
+     @f_a1S7
+     $dApplicative_a1Sb
+     @(g_a1S8 (a_a1S9 -> b_a1Sa))
+     (pure @g_a1S8 $dApplicative_a1Sc @(a_a1S9 -> b_a1Sa) g_aMr))
+  (pure
+     @(Cmps f_a1S7 g_a1S8)
+     ($fApplicativeCmps
+        @f_a1S7 @g_a1S8 $dApplicative_a1Sb $dApplicative_a1Sc)
+     @a_a1S9
+     a_aMs)
+expr:
+App :: pure
+  @(Cmps f_a1S7 g_a1S8)
+  ($fApplicativeCmps
+     @f_a1S7 @g_a1S8 $dApplicative_a1Sb $dApplicative_a1Sc)
+  @(a_a1S9 -> b_a1Sa)
+  g_aMr
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeCmps
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a363
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app3LawCmps` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: pure @f_a1S7 $dApplicative_a1Sb @(g_a1S8 a_a1S9)
+       expr: App :: pure
+  @(Cmps f_a1S7 g_a1S8)
+  ($fApplicativeCmps
+     @f_a1S7 @g_a1S8 $dApplicative_a1Sb $dApplicative_a1Sc)
+  @a_a1S9
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Cmps f_a1S7 g_a1S8)
+  ($fApplicativeCmps
+     @f_a1S7 @g_a1S8 $dApplicative_a1Sb $dApplicative_a1Sc)
+  @a_a1S9
+  @b_a1Sa
+  (pure
+     @f_a1S7
+     $dApplicative_a1Sb
+     @(g_a1S8 (a_a1S9 -> b_a1Sa))
+     (pure @g_a1S8 $dApplicative_a1Sc @(a_a1S9 -> b_a1Sa) g_aMr))
+  (pure
+     @f_a1S7
+     $dApplicative_a1Sb
+     @(g_a1S8 a_a1S9)
+     (pure @g_a1S8 $dApplicative_a1Sc @a_a1S9 a_aMs))
+expr:
+App :: pure
+  @(Cmps f_a1S7 g_a1S8)
+  ($fApplicativeCmps
+     @f_a1S7 @g_a1S8 $dApplicative_a1Sb $dApplicative_a1Sc)
+  @a_a1S9
+  a_aMs
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeCmps
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a363
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app3LawCmps` conversion=3
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: <*> @f_a1S7 $dApplicative_a1Sb @(g_a1S8 a_a1S9) @(g_a1S8 b_a1Sa)
+       expr: App :: <*>
+  @(Cmps f_a1S7 g_a1S8)
+  ($fApplicativeCmps
+     @f_a1S7 @g_a1S8 $dApplicative_a1Sb $dApplicative_a1Sc)
+  @a_a1S9
+  @b_a1Sa
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a1S7
+  $dApplicative_a1Sb
+  @(g_a1S8 a_a1S9)
+  @(g_a1S8 b_a1Sa)
+  (fmap
+     @f_a1S7
+     ($p1Applicative @f_a1S7 $dApplicative_a1Sb)
+     @(g_a1S8 (a_a1S9 -> b_a1Sa))
+     @(g_a1S8 a_a1S9 -> g_a1S8 b_a1Sa)
+     (<*> @g_a1S8 $dApplicative_a1Sc @a_a1S9 @b_a1Sa)
+     (pure
+        @f_a1S7
+        $dApplicative_a1Sb
+        @(g_a1S8 (a_a1S9 -> b_a1Sa))
+        (pure @g_a1S8 $dApplicative_a1Sc @(a_a1S9 -> b_a1Sa) g_aMr)))
+  (pure
+     @f_a1S7
+     $dApplicative_a1Sb
+     @(g_a1S8 a_a1S9)
+     (pure @g_a1S8 $dApplicative_a1Sc @a_a1S9 a_aMs))
+expr:
+App :: <*>
+  @(Cmps f_a1S7 g_a1S8)
+  ($fApplicativeCmps
+     @f_a1S7 @g_a1S8 $dApplicative_a1Sb $dApplicative_a1Sc)
+  @a_a1S9
+  @b_a1Sa
+  (pure
+     @f_a1S7
+     $dApplicative_a1Sb
+     @(g_a1S8 (a_a1S9 -> b_a1Sa))
+     (pure @g_a1S8 $dApplicative_a1Sc @(a_a1S9 -> b_a1Sa) g_aMr))
+  (pure
+     @f_a1S7
+     $dApplicative_a1Sb
+     @(g_a1S8 a_a1S9)
+     (pure @g_a1S8 $dApplicative_a1Sc @a_a1S9 a_aMs))
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeCmps
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a36M
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app3LawCmps` conversion=4
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: <*>
+  @f_a1S7
+  $dApplicative_a1Sb
+  @(g_a1S8 (a_a1S9 -> b_a1Sa))
+  @(g_a1S8 a_a1S9 -> g_a1S8 b_a1Sa)
+       expr: App :: fmap
+  @f_a1S7
+  ($p1Applicative @f_a1S7 $dApplicative_a1Sb)
+  @(g_a1S8 (a_a1S9 -> b_a1Sa))
+  @(g_a1S8 a_a1S9 -> g_a1S8 b_a1Sa)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @f_a1S7
+  $dApplicative_a1Sb
+  @(g_a1S8 a_a1S9)
+  @(g_a1S8 b_a1Sa)
+  (<*>
+     @f_a1S7
+     $dApplicative_a1Sb
+     @(g_a1S8 (a_a1S9 -> b_a1Sa))
+     @(g_a1S8 a_a1S9 -> g_a1S8 b_a1Sa)
+     (pure
+        @f_a1S7
+        $dApplicative_a1Sb
+        @(g_a1S8 (a_a1S9 -> b_a1Sa) -> g_a1S8 a_a1S9 -> g_a1S8 b_a1Sa)
+        (<*> @g_a1S8 $dApplicative_a1Sc @a_a1S9 @b_a1Sa))
+     (pure
+        @f_a1S7
+        $dApplicative_a1Sb
+        @(g_a1S8 (a_a1S9 -> b_a1Sa))
+        (pure @g_a1S8 $dApplicative_a1Sc @(a_a1S9 -> b_a1Sa) g_aMr)))
+  (pure
+     @f_a1S7
+     $dApplicative_a1Sb
+     @(g_a1S8 a_a1S9)
+     (pure @g_a1S8 $dApplicative_a1Sc @a_a1S9 a_aMs))
+expr:
+App :: fmap
+  @f_a1S7
+  ($p1Applicative @f_a1S7 $dApplicative_a1Sb)
+  @(g_a1S8 (a_a1S9 -> b_a1Sa))
+  @(g_a1S8 a_a1S9 -> g_a1S8 b_a1Sa)
+  (<*> @g_a1S8 $dApplicative_a1Sc @a_a1S9 @b_a1Sa)
+  (pure
+     @f_a1S7
+     $dApplicative_a1Sb
+     @(g_a1S8 (a_a1S9 -> b_a1Sa))
+     (pure @g_a1S8 $dApplicative_a1Sc @(a_a1S9 -> b_a1Sa) g_aMr))
+
+Rule `["ID: a0"]`not fired.
+
+
+-----------------------------
+Start analyze declConversion: ID: app4LawCmps
+
+
+----------------
+Start analyzing: decl=`JustID: app4LawCmps` conversion=1
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: pure
+  @f_a1d1
+  $dApplicative_a1d6
+  @(g_a1d2
+      ((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+       expr: App :: pure
+  @(Cmps f_a1d1 g_a1d2)
+  ($fApplicativeCmps
+     @f_a1d1 @g_a1d2 $dApplicative_a1d6 $dApplicative_a1d7)
+  @((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Cmps f_a1d1 g_a1d2)
+  ($fApplicativeCmps
+     @f_a1d1 @g_a1d2 $dApplicative_a1d6 $dApplicative_a1d7)
+  @a_a1d5
+  @c_a1d4
+  (<*>
+     @(Cmps f_a1d1 g_a1d2)
+     ($fApplicativeCmps
+        @f_a1d1 @g_a1d2 $dApplicative_a1d6 $dApplicative_a1d7)
+     @(a_a1d5 -> b_a1d3)
+     @(a_a1d5 -> c_a1d4)
+     (<*>
+        @(Cmps f_a1d1 g_a1d2)
+        ($fApplicativeCmps
+           @f_a1d1 @g_a1d2 $dApplicative_a1d6 $dApplicative_a1d7)
+        @(b_a1d3 -> c_a1d4)
+        @((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4)
+        (pure
+           @f_a1d1
+           $dApplicative_a1d6
+           @(g_a1d2
+               ((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+           (pure
+              @g_a1d2
+              $dApplicative_a1d7
+              @((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4)
+              (. @b_a1d3 @c_a1d4 @a_a1d5)))
+        ds_d3gh)
+     ds_d3gi)
+  ds_d3gj
+expr:
+App :: pure
+  @(Cmps f_a1d1 g_a1d2)
+  ($fApplicativeCmps
+     @f_a1d1 @g_a1d2 $dApplicative_a1d6 $dApplicative_a1d7)
+  @((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4)
+  (. @b_a1d3 @c_a1d4 @a_a1d5)
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: pure
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeCmps
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $cpure_a363
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app4LawCmps` conversion=2
+
+Evaluate inst-conversion
+Get diff:
+  cntr_expr: App :: <*>
+  @f_a1d1
+  $dApplicative_a1d6
+  @(g_a1d2 (b_a1d3 -> c_a1d4))
+  @(g_a1d2 ((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+       expr: App :: <*>
+  @(Cmps f_a1d1 g_a1d2)
+  ($fApplicativeCmps
+     @f_a1d1 @g_a1d2 $dApplicative_a1d6 $dApplicative_a1d7)
+  @(b_a1d3 -> c_a1d4)
+  @((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4)
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Cmps f_a1d1 g_a1d2)
+  ($fApplicativeCmps
+     @f_a1d1 @g_a1d2 $dApplicative_a1d6 $dApplicative_a1d7)
+  @a_a1d5
+  @c_a1d4
+  (<*>
+     @(Cmps f_a1d1 g_a1d2)
+     ($fApplicativeCmps
+        @f_a1d1 @g_a1d2 $dApplicative_a1d6 $dApplicative_a1d7)
+     @(a_a1d5 -> b_a1d3)
+     @(a_a1d5 -> c_a1d4)
+     (<*>
+        @f_a1d1
+        $dApplicative_a1d6
+        @(g_a1d2 (b_a1d3 -> c_a1d4))
+        @(g_a1d2 ((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+        (fmap
+           @f_a1d1
+           ($p1Applicative @f_a1d1 $dApplicative_a1d6)
+           @(g_a1d2
+               ((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+           @(g_a1d2 (b_a1d3 -> c_a1d4)
+             -> g_a1d2 ((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+           (<*>
+              @g_a1d2
+              $dApplicative_a1d7
+              @(b_a1d3 -> c_a1d4)
+              @((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+           (pure
+              @f_a1d1
+              $dApplicative_a1d6
+              @(g_a1d2
+                  ((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+              (pure
+                 @g_a1d2
+                 $dApplicative_a1d7
+                 @((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4)
+                 (. @b_a1d3 @c_a1d4 @a_a1d5))))
+        ds_d3gh)
+     ds_d3gi)
+  ds_d3gj
+expr:
+App :: <*>
+  @(Cmps f_a1d1 g_a1d2)
+  ($fApplicativeCmps
+     @f_a1d1 @g_a1d2 $dApplicative_a1d6 $dApplicative_a1d7)
+  @(b_a1d3 -> c_a1d4)
+  @((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4)
+  (pure
+     @f_a1d1
+     $dApplicative_a1d6
+     @(g_a1d2
+         ((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+     (pure
+        @g_a1d2
+        $dApplicative_a1d7
+        @((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4)
+        (. @b_a1d3 @c_a1d4 @a_a1d5)))
+  ds_d3gh
+
+Try simplifyOptFunc n=0
+
+Substitute selector for instance_method: ID: <*>
+
+Try simplifyOptFunc n=0
+
+Substitute instance for instance_method: ID: $fApplicativeCmps
+
+Try simplifyOptFunc n=0
+
+Substitute instance method for inst: ID: $c<*>_a36M
+
+Try simplifyOptFunc n=0
+
+Compare result: True
+
+
+----------------
+Start analyzing: decl=`JustID: app4LawCmps` conversion=3
+
+Evaluate prop-conversion
+Get diff:
+  cntr_expr: App :: <*>
+  @f_a1d1
+  $dApplicative_a1d6
+  @(g_a1d2
+      ((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+  @(g_a1d2 (b_a1d3 -> c_a1d4)
+    -> g_a1d2 ((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+       expr: App :: fmap
+  @f_a1d1
+  ($p1Applicative @f_a1d1 $dApplicative_a1d6)
+  @(g_a1d2
+      ((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+  @(g_a1d2 (b_a1d3 -> c_a1d4)
+    -> g_a1d2 ((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+
+getFirstDiff result:
+cntr_expr:
+App :: <*>
+  @(Cmps f_a1d1 g_a1d2)
+  ($fApplicativeCmps
+     @f_a1d1 @g_a1d2 $dApplicative_a1d6 $dApplicative_a1d7)
+  @a_a1d5
+  @c_a1d4
+  (<*>
+     @(Cmps f_a1d1 g_a1d2)
+     ($fApplicativeCmps
+        @f_a1d1 @g_a1d2 $dApplicative_a1d6 $dApplicative_a1d7)
+     @(a_a1d5 -> b_a1d3)
+     @(a_a1d5 -> c_a1d4)
+     (<*>
+        @f_a1d1
+        $dApplicative_a1d6
+        @(g_a1d2 (b_a1d3 -> c_a1d4))
+        @(g_a1d2 ((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+        (<*>
+           @f_a1d1
+           $dApplicative_a1d6
+           @(g_a1d2
+               ((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+           @(g_a1d2 (b_a1d3 -> c_a1d4)
+             -> g_a1d2 ((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+           (pure
+              @f_a1d1
+              $dApplicative_a1d6
+              @(g_a1d2
+                  ((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4)
+                -> g_a1d2 (b_a1d3 -> c_a1d4)
+                -> g_a1d2 ((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+              (<*>
+                 @g_a1d2
+                 $dApplicative_a1d7
+                 @(b_a1d3 -> c_a1d4)
+                 @((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4)))
+           (pure
+              @f_a1d1
+              $dApplicative_a1d6
+              @(g_a1d2
+                  ((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+              (pure
+                 @g_a1d2
+                 $dApplicative_a1d7
+                 @((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4)
+                 (. @b_a1d3 @c_a1d4 @a_a1d5))))
+        ds_d3gh)
+     ds_d3gi)
+  ds_d3gj
+expr:
+App :: fmap
+  @f_a1d1
+  ($p1Applicative @f_a1d1 $dApplicative_a1d6)
+  @(g_a1d2
+      ((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+  @(g_a1d2 (b_a1d3 -> c_a1d4)
+    -> g_a1d2 ((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+  (<*>
+     @g_a1d2
+     $dApplicative_a1d7
+     @(b_a1d3 -> c_a1d4)
+     @((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+  (pure
+     @f_a1d1
+     $dApplicative_a1d6
+     @(g_a1d2
+         ((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+     (pure
+        @g_a1d2
+        $dApplicative_a1d7
+        @((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4)
+        (. @b_a1d3 @c_a1d4 @a_a1d5)))
+
+Rule `["ID: a0"]`not fired.
+
+
+============================================
+================== REPORT ==================
+Succsessfully proved: 27
+  lemma_JJ2J_eth
+  lemma_JJ2J
+  f2
+  f1
+  app4LawArrow
+  app3LawArrow
+  app2LawArrow
+  app0LawArrow
+  ap4LawMaybe
+  ap4LawEither
+  ap3LawMaybe
+  ap3LawEither
+  ap2LawMaybe
+  ap2LawEither
+  ap1LawMaybe
+  ap1LawEither
+  ap0LawMaybe
+  ap0LawEither
+  a4
+  lemma0
+  a3
+  liftA_f2
+  a2
+  a1
+  liftA_f1
+  a0
+  app1Law
+
+Failures proved: 4
+  app0LawCmps
+  app2LawCmps
+  app3LawCmps
+  app4LawCmps
+Reasons for failures:
+
+Fail in decl: app0LawCmps in conversion number: 3
+Reason:
+Rule `["ID: a0"]`not fired.
+Rule:
+
+  Postl_ID :: ID: a0
+  Postl_rule:
+"my-rule-a0"
+    forall (@(f_a33T :: Type -> Type))
+           (@a_a33U)
+           ($dApplicative_a33V :: Applicative f_a33T)
+           (g_aKT :: a_a33U -> a_a33U)
+           (as_aKU :: f_a33T a_a33U).
+      <*> @f_a33T
+          $dApplicative_a33V
+          @a_a33U
+          @a_a33U
+          (pure @f_a33T $dApplicative_a33V @(a_a33U -> a_a33U) g_aKT)
+          as_aKU
+      = fmap
+          @f_a33T
+          ($p1Applicative @f_a33T $dApplicative_a33V)
+          @a_a33U
+          @a_a33U
+          g_aKT
+          as_aKU
+Expr:
+App :: <*>
+  @f_a2a1
+  $dApplicative_a2a5
+  @(g_a2a2 (a_a2a3 -> b_a2a4))
+  @(g_a2a2 a_a2a3 -> g_a2a2 b_a2a4)
+  (pure
+     @f_a2a1
+     $dApplicative_a2a5
+     @(g_a2a2 (a_a2a3 -> b_a2a4) -> g_a2a2 a_a2a3 -> g_a2a2 b_a2a4)
+     (<*> @g_a2a2 $dApplicative_a2a6 @a_a2a3 @b_a2a4))
+  (pure
+     @f_a2a1
+     $dApplicative_a2a5
+     @(g_a2a2 (a_a2a3 -> b_a2a4))
+     (pure @g_a2a2 $dApplicative_a2a6 @(a_a2a3 -> b_a2a4) g_aMh))
+
+
+Fail in decl: app2LawCmps in conversion number: 3
+Reason:
+Rule `["ID: a0"]`not fired.
+Rule:
+
+  Postl_ID :: ID: a0
+  Postl_rule:
+"my-rule-a0"
+    forall (@(f_a33T :: Type -> Type))
+           (@a_a33U)
+           ($dApplicative_a33V :: Applicative f_a33T)
+           (g_aKT :: a_a33U -> a_a33U)
+           (as_aKU :: f_a33T a_a33U).
+      <*> @f_a33T
+          $dApplicative_a33V
+          @a_a33U
+          @a_a33U
+          (pure @f_a33T $dApplicative_a33V @(a_a33U -> a_a33U) g_aKT)
+          as_aKU
+      = fmap
+          @f_a33T
+          ($p1Applicative @f_a33T $dApplicative_a33V)
+          @a_a33U
+          @a_a33U
+          g_aKT
+          as_aKU
+Expr:
+App :: <*>
+  @f_a1Xk
+  $dApplicative_a1Xo
+  @(g_a1Xl (a_a1Xm -> b_a1Xn))
+  @(g_a1Xl a_a1Xm -> g_a1Xl b_a1Xn)
+  (pure
+     @f_a1Xk
+     $dApplicative_a1Xo
+     @(g_a1Xl (a_a1Xm -> b_a1Xn) -> g_a1Xl a_a1Xm -> g_a1Xl b_a1Xn)
+     (<*> @g_a1Xl $dApplicative_a1Xp @a_a1Xm @b_a1Xn))
+  ds_d3iK
+
+
+Fail in decl: app3LawCmps in conversion number: 4
+Reason:
+Rule `["ID: a0"]`not fired.
+Rule:
+
+  Postl_ID :: ID: a0
+  Postl_rule:
+"my-rule-a0"
+    forall (@(f_a33T :: Type -> Type))
+           (@a_a33U)
+           ($dApplicative_a33V :: Applicative f_a33T)
+           (g_aKT :: a_a33U -> a_a33U)
+           (as_aKU :: f_a33T a_a33U).
+      <*> @f_a33T
+          $dApplicative_a33V
+          @a_a33U
+          @a_a33U
+          (pure @f_a33T $dApplicative_a33V @(a_a33U -> a_a33U) g_aKT)
+          as_aKU
+      = fmap
+          @f_a33T
+          ($p1Applicative @f_a33T $dApplicative_a33V)
+          @a_a33U
+          @a_a33U
+          g_aKT
+          as_aKU
+Expr:
+App :: fmap
+  @f_a1S7
+  ($p1Applicative @f_a1S7 $dApplicative_a1Sb)
+  @(g_a1S8 (a_a1S9 -> b_a1Sa))
+  @(g_a1S8 a_a1S9 -> g_a1S8 b_a1Sa)
+  (<*> @g_a1S8 $dApplicative_a1Sc @a_a1S9 @b_a1Sa)
+  (pure
+     @f_a1S7
+     $dApplicative_a1Sb
+     @(g_a1S8 (a_a1S9 -> b_a1Sa))
+     (pure @g_a1S8 $dApplicative_a1Sc @(a_a1S9 -> b_a1Sa) g_aMr))
+
+
+Fail in decl: app4LawCmps in conversion number: 3
+Reason:
+Rule `["ID: a0"]`not fired.
+Rule:
+
+  Postl_ID :: ID: a0
+  Postl_rule:
+"my-rule-a0"
+    forall (@(f_a33T :: Type -> Type))
+           (@a_a33U)
+           ($dApplicative_a33V :: Applicative f_a33T)
+           (g_aKT :: a_a33U -> a_a33U)
+           (as_aKU :: f_a33T a_a33U).
+      <*> @f_a33T
+          $dApplicative_a33V
+          @a_a33U
+          @a_a33U
+          (pure @f_a33T $dApplicative_a33V @(a_a33U -> a_a33U) g_aKT)
+          as_aKU
+      = fmap
+          @f_a33T
+          ($p1Applicative @f_a33T $dApplicative_a33V)
+          @a_a33U
+          @a_a33U
+          g_aKT
+          as_aKU
+Expr:
+App :: fmap
+  @f_a1d1
+  ($p1Applicative @f_a1d1 $dApplicative_a1d6)
+  @(g_a1d2
+      ((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+  @(g_a1d2 (b_a1d3 -> c_a1d4)
+    -> g_a1d2 ((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+  (<*>
+     @g_a1d2
+     $dApplicative_a1d7
+     @(b_a1d3 -> c_a1d4)
+     @((a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+  (pure
+     @f_a1d1
+     $dApplicative_a1d6
+     @(g_a1d2
+         ((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4))
+     (pure
+        @g_a1d2
+        $dApplicative_a1d7
+        @((b_a1d3 -> c_a1d4) -> (a_a1d5 -> b_a1d3) -> a_a1d5 -> c_a1d4)
+        (. @b_a1d3 @c_a1d4 @a_a1d5)))
+
+
+============================================
+
+
+===== The End: App/Main =====

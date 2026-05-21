@@ -36,3 +36,6 @@ id x                    =  x
 
 flip :: (a -> b -> c) -> b -> a -> c
 flip f x y              =  f y x
+
+const :: a -> b -> a
+const x _  =  x

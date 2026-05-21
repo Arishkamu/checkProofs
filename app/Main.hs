@@ -36,6 +36,7 @@ import AstInfo
 import PrettyString
 import ProofBase ( ExprInfo(..), SideExprInfo(..) )
 import SortDecls ( sorteDeclConvrs )
+import System.Environment (getArgs)
 
 
 logPath :: FilePath
@@ -44,11 +45,17 @@ logPath = "logs" </> "app.txt"
 proofbasePath :: FilePath
 proofbasePath = "src" </> "ProofBase.hs"
 
-filePath :: FilePath
-filePath = "examples" </> "AllExamples.hs"
+filePathDefault :: FilePath
+filePathDefault = "examples" </> "AllGoodExamples.hs"
 
 main :: IO ()
-main =
+main = do
+  sys_args <- getArgs
+  let filePath = case sys_args of
+        [path] -> path
+        []     -> filePathDefault
+        _      -> error $ "Extra arguments. Please provide only analyzing file path \nor nothing if you want to use default one: `" ++ filePathDefault ++ "`"
+
   runGhc (Just libdir) $ do
     dflags' <- getSessionDynFlags
     let dflags = gopt_set dflags' Opt_EnableRewriteRules
@@ -58,7 +65,7 @@ main =
     let analyzing_file_str = "ANALUZING FILE: " ++ filePath ++ "\n"
     liftIO $ writeFile logPath analyzing_file_str
     liftIO $ putStrLn analyzing_file_str
-    (mg_main, mg_base) <- getModulesGuts
+    (mg_main, mg_base) <- getModulesGuts filePath
 
     -- logMsg "\n=== Core mg_binds ===\n"
     -- logMsg (showSDocUnsafe $ ppr $ mg_binds mg_main)
@@ -76,8 +83,8 @@ main =
 
 
 ---- GET MOD GUTS
-getModulesGuts :: GhcMonad m => m (ModGuts, ModGuts)
-getModulesGuts =
+getModulesGuts :: GhcMonad m => String -> m (ModGuts, ModGuts)
+getModulesGuts filePath =
   do
     targets <- mapM (\fp -> guessTarget fp Nothing Nothing) [filePath, proofbasePath]
     setTargets targets
@@ -297,7 +304,7 @@ cmpCnvrs e_cntr e =
       "Compare result: False\n"
     throwError $ "Error. Not equal." ++ 
       "\n\nExpected: " ++ prettyString e_cntr ++ 
-      "\n\n.    Got: " ++ prettyString e ++ "\n"
+      "\n\n    Got: " ++ prettyString e ++ "\n"
 
 
 analyzeConvrs :: Conversion -> CheckerM ()
@@ -440,6 +447,9 @@ analyzePropConv comment control_expr expr =
       (_:_)  -> throwError $ "Unexpected postulate. Found more than one matched with comment `" ++ comment ++ "`"
       []     -> throwError $ "Unexpected postulate. Not found match with comment `"             ++ comment ++ "`"
 
+    case collectArgs diff_expr of
+      (Var _, _) -> return ()
+      _          -> throwError $ "Not implemented: " ++ "postl dif not var."
     lookup_expr        <- substRule [rule] diff_expr
     let lookup_restored = builder lookup_expr
     -- TODO
@@ -479,7 +489,9 @@ analyzeInstConv comment control_expr expr =
         -- logMsg $ "Selector implementation\n" ++ prettyString selector_simpl ++ "\n"
 
 
-        let (Var instce_id, _) = collectArgs (args !! 1)
+        instce_id <- case collectArgs (args !! 1) of
+          (Var instce_id, _) -> return instce_id
+          _                  -> throwError $ "Not implemented: " ++ "instance_is not var."
         (inst_id, inst_body)  <- getBodyByFuncId instce_id
         let subst_inst         = easySubstFunc selector_simpl inst_id inst_body
         selector_inst         <- simplifyOptFunc subst_inst
@@ -489,7 +501,9 @@ analyzeInstConv comment control_expr expr =
 
     ordinar_subst expr =
       do
-        let (func@(Var fn_id), args) = collectArgs expr
+        (func@(Var fn_id), args) <- case collectArgs expr of
+          f@(Var _, _) -> return f
+          _            -> throwError $ "Not implemented: " ++ "function not var."
         (func_id, func_body)        <- getBodyByFuncId fn_id
         let subst_func = easySubstFunc func func_id func_body
         logMsg $ "Substitute instance method for inst: " ++ prettyString func_id ++ "\n"

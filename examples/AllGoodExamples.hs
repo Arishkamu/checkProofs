@@ -1,4 +1,4 @@
-module Compose where
+module AllGoodExamples where
 
 import ProofBase
 
@@ -35,7 +35,7 @@ composeAssoc f g h =
      (f . (g . h))                   --. L (Def  ".")
  === (\x -> f ((g . h) x))           --. L (Def  ".")
  === (\x -> f ((\x' -> g (h x')) x)) --. L Beta 
- === (\x -> f (g (h x)))             --. L Beta 
+ === (\x -> f (g (h x)))             --. R Beta 
  === (\x -> (\x' -> f (g x')) (h x)) --. R (Def  ".")
  === (\x -> (f . g) (h x))           --. R (Def  ".")
  === ((f . g) . h)                   --. QED
@@ -524,6 +524,91 @@ ap4LawMaybe (Just f) (Just g) (Just z) =
  === Just (f (g z))                             --. R (Prop "lemma_JJ2J")
  === Just f <*> Just (g z)                      --. R (Prop "lemma_JJ2J")
  === Just f <*> (Just g <*> Just z)             --. QED
+
+
+
+
+
+
+--------------------------------------------------
+-- Either
+instance Applicative (Either e) where
+  pure = Right                   -- L (Inst "pure")
+  (Left e) <*> _  = (Left e)      -- L (Inst "<*>")
+  Right g  <*> x  = fmap g x     -- L (Inst "<*>")
+
+
+
+-- fmap g v  =  pure g <*> v
+ap0LawEither :: (a -> b) -> Either e a -> Either e b
+ap0LawEither g v = 
+     pure g <*> v --. L (Inst "pure")
+ === Right g <*> v --. L (Inst "<*>")
+ === fmap g v     --. QED
+
+-- pure id <*> v  ===  v
+ap1LawEither :: Either e a -> Either e a
+ap1LawEither v = 
+     pure id <*> v  --. L (Inst "pure")
+ === Right id <*> v --. L (Inst "<*>")
+ === fmap id v      --. L (Prop "f1")
+ === id v           --. L (Def  "id")
+ === v              --. QED
+
+-- нам неоднократно потребуется лемма
+lemma_JJ2J_eth :: (a -> b) -> a -> Either e b
+lemma_JJ2J_eth f x =
+     Right f <*> Right x --. L (Inst "<*>")
+ === fmap f (Right x)    --. L (Inst "fmap")
+ === Right (f x)         --. QED
+
+-- pure g <*> pure x  ===  pure (g x)
+ap2LawEither :: (a -> b) -> a -> Either e b
+ap2LawEither g x = 
+     pure g <*> pure x   --. L (Inst "pure")
+ === Right g <*> pure x  --. L (Inst "pure")
+ === Right g <*> Right x --. L (Prop "lemma_JJ2J_eth")
+ === Right (g x)         --. R (Inst "pure")
+ === pure (g x)          --. QED
+
+-- u <*> pure x  ===  pure ($ x) <*> u
+ap3LawEither :: Either e (a -> b) -> a -> Either e b
+ap3LawEither (Left e) x = 
+     pure ($ x) <*> (Left e)  --. L (Inst "pure")
+ === Right ($ x) <*> (Left e) --. L (Inst "<*>")
+ === fmap ($ x) (Left e)      --. L (Inst "fmap")
+ === (Left e)                 --. R (Inst "<*>")
+ === (Left e) <*> pure x      --. QED
+ap3LawEither (Right f) x = 
+     pure ($ x) <*> Right f  --. L (Inst "pure")
+ === Right ($ x) <*> Right f --. L (Prop "lemma_JJ2J_eth")
+ === Right (($ x) f)         --. L (Def  "$")
+ === Right (f x)             --. R (Prop "lemma_JJ2J_eth")
+ === Right f <*> Right x     --. R (Inst "pure")
+ === Right f <*> pure x      --. QED
+
+-- pure (.) <*> u <*> v <*> w === u <*> (v <*> w)
+ap4LawEither :: Either e (b -> c) -> Either e (a -> b) -> Either e a -> Either e c
+ap4LawEither (Left e) gs zs =
+     pure (.) <*> (Left e) <*> gs <*> zs  --. L (Inst "pure")
+ === Right (.) <*> (Left e) <*> gs <*> zs --. L (Inst "<*>")
+ === fmap (.) (Left e) <*> gs <*> zs      --. L (Inst "fmap")
+ === (Left e)  <*> gs <*> zs              --. L (Inst "<*>")
+ === (Left e) <*> zs                      --. L (Inst "<*>")
+ === (Left e)                             --. R (Inst "<*>")
+ === (Left e) <*> (gs <*> zs)             --. QED
+ap4LawEither (Right f) (Right g) (Right z) = 
+     pure (.) <*> Right f <*> Right g <*> Right z   --. L (Inst "pure")
+ === Right (.) <*> Right f <*> Right g <*> Right z  --. L (Prop "lemma_JJ2J_eth")
+ === Right ((.) f)        <*> Right g <*> Right z   --. L (Prop "lemma_JJ2J_eth")
+ === Right ((.) f g)                 <*> Right z    --. L (Prop "lemma_JJ2J_eth")
+ === Right ((.) f g z)                              --. L (Def  ".")
+ === Right (f (g z))                                --. R (Prop "lemma_JJ2J_eth")
+ === Right f <*> Right (g z)                        --. R (Prop "lemma_JJ2J_eth")
+ === Right f <*> (Right g <*> Right z)              --. QED
+
+
+
 
 
 
@@ -1108,6 +1193,88 @@ monad3LawMaybe Nothing k k' =
  === (Nothing >>= k')               --. R (Inst ">>=")
  === ((Nothing >>= k) >>= k')       --. QED     
 
+
+
+
+
+instance  Monad ((->) e)  where
+  f  >>= k  = \r -> k (f r) r     -- (1)
+  return  =  const
+-- -}
+
+-- {- AAAAA-3
+-- forall a k . return a >>= k === k a
+monad1LawArrow :: a -> (a -> (c -> b)) -> (c -> b)
+monad1LawArrow a k =
+     (return a >>= k)  --. L (Inst "return")
+ === (const a >>= k)   --. L (Inst ">>=")
+ === (\r -> k (const a r) r)   --. L (Def  "const")
+ === (\r -> k a r)     --. L Eta
+ === k a               --. QED
+
+-- forall m . m >>= return === m  
+monad2LawArrow :: (a -> c) -> (a -> c)
+monad2LawArrow f =
+     (f >>= return)   --. L (Inst ">>=")
+ === (\r -> return (f r) r)    --. L (Inst "return")
+ === (\r -> const (f r) r)    --. L (Def  "const")
+ === (\r -> f r)    --. L Eta
+ === f                --. QED
+
+-- monad3LawMaybe ::  Maybe a -> (a -> Maybe b) -> (b -> Maybe c) -> Maybe c
+-- forall m k k' . m >>= k >>= k'  ===  m >>= \x -> k x >>= k'
+monad3LawArrow :: (d -> a) -> (a -> (d -> b)) -> (b -> (d -> c)) -> (d -> c)
+monad3LawArrow f k k' =
+     (f >>= (\x -> k x >>= k'))         --. L (Inst ">>=")
+ === (\r -> (\x -> k x >>= k') (f r) r) --. L Beta
+ === (\r -> (k (f r) >>= k') r)         --. L (Inst ">>=")
+ === (\r -> (\u -> k' (k (f r) u) u) r) --. L Beta
+ === (\r -> k' (k (f r) r) r)           --. R Beta
+ === (\r -> k' ((\u -> k (f u) u) r) r) --. R (Inst ">>=")
+ === (\r -> k' ((f >>= k) r) r)         --. R (Inst ">>=")
+ === ((f >>= k) >>= k')                 --. QED
+
+
+
+instance  Monad (Either e)  where
+  Left e  >>= _  =  Left e     -- (1)
+  Right r >>= k  =  k r -- (2)
+
+  return  =  Right
+-- -}
+
+
+-- {- AAAAA-3
+-- forall a k . return a >>= k === k a
+monad1LawEither  :: a -> (a -> Either e b) -> Either e b
+monad1LawEither  a k =
+     (return a >>= k)  --. L (Inst "return")
+ === (Right a >>= k)    --. L (Inst ">>=")
+ === k a               --. QED
+
+-- forall m . m >>= return === m  
+monad2LawEither  ::  Either e b -> Either e b
+monad2LawEither  (Right a) =
+     (Right a >>= return)   --. L (Inst ">>=")
+ === return a               --. L (Inst "return")
+ === Right a                --. QED
+monad2LawEither  (Left e) =
+     (Left e >>= return)  --. L (Inst ">>=")
+ === Left e               --. QED
+
+-- forall m k k' . m >>= k >>= k'  ===  m >>= \x -> k x >>= k'
+monad3LawEither  ::  Either e a -> (a -> Either e b) -> (b -> Either e c) -> Either e c
+monad3LawEither  (Right a) k k' =
+     (Right a >>= \x -> k x >>= k')  --. L (Inst ">>=")
+ === ((\x -> k x >>= k') a)         --. L Beta
+ === (k a >>= k')                   --. R (Inst ">>=")
+ === ((Right a >>= k) >>= k')        --. QED
+monad3LawEither  (Left e) k k' =
+     (Left e >>= \x -> k x >>= k') --. L (Inst ">>=")
+ === (Left e)                        --. R (Inst ">>=")
+ === (Left e >>= k')               --. R (Inst ">>=")
+ === ((Left e >>= k) >>= k')       --. QED     
+-- AAAA-4 -}
 
 
 ------ Monad Alternative in file ProofsMonad2
