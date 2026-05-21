@@ -1,0 +1,16 @@
+ANALUZING FILE: /Users/arina/hse/nir/moskvinPrj/checkProofs/examples/ForDiploma.hs
+
+============================================
+================== REPORT ==================
+Succsessfully proved: 0
+  <None>
+
+Failures proved: 0
+  <None>
+Reasons for failures:
+
+
+============================================
+
+
+===== The End: App/Main =====
