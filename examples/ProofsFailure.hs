@@ -11,8 +11,8 @@ instance  Monad ((->) e)  where
   f  >>= k  = \r -> k (f r) r     -- (1)
   return  =  const
 
-myConst :: a -> b -> b
-myConst = сonst 
+myConst :: a -> b -> a
+myConst = const 
 
 monad2LawArrow_wrongDef :: (a -> a) -> (a -> a)
 monad2LawArrow_wrongDef f =

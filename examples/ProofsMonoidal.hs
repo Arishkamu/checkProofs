@@ -163,7 +163,7 @@ l2r . r2l = id :: (a, (b, c)) -> (a, (b, c))
 -}
 isoTriple ::((a,b),c) -> ((a,b),c) 
 isoTriple = 
-    (r2l . l2r)                                    --. Postulate -- --. R Eta
+    (r2l . l2r)                                     --. R Eta
  === (\((a,b),c) -> (r2l . l2r) ((a,b),c))         --. L (Def  ".")
  === (\((a,b),c) -> (\x -> r2l (l2r x)) ((a,b),c)) --. L Beta
  === (\((a,b),c) -> r2l (l2r ((a,b),c)))           --. L (Def  "l2r")
@@ -174,7 +174,7 @@ isoTriple =
 
 isoTriple' :: (a,(b,c)) -> (a,(b,c)) 
 isoTriple' = 
-     (l2r . r2l)                                   --. Postulate -- --. R Eta
+     (l2r . r2l)                                   --. R Eta
  === (\(a,(b,c)) -> (l2r . r2l) (a,(b,c)))         --. L (Def  ".")
  === (\(a,(b,c)) -> (\x -> l2r (r2l x)) (a,(b,c))) --. L Beta
  === (\(a,(b,c)) -> l2r (r2l (a,(b,c))))           --. L (Def  "r2l")
@@ -197,9 +197,9 @@ ml3 as bs cs =
 
 ml3' :: Monoidal f => f a -> f b -> f c -> f (a, (b, c))
 ml3' as bs cs =
-    (as *&* (bs *&* cs))                      --. Postulate -- [f1]
+    (as *&* (bs *&* cs))                      --. L (Prop "f1") -- [f1]
  === fmap id (as *&* (bs *&* cs))             --. L (Prop "isoTriple'")
- === fmap (l2r . r2l) (as *&* (bs *&* cs))    --. Postulate -- [f2]
+ === fmap (l2r . r2l) (as *&* (bs *&* cs))    --. L (Prop "f2") -- [f2]
  === fmap l2r (fmap r2l (as *&* (bs *&* cs))) --. L (Prop "ml3")
  === fmap l2r ((as *&* bs) *&* cs)            --. QED
 
@@ -332,14 +332,14 @@ monLaw1 :: Applicative f => f b -> f b
 monLaw1 as =
      fmap snd (pair' unit' as)               --. L (Def "pair'")
  === fmap snd (pure (,) <*> unit' <*> as)    --. L (Def "unit'")
- === fmap snd (pure (,) <*> pure () <*> as)  --. Postulate -- --. Postulate -- --. L (Prop "a3")
- === fmap snd (pure ((,) ()) <*> as)         --. Postulate -- --. L (Prop "a0")
- === fmap snd (fmap ((,) ()) as)             --. Postulate -- [f2]
+ === fmap snd (pure (,) <*> pure () <*> as)    --. L (Prop "a3")
+ === fmap snd (pure ((,) ()) <*> as)          --. L (Prop "a0")
+ === fmap snd (fmap ((,) ()) as)             --. L (Prop "f2") -- [f2]
  === fmap (snd . (,) ()) as                  --. L (Def  ".")
  === fmap (\x -> snd ((),x)) as              --. L (Def "snd")
  === fmap (\x -> x) as                       --. L (Def  "id")
  === fmap (\x -> id x) as                    --. L Eta
- === fmap id as                              --. Postulate -- [f1]
+ === fmap id as                              --. L (Prop "f1") -- [f1]
  === id as                                   --. L (Def  "id")
  === as                                      --. QED
 
@@ -351,14 +351,14 @@ monLaw2 :: Applicative f => f b -> f b
 monLaw2 as =
      fmap fst (pair' as unit')                               --. L (Def "pair'")
  === fmap fst (pure (,) <*> as <*> unit')                    --. L (Def "unit'")
- === fmap fst (pure (,) <*> as <*> pure ())                  --. Postulate -- --. Postulate -- --. L (Prop "a3")
- === fmap fst (pure ($ ()) <*> (pure (,) <*> as))            --. Postulate -- --. L (Prop "a4")
- === fmap fst (pure (.) <*> pure ($ ()) <*> pure (,) <*> as) --. Postulate -- --. L (Prop "a2")
- === fmap fst (pure ((.) ($ ())) <*> pure (,) <*> as)        --. Postulate -- --. L (Prop "a2")
- === fmap fst (pure (($ ()) . (,)) <*> as)                   --. Postulate -- --. L (Prop "a0")
- === fmap fst (fmap (($ ()) . (,)) as)                       --. Postulate -- [f2]
- === fmap (fst . (($ ()) . (,))) as                          --. Postulate -- --. L (Prop "a0")-- [lemmaML2]
- === fmap id as                                              --. Postulate -- [f1]
+ === fmap fst (pure (,) <*> as <*> pure ())                    --. L (Prop "a3")
+ === fmap fst (pure ($ ()) <*> (pure (,) <*> as))             --. L (Prop "a4")
+ === fmap fst (pure (.) <*> pure ($ ()) <*> pure (,) <*> as)  --. L (Prop "a2")
+ === fmap fst (pure ((.) ($ ())) <*> pure (,) <*> as)         --. L (Prop "a2")
+ === fmap fst (pure (($ ()) . (,)) <*> as)                    --. L (Prop "a0")
+ === fmap fst (fmap (($ ()) . (,)) as)                        --. L (Prop "f2") -- [f2]
+ === fmap (fst . (($ ()) . (,))) as                           --. L (Prop "a0")-- [lemmaML2]
+ === fmap id as                                              --. L (Prop "f1") -- [f1]
  === id as                                                   --. L (Def  "id")
  === as                                                      --. QED
 
@@ -367,7 +367,7 @@ lemmaML2 =
      (fst . (($ ()) . (,)))                 --. L (Def  ".")
  === (\x -> fst ((($ ()) . (,)) x))         --. L (Def  ".")
  === (\x -> fst ((\y -> ($ ()) ((,) y)) x)) --. L Beta
- === (\x -> fst (($ ()) ((,) x)))           --. Postulate -- L (Def  "$") SECTION
+ === (\x -> fst (($ ()) ((,) x)))           --. L (Def  "$") -- SECTION
  === (\x -> fst (x,()))                     --. L (Def "fst")
  === (\x -> x)                              --. L (Def  "id")
  === (\x -> id x)                           --. L Eta
@@ -384,34 +384,34 @@ monLaw3 :: Applicative f => f a -> f b -> f c -> f ((a, b), c)
 monLaw3 as bs cs =
      fmap r2l (pair' as (pair' bs cs)) --. L (Def "pair'")
  === fmap r2l (pure (,) <*> as <*> (pair' bs cs)) --. L (Def "pair'")
- === fmap r2l (pure (,) <*> as <*> (pure (,) <*> bs <*> cs))  --. Postulate -- --. L (Prop "a4")
- === fmap r2l (pure (.) <*> (pure (,) <*> as) <*> (pure (,) <*> bs) <*> cs)  --. Postulate -- --. L (Prop "a4")
- === fmap r2l (pure (.) <*> pure (.) <*> pure (,) <*> as <*> (pure (,) <*> bs) <*> cs)  --. Postulate -- --. Postulate -- --. L (Prop "a3")
- === fmap r2l (pure ((.) (.)) <*> pure (,) <*> as <*> (pure (,) <*> bs) <*> cs)  --. Postulate -- --. Postulate -- --. L (Prop "a3")
- === fmap r2l (pure ((.) (.) (,)) <*> as <*> (pure (,) <*> bs) <*> cs)  --. Postulate -- --. L (Prop "a4")
- === fmap r2l (pure (.) <*> (pure ((.) (.) (,)) <*> as) <*> pure (,) <*> bs <*> cs)  --. Postulate -- --. L (Prop "a4")
- === fmap r2l (pure (.) <*> pure (.) <*> pure ((.) (.) (,)) <*> as <*> pure (,) <*> bs <*> cs)  --. Postulate -- --. Postulate -- --. L (Prop "a3")
- === fmap r2l (pure ((.) (.)) <*> pure ((.) (.) (,)) <*> as <*> pure (,) <*> bs <*> cs)  --. Postulate -- --. Postulate -- --. L (Prop "a3")
- === fmap r2l (pure (((.) (.)) ((.) (.) (,))) <*> as <*> pure (,) <*> bs <*> cs)  --. Postulate -- --. L (Prop "a2")
- === fmap r2l (pure ($ (,)) <*> (pure (((.) (.)) ((.) (.) (,))) <*> as) <*> bs <*> cs)  --. Postulate -- --. L (Prop "a4")
- === fmap r2l (pure (.) <*> pure ($ (,)) <*> pure (((.) (.)) ((.) (.) (,))) <*> as <*> bs <*> cs)  --. Postulate -- --. Postulate -- --. L (Prop "a3")
- === fmap r2l (pure ((.) ($ (,))) <*> pure (((.) (.)) ((.) (.) (,))) <*> as <*> bs <*> cs)  --. Postulate -- --. Postulate -- --. L (Prop "a3")
+ === fmap r2l (pure (,) <*> as <*> (pure (,) <*> bs <*> cs))   --. L (Prop "a4")
+ === fmap r2l (pure (.) <*> (pure (,) <*> as) <*> (pure (,) <*> bs) <*> cs)   --. L (Prop "a4")
+ === fmap r2l (pure (.) <*> pure (.) <*> pure (,) <*> as <*> (pure (,) <*> bs) <*> cs)    --. L (Prop "a3")
+ === fmap r2l (pure ((.) (.)) <*> pure (,) <*> as <*> (pure (,) <*> bs) <*> cs)    --. L (Prop "a3")
+ === fmap r2l (pure ((.) (.) (,)) <*> as <*> (pure (,) <*> bs) <*> cs)   --. L (Prop "a4")
+ === fmap r2l (pure (.) <*> (pure ((.) (.) (,)) <*> as) <*> pure (,) <*> bs <*> cs)   --. L (Prop "a4")
+ === fmap r2l (pure (.) <*> pure (.) <*> pure ((.) (.) (,)) <*> as <*> pure (,) <*> bs <*> cs)    --. L (Prop "a3")
+ === fmap r2l (pure ((.) (.)) <*> pure ((.) (.) (,)) <*> as <*> pure (,) <*> bs <*> cs)    --. L (Prop "a3")
+ === fmap r2l (pure (((.) (.)) ((.) (.) (,))) <*> as <*> pure (,) <*> bs <*> cs)   --. L (Prop "a2")
+ === fmap r2l (pure ($ (,)) <*> (pure (((.) (.)) ((.) (.) (,))) <*> as) <*> bs <*> cs)   --. L (Prop "a4")
+ === fmap r2l (pure (.) <*> pure ($ (,)) <*> pure (((.) (.)) ((.) (.) (,))) <*> as <*> bs <*> cs)    --. L (Prop "a3")
+ === fmap r2l (pure ((.) ($ (,))) <*> pure (((.) (.)) ((.) (.) (,))) <*> as <*> bs <*> cs)    --. L (Prop "a3")
  === fmap r2l (pure (((.) ($ (,))) (((.) (.)) ((.) (.) (,)))) <*> as <*> bs <*> cs)  --. L (Prop "lemmaML3'")
- === fmap r2l (pure genR <*> as <*> bs <*> cs)  --. Postulate -- --. L (Prop "a0")
- === pure r2l <*> (pure genR <*> as <*> bs <*> cs)  --. Postulate -- --. L (Prop "a4")
- === pure (.) <*> pure r2l <*> (pure genR <*> as <*> bs) <*> cs  --. Postulate -- --. Postulate -- --. L (Prop "a3")
- === pure ((.) r2l) <*> (pure genR <*> as <*> bs) <*> cs  --. Postulate -- --. L (Prop "a4")
- === pure (.) <*> pure ((.) r2l) <*> (pure genR <*> as) <*> bs <*> cs  --. Postulate -- --. Postulate -- --. L (Prop "a3")
- === pure ((.) ((.) r2l)) <*> (pure genR <*> as) <*> bs <*> cs  --. Postulate -- --. L (Prop "a4")
- === pure (.) <*> pure ((.) ((.) r2l)) <*> pure genR <*> as <*> bs <*> cs  --. Postulate -- --. Postulate -- --. L (Prop "a3")
- === pure ((.) ((.) ((.) r2l))) <*> pure genR <*> as <*> bs <*> cs  --. Postulate -- --. Postulate -- --. L (Prop "a3")
+ === fmap r2l (pure genR <*> as <*> bs <*> cs)   --. L (Prop "a0")
+ === pure r2l <*> (pure genR <*> as <*> bs <*> cs)   --. L (Prop "a4")
+ === pure (.) <*> pure r2l <*> (pure genR <*> as <*> bs) <*> cs    --. L (Prop "a3")
+ === pure ((.) r2l) <*> (pure genR <*> as <*> bs) <*> cs   --. L (Prop "a4")
+ === pure (.) <*> pure ((.) r2l) <*> (pure genR <*> as) <*> bs <*> cs    --. L (Prop "a3")
+ === pure ((.) ((.) r2l)) <*> (pure genR <*> as) <*> bs <*> cs   --. L (Prop "a4")
+ === pure (.) <*> pure ((.) ((.) r2l)) <*> pure genR <*> as <*> bs <*> cs    --. L (Prop "a3")
+ === pure ((.) ((.) ((.) r2l))) <*> pure genR <*> as <*> bs <*> cs    --. L (Prop "a3")
  === pure ((.) ((.) ((.) r2l)) genR) <*> as <*> bs <*> cs  --. L (Prop "lemmaML3'''")
  === pure (\x -> \y -> \z -> ((x,y),z)) <*> as <*> bs <*> cs --. L (Prop "lemmaML3''")
- === pure ((.) ((.) (,)) (,)) <*> as <*> bs <*> cs --. Postulate -- --. Postulate -- --. L (Prop "a3")
- === pure ((.) ((.) (,))) <*> pure (,) <*> as <*> bs <*> cs --. Postulate -- --. Postulate -- --. L (Prop "a3")
- === pure (.) <*> pure ((.) (,)) <*> pure (,) <*> as <*> bs <*> cs --. Postulate -- --. L (Prop "a4")
- === pure ((.) (,)) <*> (pure (,) <*> as) <*> bs <*> cs --. Postulate -- --. Postulate -- --. L (Prop "a3")
- === pure (.) <*> pure (,) <*> (pure (,) <*> as) <*> bs <*> cs --. Postulate -- --. L (Prop "a4")
+ === pure ((.) ((.) (,)) (,)) <*> as <*> bs <*> cs   --. L (Prop "a3")
+ === pure ((.) ((.) (,))) <*> pure (,) <*> as <*> bs <*> cs   --. L (Prop "a3")
+ === pure (.) <*> pure ((.) (,)) <*> pure (,) <*> as <*> bs <*> cs  --. L (Prop "a4")
+ === pure ((.) (,)) <*> (pure (,) <*> as) <*> bs <*> cs   --. L (Prop "a3")
+ === pure (.) <*> pure (,) <*> (pure (,) <*> as) <*> bs <*> cs  --. L (Prop "a4")
  === pure (,) <*> (pure (,) <*> as <*> bs) <*> cs --. L (Def "pair'")
  === pure (,) <*> (pair' as bs) <*> cs --. L (Def "pair'")
  === pair' (pair' as bs) cs 
@@ -520,7 +520,7 @@ lem0'' g  =
  === (\p -> apP ((id *** g) p))            --. L (Prop "lem0")
  === (\p -> id (fst p) (g (snd p)))        --. L (Def  "id")
  === (\p -> (fst p) (g (snd p)))           --. L (Def  ".")
- === (\p -> (fst p . g) (snd p))           --. Postulate -- {section}
+ === (\p -> (fst p . g) (snd p))           -- {section}
  === (\p -> (. g) (fst p) (snd p))         --. R (Def "uncurry")
  === (\p -> uncurry (. g) p)               --. L Eta
  === uncurry (. g)                         --. QED
@@ -531,9 +531,9 @@ ap' (g <$> as) bs  ==  uncurry g <$> (as *&* bs)
 lem1 :: Monoidal f => (a -> b -> c) -> f a -> f b -> f c
 lem1 g as bs  = 
      ap' (fmap g as) bs                     -- ap'
- === fmap apP (fmap g as *&* bs)            --. Postulate -- [f1]
+ === fmap apP (fmap g as *&* bs)            --. L (Prop "f1") -- [f1]
  === fmap apP (fmap g as *&* fmap id bs)    --. L (Prop "ml4")
- === fmap apP (fmap (g *** id) (as *&* bs)) --. Postulate -- [f2]
+ === fmap apP (fmap (g *** id) (as *&* bs)) --. L (Prop "f2") -- [f2]
  === fmap (apP . (g *** id)) (as *&* bs)    --. L (Prop "lem0'")
  === fmap (uncurry g) (as *&* bs)
 {-
@@ -542,9 +542,9 @@ ap' hs (g <$> as) == uncurry (. g) <$> (hs *&* as)
 lem2 :: Monoidal f => (a -> b) -> f (b -> c) -> f a -> f c
 lem2 g hs as  = 
      ap' hs (fmap g as)                     -- ap'
- === fmap apP (hs *&* fmap g as)            --. Postulate -- [f1]
+ === fmap apP (hs *&* fmap g as)            --. L (Prop "f1") -- [f1]
  === fmap apP (fmap id hs *&* fmap g as)    --. L (Prop "ml4")
- === fmap apP (fmap (id *** g) (hs *&* as)) --. Postulate -- [f2]
+ === fmap apP (fmap (id *** g) (hs *&* as)) --. L (Prop "f2") -- [f2]
  === fmap (apP . (id *** g)) (hs *&* as)    --. L (Prop "lem0''")
   === fmap (uncurry (. g)) (hs *&* as)
 
@@ -570,7 +570,7 @@ appLaw0 g as =
      ap' (pure' g) as                       --. L (Def  "pure'")
  === ap' (fmap (const g) unit) as           --. L (Prop "lem1")
  === fmap (uncurry (const g)) (unit *&* as) --. L (Prop "lemmaAL0")
- === fmap (g . snd) (unit *&* as)           --. Postulate -- [f2]
+ === fmap (g . snd) (unit *&* as)           --. L (Prop "f2") -- [f2]
  === fmap g (fmap snd (unit *&* as))        --. L (Prop "ml1")
  === fmap g as
 
@@ -581,7 +581,7 @@ pure id <*> as = as
 appLaw1' :: Monoidal f => f a -> f a
 appLaw1' as = 
      ap' (pure' id) as  -- [appLaw0]
- === fmap id as          --. Postulate -- [f1]
+ === fmap id as         --. L (Prop "f2") --  [f1]
  === as 
 
 {-
@@ -616,9 +616,9 @@ appLaw2 gs a =
      ap' gs (pure' a)                         --. L (Def  "pure'")
  === ap' gs (fmap (const a) unit)             --. L (Prop "lem2") 
  === fmap (uncurry (. const a)) (gs *&* unit) --. L (Prop "lemmaAL2")
- === fmap (($ a) . fst) (gs *&* unit)         --. Postulate -- [f2]
+ === fmap (($ a) . fst) (gs *&* unit)         --. L (Prop "f2") -- [f2]
  === fmap ($ a) (fmap fst (gs *&* unit))      --. L (Prop "ml2")
- === fmap ($ a) gs                            --. Postulate -- --. L (Prop "a0")
+ === fmap ($ a) gs                            --. L (Prop "a0")
  === ap' (pure' ($ a)) gs
 
 
@@ -640,9 +640,9 @@ lemmaAL3 g a  =
  
 appLaw3 :: Monoidal f => (a -> b) -> a -> f b
 appLaw3 g a = 
-     ap' (pure' g)  (pure' a)     --. Postulate -- --. L (Prop "a0")
+     ap' (pure' g)  (pure' a)      --. L (Prop "a0")
  === fmap g (pure' a)             --. L (Def  "pure'")
- === fmap g (fmap (const a) unit) --. Postulate -- [f2]
+ === fmap g (fmap (const a) unit) --. L (Prop "f2") -- [f2]
  === fmap (g . const a) unit      --. L (Prop "lemmaAL3")
  === fmap (const (g a)) unit      --. L (Def  "pure'")
  === pure' (g a) 
@@ -667,7 +667,7 @@ uncurry (. uncurry ($)) . l2r  =  \((g,h),a) -> g (h a)
 -}
 rLemma :: ((b -> c, a -> b), a) -> c
 rLemma =
-     (uncurry (. apP) . l2r)                                     --. L Eta -- typed
+     (uncurry (. apP) . l2r)                                   --. L Eta -- typed
  === (\((g,h),a) -> (uncurry (. apP) . l2r) ((g,h),a))         --. L (Def  ".")
  === (\((g,h),a) -> (\x -> uncurry (. apP) (l2r x)) ((g,h),a)) --. L Beta
  === (\((g,h),a) -> uncurry (. apP) (l2r ((g,h),a)))           --. L (Def  "l2r")
@@ -688,11 +688,11 @@ lrLemma =
 
 appLaw4' :: Monoidal f => f (b -> c) -> f (a -> b) -> f a -> f c
 appLaw4' gs hs as =
-     ap' (ap' (ap' (pure' (.)) gs) hs) as                   --. Postulate -- --. L (Prop "a0")
+     ap' (ap' (ap' (pure' (.)) gs) hs) as                   --. L (Prop "a0")
  === ap' (ap' (fmap (.) gs) hs) as                          --. L (Prop "lem1")
  === ap' (fmap (uncurry (.)) (gs *&* hs)) as                --. L (Prop "lem1")
  === fmap (uncurry (uncurry (.))) ((gs *&* hs) *&* as)      --. L (Prop "lrLemma") 
- === fmap (uncurry (. apP) . l2r) ((gs *&* hs) *&* as)      --. Postulate -- [f2]
+ === fmap (uncurry (. apP) . l2r) ((gs *&* hs) *&* as)      --. L (Prop "f2") -- [f2]
  === fmap (uncurry (. apP)) (fmap l2r ((gs *&* hs) *&* as)) --. L (Prop "ml3'")
  === fmap (uncurry (. apP)) (gs *&* (hs *&* as))            --. L (Prop "lem2")
  === ap' gs (fmap apP (hs *&* as))                          -- ap'
