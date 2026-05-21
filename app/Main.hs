@@ -1,11 +1,11 @@
 {-|
 Module      : Main
-Description : Analuzing equational reasoning
+Description : Main entry point for checking equation reasonings
 License     : MIT
 -}
 module Main where
 
-import CheckProofs
+import CheckProofs ( checkProofs )
 import System.Environment (getArgs)
 import System.FilePath ((</>))
 

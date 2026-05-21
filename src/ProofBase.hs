@@ -1,24 +1,27 @@
+{-|
+Module      : ProofBase
+Description : Annotation operators and base function defenition from Haskell report.
+
+This module contains operators for  annotating equation reasonings and basic functions coppied from Haskell report.
+-}
 module ProofBase where
 
 import Prelude hiding ((.), ($), id, flip)
 
-data SideExprInfo = L ExprInfo | R ExprInfo | QED | Postulate
-data ExprInfo = Def String | Prop String | Inst String | Beta | Eta | DefRec String Integer
--- data WithInfo a = WithInfo { value :: a, info :: SideExprInfo}
+-- | Constructor for expression info, QED and Postulate.
+data SideExprInfo = L ExprInfo | R ExprInfo  | QED | Postulate
+-- | Constructor for expression info
+data ExprInfo =     Def String | Prop String | Inst String | Beta | Eta | DefRec String Integer
 
+-- | Operator for adding annotation to expression
 (--.) :: a -> SideExprInfo -> a
 (--.) x _ = x
 
-
+-- | Main operator for checking type equality and combining expressions into chain.
 infixl 0 ===
 (===) :: a -> a -> a
 (===) _ y = y
 
-importThisFunc :: a -> a
-importThisFunc x = x
-
-importThisFuncHiding :: a -> a
-importThisFuncHiding x = x
 
 
 

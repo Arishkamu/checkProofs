@@ -1,3 +1,9 @@
+{-|
+Module      : SortDecls
+Description : Topologicaly sort DeclConversions
+
+Topologicaly sort DeclConversions and check for cyrcle dependencies
+-}
 module SortDecls (sorteDeclConvrs) where
 
 import GHC (Id, getOccName)

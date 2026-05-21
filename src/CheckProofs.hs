@@ -5,7 +5,7 @@ Module      : CheckProofs
 Description : Checking equational reasoning
 License     : MIT
 -}
-module CheckProofs (checkProofs) where
+module CheckProofs where
 
 import GHC
     ( runGhc,
@@ -35,12 +35,14 @@ import GHC.Core.FamInstEnv (extendFamInstEnvList, emptyFamInstEnv)
 import GHC.Core.Opt.Simplify (SimplifyExprOpts(..))
 import GHC.Core.Opt.Simplify.Env ( getInScope, mkSimplEnv, setInScopeSet, seRuleOpts, SimplEnv (seMode) )
 import GHC.Core.Opt.Simplify.Utils ( getUnfoldingInRuleMatch, activeRule )
-import GHC.Core.SimpleOpt ( defaultSimpleOpts, simpleOptExpr )
+import GHC.Core.SimpleOpt ( defaultSimpleOpts, simpleOptExpr, SimpleOpts(..) )
 
 import AstInfo
 import PrettyString
 import ProofBase ( ExprInfo(..), SideExprInfo(..) )
 import SortDecls ( sorteDeclConvrs )
+import GHC.Core.Unfold (defaultUnfoldingOpts)
+import GHC.Core.Coercion.Opt (OptCoercionOpts(OptCoercionOpts, optCoercionEnabled))
 
 
 logPath :: FilePath
@@ -77,7 +79,7 @@ checkProofs filePath = do
 
 
 
----- GET MOD GUTS
+-- | Get Module guts for provided file and ProofsBase.hs
 getModulesGuts :: GhcMonad m => String -> m (ModGuts, ModGuts)
 getModulesGuts filePath =
   do
@@ -101,6 +103,7 @@ getModulesGuts filePath =
 
 
 ---- COLLECTING AST STATE
+-- | Get Checker state
 getState :: HscEnv -> CoreProgram -> CoreProgram -> CheckerST
 getState hscEnv core_binds base_binds = CheckerST {
   st_declconvrs   = sortedDeclConvrs,
@@ -118,7 +121,7 @@ getState hscEnv core_binds base_binds = CheckerST {
     Left cyrcles -> error $ "Error. Cyrcle dependencies were found.\n" ++ showSDocUnsafe (ppr cyrcles)
     Right sdc    -> sdc
 
-
+-- | Helper function for collecting conversions from function defenition
 collectConvrs :: FuncDef -> [DeclConversions]
 collectConvrs (f_id, f_body) = case map getConvrs pairs_skip_lhe_qed of
     []      -> []
@@ -138,6 +141,7 @@ collectConvrs (f_id, f_body) = case map getConvrs pairs_skip_lhe_qed of
 
 
 ---- UTILS
+-- | Helper function to create pretty fails report
 createFail :: CheckerST -> String -> (Id, String)
 createFail CheckerST{..} reason = (,) d_id $
     "Fail in decl: " ++ str_decl_id ++ " in conversion number: " ++ show st_cnvrs_count ++ 
@@ -171,14 +175,14 @@ toSideExprInfo (App (Var expr_side) expr_info) = toSideInfo (toExprInfo expr_inf
 toSideExprInfo (Var expr_side) | getStrById expr_side == "Postulate" = Postulate
 toSideExprInfo e = error $ "Unexpected expression structure for comment, expected a function application with a string literal argument.\nGot: " ++ prettyString e
 
-{-
- assume that any variable in convertion is OR
-  * in (\x ->) this convertion
-  * global func
-  * parametr for this function
+{-|
+-- assume that any variable in convertion is OR
+* in (\x ->) this convertion
+* global func
+* parametr for this function
 
-  alphaEq called for whole expr works correctly
-  for subexpr need to remember Lam-binds (\x ->)
+-- alphaEq called for whole expr works correctly
+-- for subexpr need to remember Lam-binds (\x ->)
 -}
 alphaEq :: (Eq (DeBruijn a)) => a -> a -> Bool
 alphaEq lhv rhv = deBruijnize lhv == deBruijnize rhv
@@ -198,7 +202,7 @@ mapPassStM f (a:as) s = do
   r@(_, s1) <- f a s
   (r :) <$> mapPassStM f as s1
 
-
+-- | Helper creating PostlDef
 mkRulePstl :: HscEnv -> Id -> [CoreBndr] -> CoreExpr -> CoreExpr -> Maybe PostlDef
 mkRulePstl hscEnv pstl_id pstl_binds pstl_lhs pstl_rhs = 
   case lhs_func of
@@ -261,6 +265,7 @@ madePostulate fn_id =
 
 
 ------ Analyze
+-- | Main analyzing entry function
 analyzeModuleSt :: CheckerST -> IO ()
 analyzeModuleSt checkerST =
 
@@ -288,6 +293,7 @@ analyzeModuleSt checkerST =
 
 
 ---- ANALYZE SINGLE CONVERSION
+-- | Final comparison
 cmpCnvrs :: CoreExpr -> CoreExpr -> CheckerM ()
 cmpCnvrs e_cntr e | alphaEq e_cntr e = logMsg "Compare result: True\n"
 cmpCnvrs e_cntr e = 
@@ -301,7 +307,7 @@ cmpCnvrs e_cntr e =
       "\n\nExpected: " ++ prettyString e_cntr ++ 
       "\n\n    Got: " ++ prettyString e ++ "\n"
 
-
+-- | Main function entry for analyzing single conversion
 analyzeConvrs :: Conversion -> CheckerM ()
 analyzeConvrs Conversion{..} =
   do
@@ -326,6 +332,7 @@ analyzeConvrs Conversion{..} =
         cmpCnvrs ce e
 
 ---- just believe that this is enought
+-- | Function search of first diff between expression
 getFirstDiff :: CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr -> CoreExpr)
 getFirstDiff contrl_expr expr = 
   do
@@ -373,9 +380,11 @@ getNAppearance comnt m expr = go m expr >>= (\(x, y, _) -> return (x, y))
 
     updBuilder updater (diff_expr, builder, n) = (diff_expr, updater builder, n)
 
+-- | Analyze beta reduction conversions
 analyzeBetaConv :: CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
 analyzeBetaConv control_expr expr = return (control_expr, expr) -- TODO: check alphaEq
 
+-- | Analyze eta reduction conversions
 analyzeEtaConv :: CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
 analyzeEtaConv control_expr expr =
   do
@@ -386,6 +395,7 @@ analyzeEtaConv control_expr expr =
       _ -> throwError $ "Error in analyzeEtaConv:\n" ++ prettyString diff_expr
     return (control_expr, builder new_expr)
 
+-- | Analyze Def annotated conversions
 analyzeDefConv :: String -> Integer -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
 analyzeDefConv comment n control_expr expr =
   do
@@ -429,7 +439,7 @@ getBodyByFuncId func_id =
       Just func_body -> return (fl_id, func_body)
       Nothing        -> throwError $ "Function definition not found for:\n" ++ prettyString func_id
 
-
+-- | Analyze Prop annotated conversions
 analyzePropConv :: String -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
 analyzePropConv comment control_expr expr =
   do
@@ -452,6 +462,7 @@ analyzePropConv comment control_expr expr =
     return (control_expr, simpl_expr)
 
 
+-- | Analyze Inst annotated conversions
 analyzeInstConv :: String -> CoreExpr -> CoreExpr -> CheckerM (CoreExpr, CoreExpr)
 analyzeInstConv comment control_expr expr =
   do
@@ -529,12 +540,19 @@ inlineLetsIgnoreCast expr =
     Cast e _ -> inlineLetsIgnoreCast e
     _ -> expr
 
+-- | substExpr wrapper
 easySubstFunc :: CoreExpr -> Id -> CoreExpr -> CoreExpr
 easySubstFunc expr fn_id fn_body = substExpr subst expr
   where
     delFunFV = mkInScopeSet $ delVarSet (exprFreeVars expr) fn_id
     subst = extendSubst (mkEmptySubst delFunFV) fn_id fn_body
 
+-- | run 3 times in cyrcle
+--
+-- * simpleOptExpr
+-- * inline created @let@ expressions
+-- * check if any beta-reductions
+-- * if yes repeat
 simplifyOptFunc :: CoreExpr -> CheckerM CoreExpr
 simplifyOptFunc expr = go 0 expr
   where
@@ -553,6 +571,7 @@ simplifyOptFunc expr = go 0 expr
     isBetaRedex _                 = False
 
 
+-- | Substitute rules. lookupRule wrapper
 substRule :: [PostlDef] -> CoreExpr -> CheckerM CoreExpr
 substRule pstls expr =
   do
